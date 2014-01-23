@@ -1,0 +1,157 @@
+\documentclass{article}
+\usepackage{a4wide}
+\usepackage{chrono}
+
+\begin{document}
+
+\begin{chrono}
+  \setlength{\pBr}{0cm}
+  \setlength{\pAr}{0cm}
+  \AB{DATA1}
+  \AB[lost]{lost}
+  \AB[bad]{bad}
+  \AB[wait]{wait}
+  \AB[wait,bad]{wait,bad}
+  \AB{DATA4}
+
+  \AB[prop=1mm]{prop=1mm}
+  \AB{DATA6}
+  \AB[prop]{prop}
+  \AB{DATA7}
+  \AB[prop=2cm]{prop=2cm}
+  \AB{DATA8}
+  \AB[nowait]{nowait}
+  \AB[nowait=4mm]{nowait=4mm}
+  \AB[nowait=8mm]{nowait=8mm}
+\end{chrono}
+\hfill
+\begin{chrono}[width=2cm]
+  \AB{DATA1}
+  \AB{DATA2}
+  \BA{ACK3}
+  \setlength{\chronospacesame}{5mm}
+  \AB{DATA1}
+  \AB{DATA2}
+  \BA{ACK3}
+\end{chrono}
+\hfill
+\begin{chrono}
+  \AB{DATA1}
+  \AB{DATA2}
+  \AB{DATA3}
+  \BA{ACK1}
+  \BA{ACK2}
+  \BA{ACK3}
+  \AB{DATA4}
+  \AB[prop=2cm]{delayed}
+  \BA[]{ACK}
+  \fullduplex
+
+  \BA{ACK4}
+  \AB{DATA5}
+  \BA{ACK5}
+%  \halfduplex
+  \AB[prop=2cm]{delayed}
+  \BwaitA
+  \BA[]{ACK}
+\end{chrono}
+\hfill
+\begin{chrono}[width=3.5cm,prop=1cm]
+  \AB[bad]{DATA1}
+  \BA[bad]{DATA1}
+  \chronosyncfalse
+  \AB[bad]{DATA2}
+  \AB{DATA3}
+  \AB{DATA4}
+  \BA{DATA3}
+  \BA[bad]{DATA4}
+\end{chrono}
+\hfill
+\begin{chrono}
+  \AB{DATA1}
+  \ABtimed{DATA2}{3cm}{temporisateur}
+  \AB{DATA3}
+  \Awaittimer
+  \AB{DATA2}
+\end{chrono}
+\hfill
+\begin{chrono}[A,B]
+  \AB{DATA1}
+  \BA{DATA1}
+  \ABdelayed{1cm}{ack}{ACK}
+\end{chrono}
+\hfill
+\begin{chrono}
+  \BA{DATA}
+  \ABstop{1cm}{ack}{5mm}{DATA}
+\end{chrono}
+\hfill
+\begin{chrono}[A=client,B=serveur]
+  \AB{DATA1}
+  \ABtimed{DATA2}{3cm}{temporisateur}
+  \BAcancel{ACK}
+  \Awaittimer
+  \AB{DATA3}
+  \AB{DATA2}
+\end{chrono}
+\vspace{3cm}
+\begin{chrono}
+  \ABtimed{DATA1}{3cm}{retrans}
+  \Awaittimer
+  \AB{toto}
+  \ABtimed{DATA1}{3cm}{retrans}
+  \BAcancel{ACK}
+\end{chrono}
+\hfill
+\begin{chrono}
+  \ABtimedi{DATA}{3cm}{yo !}
+  \BAcanceli{yoo}
+\end{chrono}
+\hfill
+\begin{chrono}
+  \AB{DATA1}
+  \ABtimed{DATA2}{3cm}{temporisateur}
+  \BAcancel{ACK}
+  \ABtimedi{DATA3}{3cm}{temporisateur2}
+  \BAcanceli{ACK}
+  \ABtimed{DATA3}{3cm}{tempo3}  
+  \AB{DATA2}
+\end{chrono}
+\hfill
+
+\hspace{-2cm}
+\begin{chrono}[prop=7mm,A=client,B=serveur]
+  \Astate{closed}\Bstate{closed}
+  \Await         \Bwait
+  \Await         \Bactionstate{passive open}{listen}
+  \Aactionstate{active open}{Syn-Sent}
+  \AB{SYN}
+                 \Bstate{SynRecvd}
+                 \BA{SYN+ACK}
+  \Astate{Established}
+  \AB{ACK}
+                 \Bstate{Established}
+%\end{chrono}
+%\hfill
+%\begin{chrono}[prop=10mm,timerAoffset=3mm]
+
+  \later{3cm}
+
+
+  \Astate{Established}\Bstate{Established}
+  \Await
+  \Aactionstate{close}{FinWait1}
+  \AB{FIN}
+                      \Bstate{CloseWait}
+                      \BA{ACK}
+  \Astate{FinWait2}
+                      \Bactionstate{close}{LastAck}
+                      \BA{FIN}
+  \Astate{TimeWait}
+  \settimerA{\pAs}{5cm}{2xMSL}
+  \AB{ACK}
+                      \Bstate{closed}
+  \Awaittimer
+  \Astate{closed}
+\end{chrono}
+\end{document}

@@ -1,0 +1,370 @@
+%% TODO: wait, nowait
+%% Pb: fullduplex, picture ends at \pBr, not \pBr + \chronospaceother
+%% Awaittimer annulé par BAcancel -> ok ?
+
+%% timerAoffset, timerAioffset => don't change during the timer!
+
+\RequirePackage{tikz}
+\RequirePackage{pgfkeys}
+\usetikzlibrary{decorations.pathmorphing}
+%\usetikzlibrary{calc}
+
+\tikzset{fleche/.style={very thick, ->, >=latex}}
+
+%%%%%% option keys
+
+% arrow cmd keys
+\pgfkeys{
+  /chrono/global/.is family,
+  /chrono/wait/.belongs to family=/chrono/global,
+  /chrono/nowait/.belongs to family=/chrono/global,
+  /chrono/prop/.belongs to family=/chrono/global,
+  /chrono/.belongs to family=/chrono/global,
+}
+\pgfkeys{/pgf/key filters/active families/.install key filter}
+\pgfkeys{/chrono/prop/.default=1cm,/chrono/prop/.code=\setlength{\prop}{#1}}
+\pgfkeys{/chrono/wait/.default=1cm,/chrono/wait/.code=\setlength{\wait}{#1}}
+\pgfkeys{/chrono/nowait/.default=5mm,/chrono/nowait/.code=\setlength{\wait}{-1cm}\addtolength{\wait}{#1}}
+\pgfkeys{/chrono/lost/.default=true,/chrono/lost/.code=\chronolosttrue}
+\pgfkeys{/chrono/bad/.default=true,/chrono/bad/.code=\chronobadtrue}
+
+\pgfkeys{/chrono/timerAoffset/.code=\setlength{\timerAoffset}{#1}}
+\pgfkeys{/chrono/timerAioffset/.code=\setlength{\timerAioffset}{#1}}
+
+% chrono env keys
+\pgfkeys{/chrono/width/.code=\setlength{\chronowidth}{#1}}
+\pgfkeys{/chrono/spacesame/.code=\setlength{\chronospacesame}{#1}}
+\pgfkeys{/chrono/spaceother/.code=\setlength{\chronospaceother}{#1}}
+\pgfkeys{/chrono/A/.code=\def\chronoAname{#1}}
+\pgfkeys{/chrono/A/.default=A}
+\pgfkeys{/chrono/B/.code=\def\chronoBname{#1}}
+\pgfkeys{/chrono/B/.default=B}
+
+
+%%%%%% various definitions
+
+\def\chronoAname{}
+\def\chronoBname{}
+
+\newlength{\pAs}\newlength{\pAr}
+\newlength{\pBs}\newlength{\pBr}
+\newlength{\chronopos}
+
+%\pgfkeys{/pgf/key filter handlers/log/.install key filter handler}
+
+\newlength{\chronospacesame}\setlength{\chronospacesame}{1cm}
+\newlength{\chronospaceother}\setlength{\chronospaceother}{5mm}
+\newlength{\chronowidth}\setlength{\chronowidth}{3cm}
+
+\newif\ifchronobad\chronobadfalse
+\newif\ifchronolost\chronolostfalse
+\newif\ifchronosync\chronosynctrue
+
+\newlength{\wait}\setlength{\wait}{0cm}
+\newlength{\prop}\setlength{\prop}{0.5cm}
+\newlength{\oldprop}
+
+
+% #1 is keys, #2 is 1 or -1 (arrow direction),
+% #3 is start pos, #4 is prop, #5 is label
+
+\newcommand{\chronoarrow}[5][]{
+  \setlength{\chronopos}{#3}
+  \setlength{\prop}{#4}
+  {
+    \pgfkeys{/chrono/.cd,#1}
+    \ifchronolost\def\lost{2}\else\def\lost{1}\fi
+    \ifchronobad
+
+       \draw[fleche] (#2*-\chronowidth/2,\chronopos)
+                 --++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
+
+                 \ifchronosync\else node[near end,above,sloped]{#5}\fi
+    
+                 decorate[decoration=zigzag,segment length=2mm]
+                 {--++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
+                   \ifchronosync node[midway,above,sloped]{#5}\fi}
+
+                 --++(#2*\chronowidth/\lost/3,-\prop/\lost/3);
+    \else
+
+       \draw[fleche] (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,-\prop/\lost)
+                   node[above,sloped,\ifchronosync midway\else near start\fi]{#5};%
+    \fi
+  }
+}
+
+%%%%%% handling of timers
+
+\newlength{\timerAstart}
+\newlength{\timerAend}
+\newlength{\timerAoffset}\setlength{\timerAoffset}{4mm}
+\newlength{\timerAistart}
+\newlength{\timerAiend}
+\newlength{\timerAioffset}\setlength{\timerAioffset}{9mm}
+
+\newif\iftimerAactive
+\newif\iftimerAcancel
+\newif\iftimerAiactive
+\newif\iftimerAicancel
+
+\newcommand{\settimerA}[3]{ % pos, len, label
+  \iftimerAactive\chronoendtimerA\fi
+  \timerAactivetrue
+  \timerAcancelfalse
+  \setlength{\timerAstart}{#1}
+  \setlength{\timerAend}{#1}\addtolength{\timerAend}{-#2}
+  \def\hpos{-\chronowidth/2-\timerAoffset}
+  \draw[thin,dotted,<->](\hpos,\timerAstart) -- (\hpos,\timerAend)
+                        node[midway,below,sloped]{#3};
+}
+
+\newcommand{\settimerAi}[3]{ % pos, len, label
+  \iftimerAiactive\chronoendtimerAi\fi
+  \timerAiactivetrue
+  \timerAicancelfalse
+  \setlength{\timerAistart}{#1}
+  \setlength{\timerAiend}{#1}\addtolength{\timerAiend}{-#2}
+  \def\hpos{-\chronowidth/2-\timerAioffset}
+  \draw[thin,dotted,<->](\hpos,\timerAistart) --(\hpos,\timerAiend)
+                        node[midway,below,sloped]{#3};
+}
+
+\newcommand{\canceltimerA}[1]{ % pos
+  \timerAactivefalse
+  \timerAcanceltrue
+  \def\hpos{-\chronowidth/2-\timerAoffset}
+  \draw[thin,<-](\hpos,\timerAstart) --(\hpos,#1);
+}
+\newcommand{\canceltimerAi}[1]{ % pos
+  \timerAiactivefalse
+  \timerAicanceltrue
+  \def\hpos{-\chronowidth/2-\timerAioffset}
+  \draw[thin,<-](\hpos,\timerAistart) --(\hpos,#1);
+}
+\newcommand{\chronoendtimerA}{
+  \iftimerAactive
+  \timerAcancelfalse
+  \def\hpos{-\chronowidth/2-\timerAoffset}
+  \draw[thin,<->](\hpos,\timerAstart) -- (\hpos,\timerAend);
+}
+\newcommand{\chronoendtimerAi}{
+  \iftimerAiactive
+  \timerAicancelfalse
+  \def\hpos{-\chronowidth/2-\timerAoffset}
+  \draw[thin,<->](\hpos,\timerAistart) -- (\hpos,\timerAiend);
+}
+
+
+%%%%%% high-level commands
+
+%%: A sends to B
+
+\newcommand{\AB}[2][]{ % [keys], label
+  \pgfkeys{/chrono/global/.activate family}
+  \setlength{\oldprop}{\prop}
+  \pgfkeysfiltered{/chrono/.cd,#1}
+  \chronoarrow[#1]{1}{\pAs}{\prop}{#2}
+  \setlength{\pBr}{\pAs}
+  \addtolength{\pBr}{-\prop}
+  \addtolength{\pAs}{-\chronospacesame}
+  \setlength{\prop}{\oldprop}
+  \ifchronosync
+  \setlength{\pBs}{\pBr}\addtolength{\pBs}{-\chronospaceother}
+  \fi
+}
+
+%%: B sends to A 
+
+\newcommand{\BA}[2][]{
+  \pgfkeys{/chrono/global/.activate family}
+  \setlength{\oldprop}{\prop}
+  \pgfkeysfiltered{/chrono/.cd,#1}
+  \chronoarrow[#1]{-1}{\pBs}{\prop}{#2}
+  \setlength{\pAr}{\pBs}
+  \addtolength{\pAr}{-\prop}
+  \addtolength{\pBs}{-\chronospacesame}
+  \setlength{\prop}{\oldprop}
+  \ifchronosync
+  \setlength{\pAs}{\pAr}\addtolength{\pAs}{-\chronospaceother}
+  \fi
+}
+
+\newcommand{\Await}[1][1cm]{\addtolength{\pAs}{-#1}}
+\newcommand{\Bwait}[1][1cm]{\addtolength{\pBs}{-#1}}
+
+%%: A waits for B, B waits for A (usefull only in fullduplex mode)
+
+\newcommand{\AwaitB}{\setlength{\pAs}{\pAr}\addtolength{\pAs}{-\chronospaceother}}
+\newcommand{\BwaitA}{\setlength{\pBs}{\pBr}\addtolength{\pBs}{-\chronospaceother}}
+
+%%: A,B waits for its current timer to expire
+
+\newcommand{\Awaittimer}{\ifnum \pAs>\timerAend\setlength{\pAs}{\timerAend}\fi}
+\newcommand{\Awaittimeri}{\ifnum \pAs>\timerAiend\setlength{\pAs}{\timerAiend}\fi}
+\newcommand{\Bwaittimer}{\setlength{\pBs}{\timerBend}}
+\newcommand{\Bwaittimeri}{\setlength{\pBs}{\timerBiend}}
+
+
+%%: A sends a timed frame to B
+
+\newcommand{\ABtimed}[4][]{  % [keys], flabel, len, tlabel
+  \settimerA{\pAs}{#3}{#4}
+  \AB[#1]{#2}
+}
+\newcommand{\ABtimedi}[4][]{  % [keys], flabel, len, tlabel
+  \settimerAi{\pAs}{#3}{#4}
+  \AB[#1]{#2}
+}
+
+%%: B sends a frame that cancel A's timer
+
+\newcommand{\BAcancel}[2][]{
+  \BA[#1]{#2}
+  \canceltimerA{\pAr}
+}
+\newcommand{\BAcanceli}[2][]{
+  \BA[#1]{#2}
+  \canceltimerAi{\pAr}
+}
+
+%%: A sets a timer and sends a frame when it expires
+
+\newcommand{\ABdelayed}[3]{ % len, tlabel, flabel
+  \settimerA{\pAr}{#1}{#2}
+  \setlength{\pAs}{\pAr}\addtolength{\pAs}{-#1}
+  \AB{#3}
+  \chronoendtimerA
+}
+
+%%: A sets a timer and sends a frame that cancels it
+%%: typical use: ACK timer cancelled by sending of DATA
+
+\newcommand{\ABstop}[4]{ % len, tlabel, delay, flabel
+  \settimerA{\pAr}{#1}{#2}
+  \newlength{\chronoxx}
+  \setlength{\chronoxx}{\pAr}\addtolength{\chronoxx}{-#3}
+  \canceltimerA{\chronoxx}
+  \setlength{\pAs}{\chronoxx}
+  \AB{#4}
+}
+
+\newcommand{\chronoAaction}[2]{
+  \draw[->](-\chronowidth/2-6mm,#1)  node[left]{#2} --++(0:5mm);}
+
+\newcommand{\chronoBaction}[2]{
+  \draw[->](\chronowidth/2+6mm,#1)  node[right]{#2} --++(180:5mm);}
+
+\newcommand{\chronoAstate}[2]{
+  \draw(-\chronowidth/2-6mm,#1) node[draw,left]{\textsc{#2}};
+}
+\newcommand{\chronoBstate}[2]{
+  \draw(\chronowidth/2+6mm,#1) node[draw,right]{\textsc{#2}};
+}
+\newcommand{\Astate}[1]{\chronoAstate{\pAs}{#1}}
+\newcommand{\Bstate}[1]{\chronoBstate{\pBs}{#1}}
+\newcommand{\Aactionstate}[2]{
+  \chronoAaction{\pAs}{#1}
+  \chronoAstate{\pAs-5mm}{#2}}
+
+\newcommand{\Bactionstate}[2]{
+  \chronoBaction{\pBs}{#1}
+  \chronoBstate{\pBs-5mm}{#2}}
+
+\newcommand{\later}[1]{ %%% Z vert lines are drawn last!
+  \def\hpos{\pAs-#1/2}
+  \draw[white,very thick,opacity=1](-\chronowidth/2-1cm,\hpos) --++
+  (\chronowidth+2cm,0);
+  \addtolength{\pAs}{-#1}
+  \setlength{\pBs}{\pAs}
+}
+
+\newenvironment{chrono}[1][]{
+  \newcommand{\fullduplex}{\chronosyncfalse}
+  \newcommand{\halfduplex}{\chronosynctrue}
+  \pgfkeys{/chrono/.cd,#1}\begin{tikzpicture}\sffamily
+  }
+  {
+    \iftimerAactive\chronoendtimerA\Awaittimer\fi
+    \iftimerAcancel\Awaittimer\fi
+    \iftimerAiactive\chronoendtimerAi\Awaittimeri\fi
+    \iftimerAicancel\Awaittimeri\fi
+    % bottom of vert lines is the minimum of A and B (negative values)
+    \def\chronopos{\ifnum \pAr<\pBr \pAr\else\pBr\fi}
+    \ifnum \chronopos>\pAs \def\chronopos{\pAs}\fi
+    \ifnum \chronopos>\pBs \def\chronopos{\pBs}\fi
+    \draw[thin](-\chronowidth/2,\chronospacesame/2) node[above]{\chronoAname}-- (-\chronowidth/2,\chronopos);
+    \draw[thin](\chronowidth/2,\chronospacesame/2) node[above]{\chronoBname}-- (\chronowidth/2,\chronopos);
+  \end{tikzpicture}
+}
+
+
+% Pbs:
+% - with no sync bad labels are a bit too close on the start
+%   => ok with near end rather than midway
+
+% - vertical lines do not extend to timers
+%   => use ATwait
+
+% * cahier des charges
+
+% ** chronos hdlc/x25 horizontaux
+
+% ** chronos classiques
+%   perte
+%   corruption
+%   retard
+%   temporisateur
+%   temporisateur interrompu
+
+% * chaining mode
+
+% is vpos shared between A and B?
+% => \ifchronosync
+% ok  halfduplex/fullduplex mode
+
+% * keys for frames
+
+% lost
+% bad
+
+% arrows are vspaced /chronovspace (5mm) by default, modified by:
+
+% wait --- add even more vspace (def 1cm)
+% nowait --set vspace (default 5mm)
+
+% propagation time is 5mm by default
+% prop  -- change it (def 1cm)
+
+% * keys for env
+
+% vspace
+% width
+% A B
+
+% ABtimed{DATA}  send frame, start timer
+% BAcancel{ACK}  send frame, cancel A timer
+
+
+% * TODO
+
+% timers for B
+
+% multiple timers for A (more left)
+
+% delayed frame \verb+--\__+
+
+% expAB{DATA} send frame at end of timer -- should not do it if cancelled...
+
+% send frame at timer exp, w/o sync (retransmit but still transmit
+% others)? => not sure...
+% expAB{DATA} does not sync
+% waitAB{DATA} syncs
+
+% ok first draw full dotted line, at timer start? (+ timer label)
+% ok cancel draw partial plain line
+% ?? exp/wait draw full plain line
+
+% draw timer when exp or wait or reuse or end env
+
+% ok label on top of vert lines
