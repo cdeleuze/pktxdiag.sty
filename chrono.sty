@@ -40,7 +40,6 @@
 \pgfkeys{/chrono/B/.code=\def\chronoBname{#1}}
 \pgfkeys{/chrono/B/.default=B}
 
-
 %%%%%% various definitions
 
 \def\chronoAname{}
@@ -98,63 +97,75 @@
 
 \newlength{\timerAstart}
 \newlength{\timerAend}
-\newlength{\timerAoffset}\setlength{\timerAoffset}{4mm}
+\newlength{\timerAoffset}
 \newlength{\timerAistart}
 \newlength{\timerAiend}
-\newlength{\timerAioffset}\setlength{\timerAioffset}{9mm}
+\newlength{\timerAioffset}
+\newlength{\timerBstart}
+\newlength{\timerBend}
+\newlength{\timerBoffset}
+\newlength{\timerBistart}
+\newlength{\timerBiend}
+\newlength{\timerBioffset}
+
+\setlength{\timerAoffset}{4mm}
+\setlength{\timerBoffset}{4mm}
+\setlength{\timerAioffset}{9mm}
+\setlength{\timerBioffset}{9mm}
 
 \newif\iftimerAactive
 \newif\iftimerAcancel
 \newif\iftimerAiactive
 \newif\iftimerAicancel
+\newif\iftimerBactive
+\newif\iftimerBcancel
+\newif\iftimerBiactive
+\newif\iftimerBicancel
 
-\newcommand{\settimerA}[3]{ % pos, len, label
-  \iftimerAactive\chronoendtimerA\fi
-  \timerAactivetrue
-  \timerAcancelfalse
-  \setlength{\timerAstart}{#1}
-  \setlength{\timerAend}{#1}\addtolength{\timerAend}{-#2}
-  \def\hpos{-\chronowidth/2-\timerAoffset}
-  \draw[thin,dotted,<->](\hpos,\timerAstart) -- (\hpos,\timerAend)
-                        node[midway,below,sloped]{#3};
-}
-
-\newcommand{\settimerAi}[3]{ % pos, len, label
-  \iftimerAiactive\chronoendtimerAi\fi
-  \timerAiactivetrue
-  \timerAicancelfalse
-  \setlength{\timerAistart}{#1}
-  \setlength{\timerAiend}{#1}\addtolength{\timerAiend}{-#2}
-  \def\hpos{-\chronowidth/2-\timerAioffset}
-  \draw[thin,dotted,<->](\hpos,\timerAistart) --(\hpos,\timerAiend)
-                        node[midway,below,sloped]{#3};
+\newcommand{\settimer}[6]{
+  \csname iftimer#4active\endcsname\csname chronoendtimer#4\endcsname\fi
+  \csname timer#4activetrue\endcsname
+  \csname timer#4cancelfalse\endcsname
+%  \expandafter\show\csname timer#4start\endcsname
+  \def\timerstart{\csname timer#4start\endcsname}
+  \def\timerend{\csname timer#4end\endcsname}
+  \def\timeroffset{\csname timer#4offset\endcsname}
+  \setlength{\timerstart}{#1}
+  \setlength{\timerend}{#1}\addtolength{\timerend}{-#2}
+   \def\hpos{-#5\chronowidth/2-#5\timeroffset}
+   \draw[thin,dotted,<->](\hpos,\timerstart) -- (\hpos,\timerend) node[midway,#6,sloped]{#3};
 }
 
-\newcommand{\canceltimerA}[1]{ % pos
-  \timerAactivefalse
-  \timerAcanceltrue
-  \def\hpos{-\chronowidth/2-\timerAoffset}
-  \draw[thin,<-](\hpos,\timerAstart) --(\hpos,#1);
-}
-\newcommand{\canceltimerAi}[1]{ % pos
-  \timerAiactivefalse
-  \timerAicanceltrue
-  \def\hpos{-\chronowidth/2-\timerAioffset}
-  \draw[thin,<-](\hpos,\timerAistart) --(\hpos,#1);
-}
-\newcommand{\chronoendtimerA}{
-  \iftimerAactive
-  \timerAcancelfalse
-  \def\hpos{-\chronowidth/2-\timerAoffset}
-  \draw[thin,<->](\hpos,\timerAstart) -- (\hpos,\timerAend);
-}
-\newcommand{\chronoendtimerAi}{
-  \iftimerAiactive
-  \timerAicancelfalse
-  \def\hpos{-\chronowidth/2-\timerAoffset}
-  \draw[thin,<->](\hpos,\timerAistart) -- (\hpos,\timerAiend);
+\newcommand{\settimerA}[3]{\settimer{#1}{#2}{#3}{A}{1}{below}}
+\newcommand{\settimerAi}[3]{\settimer{#1}{#2}{#3}{Ai}{1}{below}}
+\newcommand{\settimerB}[3]{\settimer{#1}{#2}{#3}{B}{-1}{above}}
+\newcommand{\settimerBi}[3]{\settimer{#1}{#2}{#3}{Bi}{-1}{above}}
+
+
+\newcommand{\canceltimer}[3]{ % pos
+  \csname timer#2activefalse\endcsname
+  \csname timer#2canceltrue\endcsname
+  \def\hpos{-#3\chronowidth/2-#3\csname timer#2offset\endcsname}
+  \draw[thin,<-](\hpos,\csname timer#2start\endcsname) --(\hpos,#1);
 }
 
+\newcommand{\canceltimerA}[1]{\canceltimer{#1}{A}{1}}
+\newcommand{\canceltimerAi}[1]{\canceltimer{#1}{Ai}{1}}
+\newcommand{\canceltimerB}[1]{\canceltimer{#1}{B}{-1}}
+\newcommand{\canceltimerBi}[1]{\canceltimer{#1}{Bi}{-1}}
+
+\newcommand{\chronoendtimer}[2]{
+  \csname timer#1activefalse\endcsname
+  \csname timer#1cancelfalse\endcsname
+  \def\hpos{-#2\chronowidth/2-#2\csname timer#1offset\endcsname}
+  \draw[thin,<->](\hpos,\csname timer#1start\endcsname) --
+               (\hpos,\csname timer#1end\endcsname);
+}
+
+\newcommand{\chronoendtimerA} {\chronoendtimer{A}{1}}
+\newcommand{\chronoendtimerAi}{\chronoendtimer{Ai}{1}}
+\newcommand{\chronoendtimerB} {\chronoendtimer{B}{-1}}
+\newcommand{\chronoendtimerBi}{\chronoendtimer{Bi}{-1}}
 
 %%%%%% high-level commands
 
@@ -210,23 +221,38 @@
 
 \newcommand{\ABtimed}[4][]{  % [keys], flabel, len, tlabel
   \settimerA{\pAs}{#3}{#4}
-  \AB[#1]{#2}
-}
+  \AB[#1]{#2}}
+
 \newcommand{\ABtimedi}[4][]{  % [keys], flabel, len, tlabel
   \settimerAi{\pAs}{#3}{#4}
-  \AB[#1]{#2}
+  \AB[#1]{#2}}
+
+\newcommand{\BAtimed}[4][]{  % [keys], flabel, len, tlabel
+  \settimerB{\pBs}{#3}{#4}
+  \BA[#1]{#2}}
+
+\newcommand{\BAtimedi}[4][]{  % [keys], flabel, len, tlabel
+  \settimerBi{\pBs}{#3}{#4}
+  \BA[#1]{#2}
 }
 
-%%: B sends a frame that cancel A's timer
+%%: A sends a frame that cancels B's timer
+
+\newcommand{\ABcancel}[2][]{
+  \AB[#1]{#2}
+  \canceltimerB{\pBr}}
+
+\newcommand{\ABcanceli}[2][]{
+  \AB[#1]{#2}
+  \canceltimerBi{\pBr}}
 
 \newcommand{\BAcancel}[2][]{
   \BA[#1]{#2}
-  \canceltimerA{\pAr}
-}
+  \canceltimerA{\pAr}}
+
 \newcommand{\BAcanceli}[2][]{
   \BA[#1]{#2}
-  \canceltimerAi{\pAr}
-}
+  \canceltimerAi{\pAr}}
 
 %%: A sets a timer and sends a frame when it expires
 
@@ -234,10 +260,15 @@
   \settimerA{\pAr}{#1}{#2}
   \setlength{\pAs}{\pAr}\addtolength{\pAs}{-#1}
   \AB{#3}
-  \chronoendtimerA
-}
+  \chronoendtimerA}
 
-%%: A sets a timer and sends a frame that cancels it
+\newcommand{\BAdelayed}[3]{ % len, tlabel, flabel
+  \settimerB{\pBr}{#1}{#2}
+  \setlength{\pBs}{\pBr}\addtolength{\pBs}{-#1}
+  \BA{#3}
+  \chronoendtimerB}
+
+%%: A sets a timer and after a delay sends a frame that cancels it
 %%: typical use: ACK timer cancelled by sending of DATA
 
 \newcommand{\ABstop}[4]{ % len, tlabel, delay, flabel
@@ -246,8 +277,18 @@
   \setlength{\chronoxx}{\pAr}\addtolength{\chronoxx}{-#3}
   \canceltimerA{\chronoxx}
   \setlength{\pAs}{\chronoxx}
-  \AB{#4}
-}
+  \AB{#4}}
+
+\newcommand{\BAstop}[4]{ % len, tlabel, delay, flabel
+  \settimerB{\pBr}{#1}{#2}
+  \newlength{\chronoxx}
+  \setlength{\chronoxx}{\pBr}\addtolength{\chronoxx}{-#3}
+  \canceltimerB{\chronoxx}
+  \setlength{\pBs}{\chronoxx}
+  \BA{#4}}
+
+
+%%%%%% side decorations (eg for TCP)
 
 \newcommand{\chronoAaction}[2]{
   \draw[->](-\chronowidth/2-6mm,#1)  node[left]{#2} --++(0:5mm);}
@@ -263,6 +304,7 @@
 }
 \newcommand{\Astate}[1]{\chronoAstate{\pAs}{#1}}
 \newcommand{\Bstate}[1]{\chronoBstate{\pBs}{#1}}
+
 \newcommand{\Aactionstate}[2]{
   \chronoAaction{\pAs}{#1}
   \chronoAstate{\pAs-5mm}{#2}}
@@ -271,13 +313,22 @@
   \chronoBaction{\pBs}{#1}
   \chronoBstate{\pBs-5mm}{#2}}
 
-\newcommand{\later}[1]{ %%% Z vert lines are drawn last!
-  \def\hpos{\pAs-#1/2}
-  \draw[white,very thick,opacity=1](-\chronowidth/2-1cm,\hpos) --++
-  (\chronowidth+2cm,0);
+
+\newif\ifchronolater
+\newlength{\chronolaterpos}
+\newlength{\chronolaterlen}
+\newlength{\chronolaterdashedlen}
+\setlength{\chronolaterdashedlen}{1cm}
+
+
+\newcommand{\later}[1]{
+  \setlength{\chronolaterpos}{\pAs}
+  \setlength{\chronolaterlen}{#1}
   \addtolength{\pAs}{-#1}
-  \setlength{\pBs}{\pAs}
-}
+  \addtolength{\pAr}{-#1}
+  \addtolength{\pBs}{-#1}
+  \addtolength{\pBr}{-#1}
+  \chronolatertrue}
 
 \newenvironment{chrono}[1][]{
   \newcommand{\fullduplex}{\chronosyncfalse}
@@ -285,16 +336,29 @@
   \pgfkeys{/chrono/.cd,#1}\begin{tikzpicture}\sffamily
   }
   {
+    % finish drawing all timers
     \iftimerAactive\chronoendtimerA\Awaittimer\fi
     \iftimerAcancel\Awaittimer\fi
     \iftimerAiactive\chronoendtimerAi\Awaittimeri\fi
     \iftimerAicancel\Awaittimeri\fi
+    \iftimerBactive\chronoendtimerB\Bwaittimer\fi
+    \iftimerBcancel\Bwaittimer\fi
+    \iftimerBiactive\chronoendtimerBi\Bwaittimeri\fi
+    \iftimerBicancel\Bwaittimeri\fi
+
     % bottom of vert lines is the minimum of A and B (negative values)
     \def\chronopos{\ifnum \pAr<\pBr \pAr\else\pBr\fi}
     \ifnum \chronopos>\pAs \def\chronopos{\pAs}\fi
     \ifnum \chronopos>\pBs \def\chronopos{\pBs}\fi
     \draw[thin](-\chronowidth/2,\chronospacesame/2) node[above]{\chronoAname}-- (-\chronowidth/2,\chronopos);
     \draw[thin](\chronowidth/2,\chronospacesame/2) node[above]{\chronoBname}-- (\chronowidth/2,\chronopos);
+
+    % erase part of the vertical lines if later is set
+    \ifchronolater
+      \def\hpos{\chronolaterpos-\chronolaterlen/2+\chronolaterdashedlen/2}
+      \draw[white,dashed](-\chronowidth/2,\hpos) -- ++(0,-\chronolaterdashedlen);
+      \draw[white,dashed]( \chronowidth/2,\hpos) -- ++(0,-\chronolaterdashedlen);
+    \fi
   \end{tikzpicture}
 }
 
@@ -348,7 +412,7 @@
 
 % * TODO
 
-% timers for B
+% ok timers for B
 
 % multiple timers for A (more left)
 
@@ -365,6 +429,6 @@
 % ok cancel draw partial plain line
 % ?? exp/wait draw full plain line
 
-% draw timer when exp or wait or reuse or end env
+% ok draw timer when exp or wait or reuse or end env
 
 % ok label on top of vert lines

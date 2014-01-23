@@ -106,6 +106,8 @@
 \begin{chrono}
   \ABtimedi{DATA}{3cm}{yo !}
   \BAcanceli{yoo}
+  \BAtimed{DATA}{2cm}{gah}
+  \ABcancel{feu}
 \end{chrono}
 \hfill
 \begin{chrono}
@@ -121,7 +123,7 @@
 
 \hspace{-2cm}
 \begin{chrono}[prop=7mm,A=client,B=serveur]
-  \Astate{closed}\Bstate{closed}
+  \Astate{Closed}\Bstate{Closed}
   \Await         \Bwait
   \Await         \Bactionstate{passive open}{listen}
   \Aactionstate{active open}{Syn-Sent}
@@ -150,8 +152,16 @@
   \Astate{TimeWait}
   \settimerA{\pAs}{5cm}{2xMSL}
   \AB{ACK}
-                      \Bstate{closed}
+                      \Bstate{Closed}
   \Awaittimer
-  \Astate{closed}
+  \Astate{Closed}
+\end{chrono}
+\hfill
+\begin{chrono}[prop=0cm]
+  \AB{DATA1}
+  \AB{DATA2}
+  \BA{ACK3}
+  \AB{DATA3}
+  \BAdelayed{1cm}{ack}{ACK4}
 \end{chrono}
 \end{document}
