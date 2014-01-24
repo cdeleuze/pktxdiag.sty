@@ -330,6 +330,17 @@
   \addtolength{\pBr}{-#1}
   \chronolatertrue}
 
+\newcommand{\chronofinishtimers}{
+  \iftimerAactive\chronoendtimerA\Awaittimer\fi
+  \iftimerBactive\chronoendtimerB\Bwaittimer\fi
+  \iftimerAiactive\chronoendtimerAi\Awaittimeri\fi
+  \iftimerBiactive\chronoendtimerBi\Bwaittimeri\fi
+  \iftimerAcancel\Awaittimer\fi
+  \iftimerBcancel\Bwaittimer\fi
+  \iftimerAicancel\Awaittimeri\fi
+  \iftimerBicancel\Bwaittimeri\fi
+}
+
 \newenvironment{chrono}[1][]{
   \newcommand{\fullduplex}{\chronosyncfalse}
   \newcommand{\halfduplex}{\chronosynctrue}
@@ -337,14 +348,7 @@
   }
   {
     % finish drawing all timers
-    \iftimerAactive\chronoendtimerA\Awaittimer\fi
-    \iftimerAcancel\Awaittimer\fi
-    \iftimerAiactive\chronoendtimerAi\Awaittimeri\fi
-    \iftimerAicancel\Awaittimeri\fi
-    \iftimerBactive\chronoendtimerB\Bwaittimer\fi
-    \iftimerBcancel\Bwaittimer\fi
-    \iftimerBiactive\chronoendtimerBi\Bwaittimeri\fi
-    \iftimerBicancel\Bwaittimeri\fi
+    \chronofinishtimers
 
     % bottom of vert lines is the minimum of A and B (negative values)
     \def\chronopos{\ifnum \pAr<\pBr \pAr\else\pBr\fi}
