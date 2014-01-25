@@ -4,16 +4,18 @@
 
 \begin{document}
 
-\begin{chrono}
+\def\rotate{\pgfkeys{/tikz/rotate=90,/tikz/transform shape}}
+
+\def\test{
   \setlength{\pBr}{0cm}
   \setlength{\pAr}{0cm}
   \AB{DATA1}
+  \Await
   \AB[lost]{lost}
   \AB[bad]{bad}
   \AB[wait]{wait}
   \AB[wait,bad]{wait,bad}
   \AB{DATA4}
-
   \AB[prop=1mm]{prop=1mm}
   \AB{DATA6}
   \AB[prop]{prop}
@@ -23,106 +25,91 @@
   \AB[nowait]{nowait}
   \AB[nowait=4mm]{nowait=4mm}
   \AB[nowait=8mm]{nowait=8mm}
-\end{chrono}
-\hfill
-\begin{chrono}[width=2cm]
-  \AB{DATA1}
+}
+\def\testi{\AB{DATA1}
   \AB{DATA2}
-  \BA{ACK3}
+  \BA[trans]{ACK3}
   \setlength{\chronospacesame}{5mm}
   \AB{DATA1}
   \AB{DATA2}
-  \BA{ACK3}
-\end{chrono}
-\hfill
-\begin{chrono}
+  \BA[trans]{ACK3}}
+\def\testii{
   \AB{DATA1}
   \AB{DATA2}
   \AB{DATA3}
-  \BA{ACK1}
-  \BA{ACK2}
-  \BA{ACK3}
+  \BA[trans]{ACK1}
+  \BA[trans]{ACK2}
+  \BA[trans]{ACK3}
   \AB{DATA4}
   \AB[prop=2cm]{delayed}
-  \BA[]{ACK}
+  \BA[trans]{ACK}
   \fullduplex
 
-  \BA{ACK4}
+  \BA[trans]{ACK4}
   \AB{DATA5}
-  \BA{ACK5}
+  \BA[trans]{ACK5}
 %  \halfduplex
   \AB[prop=2cm]{delayed}
   \BwaitA
-  \BA[]{ACK}
-\end{chrono}
-\hfill
-\begin{chrono}[width=3.5cm,prop=1cm]
-  \AB[bad]{DATA1}
+  \BA[trans]{ACK}
+}
+\def\testiii{
+ \AB[bad]{DATA1}
   \BA[bad]{DATA1}
   \chronosyncfalse
   \AB[bad]{DATA2}
   \AB{DATA3}
   \AB{DATA4}
   \BA{DATA3}
-  \BA[bad]{DATA4}
-\end{chrono}
-\hfill
-\begin{chrono}
+  \BA[bad]{DATA4}}
+
+\def\testiv{
   \AB{DATA1}
   \ABtimed{DATA2}{3cm}{temporisateur}
   \AB{DATA3}
   \Awaittimer
-  \AB{DATA2}
-\end{chrono}
-\hfill
-\begin{chrono}[A,B]
-  \AB{DATA1}
-  \BA{DATA1}
-  \ABdelayed{1cm}{ack}{ACK}
-\end{chrono}
-\hfill
-\begin{chrono}
-  \BA{DATA}
-  \ABstop{1cm}{ack}{5mm}{DATA}
-\end{chrono}
-\hfill
-\begin{chrono}[A=client,B=serveur]
+  \AB{DATA2}}
+
+\def\testv{
+ \AB{DATA1}
+ \BA{DATA1}
+ \ABdelayed[trans]{1cm}{ack}{ACK}}
+
+\def\testvi{
+ \BA{DATA}
+ \ABstop{1cm}{ack}{5mm}{DATA}}
+
+\def\testvii{
   \AB{DATA1}
   \ABtimed{DATA2}{3cm}{temporisateur}
-  \BAcancel{ACK}
+  \BAcancel[trans]{ACK}
   \Awaittimer
   \AB{DATA3}
-  \AB{DATA2}
-\end{chrono}
-\vspace{3cm}
-\begin{chrono}
+  \AB{DATA2}}
+
+\def\testviii{
   \ABtimed{DATA1}{3cm}{retrans}
   \Awaittimer
   \AB{toto}
   \ABtimed{DATA1}{3cm}{retrans}
-  \BAcancel{ACK}
-\end{chrono}
-\hfill
-\begin{chrono}
+  \BAcancel[trans]{ACK}}
+
+\def\testix{
   \ABtimedi{DATA}{3cm}{yo !}
   \BAcanceli{yoo}
   \BAtimed{DATA}{2cm}{gah}
-  \ABcancel{feu}
-\end{chrono}
-\hfill
-\begin{chrono}
+  \ABcancel{feu}}
+
+\def\testx{
   \AB{DATA1}
   \ABtimed{DATA2}{3cm}{temporisateur}
-  \BAcancel{ACK}
+  \BAcancel[trans]{ACK}
   \ABtimedi{DATA3}{3cm}{temporisateur2}
-  \BAcanceli{ACK}
+  \BAcanceli[trans]{ACK}
   \ABtimed{DATA3}{3cm}{tempo3}  
-  \AB{DATA2}
-\end{chrono}
-\hfill
+  \AB{DATA2}}
 
-\hspace{-2cm}
-\begin{chrono}[prop=7mm,A=client,B=serveur]
+\def\testxi{
   \Astate{Closed}\Bstate{Closed}
   \Await         \Bwait
   \Await         \Bactionstate{passive open}{listen}
@@ -131,11 +118,8 @@
                  \Bstate{SynRecvd}
                  \BA{SYN+ACK}
   \Astate{Established}
-  \AB{ACK}
+  \AB[trans]{ACK}
                  \Bstate{Established}
-%\end{chrono}
-%\hfill
-%\begin{chrono}[prop=10mm,timerAoffset=3mm]
 
   \later{3cm}
 
@@ -145,23 +129,129 @@
   \Aactionstate{close}{FinWait1}
   \AB{FIN}
                       \Bstate{CloseWait}
-                      \BA{ACK}
+                      \BA[trans]{ACK}
   \Astate{FinWait2}
+
+  \later{2cm}
+
                       \Bactionstate{close}{LastAck}
                       \BA{FIN}
   \Astate{TimeWait}
   \settimerA{\pAs}{5cm}{2xMSL}
-  \AB{ACK}
+  \AB[trans]{ACK}
                       \Bstate{Closed}
   \Awaittimer
   \Astate{Closed}
-\end{chrono}
-\hfill
-\begin{chrono}[prop=0cm]
+}
+\def\testxii{
   \AB{DATA1}
   \AB{DATA2}
-  \BA{ACK3}
+  \BA[trans]{ACK3}
   \AB{DATA3}
-  \BAdelayed{1cm}{ack}{ACK4}
+  \BAdelayed[trans]{1cm}{ack}{ACK4}}
+
+\begin{chrono}
+  \test
 \end{chrono}
+\hfill
+\begin{hchrono}
+\rotate
+  \test
+\end{hchrono}
+\vfill
+\begin{chrono}[width=2cm]
+\testi
+\end{chrono}
+\hfill
+\begin{hchrono}[width=2cm]
+\testi
+\end{hchrono}
+\vfill
+\begin{chrono}
+\testii\end{chrono}
+\hfill
+\begin{hchrono}
+\rotate
+\testii\end{hchrono}
+\vfill
+\begin{chrono}[width=3.5cm,prop=1cm]
+\testiii
+\end{chrono}
+\hfill
+\begin{hchrono}[width=3.5cm,prop=1cm]
+\testiii
+\end{hchrono}
+\vfill
+\begin{chrono}
+\testiv
+\end{chrono}
+\hfill
+\begin{hchrono}
+\testiv
+\end{hchrono}
+\vfill
+\begin{chrono}[A,B]
+  \testv
+\end{chrono}
+\hfill
+\begin{hchrono}[A,B]
+  \testv
+\end{hchrono}
+\vfill
+\begin{chrono}
+ \testvi
+\end{chrono}
+\hfill
+\begin{hchrono}
+ \testvi
+\end{hchrono}
+\vfill
+\begin{chrono}[A=client,B=serveur]
+\testvii
+\end{chrono}
+\begin{hchrono}[A=client,B=serveur]
+\testvii
+\end{hchrono}
+\vspace{3cm}
+\begin{chrono}
+\testviii
+\end{chrono}
+\hfill
+\begin{hchrono}
+\testviii
+\end{hchrono}
+\vfill
+\begin{chrono}
+\testix
+\end{chrono}
+\hfill
+\begin{hchrono}
+\testix
+\end{hchrono}
+\vfill
+\begin{chrono}
+\testx
+\end{chrono}
+\hfill
+\begin{hchrono}
+\testx
+\end{hchrono}
+\vfill
+
+\hspace{-2cm}
+\begin{chrono}[prop=7mm,A=client,B=serveur]
+\testxi\end{chrono}
+\hfill
+\begin{hchrono}[prop=7mm,A=client,B=serveur,trans]
+\rotate
+\testxi
+\end{hchrono}
+\vfill
+\begin{chrono}%[prop=0cm]
+\testxii
+\end{chrono}
+\begin{hchrono}%[prop=0cm]
+\testxii
+\end{hchrono}
+
 \end{document}

@@ -7,6 +7,7 @@
 \RequirePackage{tikz}
 \RequirePackage{pgfkeys}
 \usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{arrows}
 %\usetikzlibrary{calc}
 
 \tikzset{fleche/.style={very thick, ->, >=latex}}
@@ -18,11 +19,12 @@
   /chrono/global/.is family,
   /chrono/wait/.belongs to family=/chrono/global,
   /chrono/nowait/.belongs to family=/chrono/global,
-  /chrono/prop/.belongs to family=/chrono/global,
+  /chrono/trans/.belongs to family=/chrono/global,
   /chrono/.belongs to family=/chrono/global,
 }
 \pgfkeys{/pgf/key filters/active families/.install key filter}
 \pgfkeys{/chrono/prop/.default=1cm,/chrono/prop/.code=\setlength{\prop}{#1}}
+\pgfkeys{/chrono/trans/.default=8mm,/chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi}
 \pgfkeys{/chrono/wait/.default=1cm,/chrono/wait/.code=\setlength{\wait}{#1}}
 \pgfkeys{/chrono/nowait/.default=5mm,/chrono/nowait/.code=\setlength{\wait}{-1cm}\addtolength{\wait}{#1}}
 \pgfkeys{/chrono/lost/.default=true,/chrono/lost/.code=\chronolosttrue}
@@ -45,9 +47,13 @@
 \def\chronoAname{}
 \def\chronoBname{}
 
+\newif\ifchronoh\chronohfalse
+
 \newlength{\pAs}\newlength{\pAr}
 \newlength{\pBs}\newlength{\pBr}
 \newlength{\chronopos}
+\newlength{\chronopostrans}
+\newlength{\chronoxx}
 
 %\pgfkeys{/pgf/key filter handlers/log/.install key filter handler}
 
@@ -61,35 +67,61 @@
 
 \newlength{\wait}\setlength{\wait}{0cm}
 \newlength{\prop}\setlength{\prop}{0.5cm}
-\newlength{\oldprop}
+\newlength{\trans}\setlength{\trans}{1.5cm}
+\newlength{\savedtrans}
 
+\newcommand{\addto}[2]{
+  \ifnum \y=1\addtolength{#1}{#2}\else\addtolength{#1}{-#2}\fi
+}
 
 % #1 is keys, #2 is 1 or -1 (arrow direction),
-% #3 is start pos, #4 is prop, #5 is label
+% #3 is start pos, #4 is label
 
-\newcommand{\chronoarrow}[5][]{
+\newcommand{\chronoarrowv}[4][]{
   \setlength{\chronopos}{#3}
-  \setlength{\prop}{#4}
   {
     \pgfkeys{/chrono/.cd,#1}
     \ifchronolost\def\lost{2}\else\def\lost{1}\fi
     \ifchronobad
 
        \draw[fleche] (#2*-\chronowidth/2,\chronopos)
-                 --++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
+                 --++(#2*\chronowidth/\lost/3,\y\prop/\lost/3)
 
-                 \ifchronosync\else node[near end,above,sloped]{#5}\fi
+                 \ifchronosync\else node[near end,above,sloped]{#4}\fi
     
                  decorate[decoration=zigzag,segment length=2mm]
-                 {--++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
-                   \ifchronosync node[midway,above,sloped]{#5}\fi}
+                 {--++(#2*\chronowidth/\lost/3,\y\prop/\lost/3)
+                   \ifchronosync node[midway,above,sloped]{#4}\fi}
 
-                 --++(#2*\chronowidth/\lost/3,-\prop/\lost/3);
+                 --++(#2*\chronowidth/\lost/3,\y\prop/\lost/3);
     \else
 
-       \draw[fleche] (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,-\prop/\lost)
-                   node[above,sloped,\ifchronosync midway\else near start\fi]{#5};%
+       \draw[fleche] (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,\y\prop/\lost)
+                   node[above,sloped,\ifchronosync midway\else near start\fi]{#4};%
     \fi
+  }
+}
+
+\newcommand{\chronoarrowh}[4][]{
+  \setlength{\chronopos}{#3}
+  \setlength{\chronopostrans}{\chronopos}
+  \ifnum #2=1\setlength{\chronoxx}{1mm}\else\setlength{\chronoxx}{-7mm}\fi
+  {
+    \pgfkeys{/chrono/.cd,#1}
+    \addtolength{\chronopostrans}{\trans}
+    \ifchronolost\def\lost{2}\else\def\lost{1}\fi
+    \ifchronobad
+
+       \draw[fleche,|-|] (\chronopos,#2*\chronowidth/2) --++(\trans/3,0)
+                 decorate[decoration=zigzag,segment length=2mm]
+                 {--++(\trans/3,0) node[above=\chronoxx,midway]{#4}}
+                 --++(\trans/3,0);
+    \else
+
+       \draw[fleche,|-|] (\chronopos,#2*\chronowidth/2)
+       -- ++(\trans,0) node[above=\chronoxx,midway]{#4};
+    \fi
+    \draw[->] (\chronopostrans,#2*\chronowidth/2) -- ++(\prop/\lost,#2*-\chronowidth/\lost);%
   }
 }
 
@@ -122,8 +154,13 @@
 \newif\iftimerBiactive
 \newif\iftimerBicancel
 
-\newcommand{\settimer}[6]{
-  \csname iftimer#4active\endcsname\csname chronoendtimer#4\endcsname\fi
+\newcommand{\chronoendtimerifactive}[1]{
+  \csname iftimer#1active\endcsname
+  \csname chronoendtimer#1\endcsname\fi
+}
+
+\newcommand{\settimer}[6]{ % start, len, label, A/B, 1/-1, above/below
+  \chronoendtimerifactive{#4}
   \csname timer#4activetrue\endcsname
   \csname timer#4cancelfalse\endcsname
 %  \expandafter\show\csname timer#4start\endcsname
@@ -131,35 +168,55 @@
   \def\timerend{\csname timer#4end\endcsname}
   \def\timeroffset{\csname timer#4offset\endcsname}
   \setlength{\timerstart}{#1}
-  \setlength{\timerend}{#1}\addtolength{\timerend}{-#2}
-   \def\hpos{-#5\chronowidth/2-#5\timeroffset}
-   \draw[thin,dotted,<->](\hpos,\timerstart) -- (\hpos,\timerend) node[midway,#6,sloped]{#3};
+  \addtolength{\timerstart}{\trans}
+  \setlength{\timerend}{#1}\addto{\timerend}{#2}\addto{\timerend}{\trans}
+  \def\hpos{#5\chronowidth/2+#5\timeroffset}
+  \ifchronoh\else
+  \ifchronoh
+  \draw[thin,dotted,<->](\timerstart,\hpos) -- (\timerend,\hpos) node[midway,#6,sloped]{#3};
+  \else
+  \draw[thin,dotted,<->](\hpos,\timerstart) -- (\hpos,\timerend) node[midway,#6,sloped]{#3};
+  \fi
+  \fi
 }
 
-\newcommand{\settimerA}[3]{\settimer{#1}{#2}{#3}{A}{1}{below}}
-\newcommand{\settimerAi}[3]{\settimer{#1}{#2}{#3}{Ai}{1}{below}}
-\newcommand{\settimerB}[3]{\settimer{#1}{#2}{#3}{B}{-1}{above}}
-\newcommand{\settimerBi}[3]{\settimer{#1}{#2}{#3}{Bi}{-1}{above}}
+\newcommand{\settimerA}[3]{\settimer{#1}{#2}{#3}{A}{\y}{below}}
+\newcommand{\settimerAi}[3]{\settimer{#1}{#2}{#3}{Ai}{\y}{below}}
+\newcommand{\settimerB}[3]{\settimer{#1}{#2}{#3}{B}{-\y}{above}}
+\newcommand{\settimerBi}[3]{\settimer{#1}{#2}{#3}{Bi}{-\y}{above}}
 
 
-\newcommand{\canceltimer}[3]{ % pos
+\newcommand{\canceltimer}[3]{ % pos, A/B, -1/1
   \csname timer#2activefalse\endcsname
   \csname timer#2canceltrue\endcsname
   \def\hpos{-#3\chronowidth/2-#3\csname timer#2offset\endcsname}
+  \ifchronoh\else
+  \ifchronoh
+  \draw[thin,<-](\csname timer#2start\endcsname,\hpos) --(#1,\hpos);
+  \else
   \draw[thin,<-](\hpos,\csname timer#2start\endcsname) --(\hpos,#1);
+  \fi
+  \fi
 }
 
-\newcommand{\canceltimerA}[1]{\canceltimer{#1}{A}{1}}
-\newcommand{\canceltimerAi}[1]{\canceltimer{#1}{Ai}{1}}
-\newcommand{\canceltimerB}[1]{\canceltimer{#1}{B}{-1}}
-\newcommand{\canceltimerBi}[1]{\canceltimer{#1}{Bi}{-1}}
+\newcommand{\canceltimerA}[1]{\canceltimer{#1}{A}{-\y}}
+\newcommand{\canceltimerAi}[1]{\canceltimer{#1}{Ai}{-\y}}
+\newcommand{\canceltimerB}[1]{\canceltimer{#1}{B}{\y}}
+\newcommand{\canceltimerBi}[1]{\canceltimer{#1}{Bi}{\y}}
 
 \newcommand{\chronoendtimer}[2]{
   \csname timer#1activefalse\endcsname
   \csname timer#1cancelfalse\endcsname
   \def\hpos{-#2\chronowidth/2-#2\csname timer#1offset\endcsname}
+  \ifchronoh\else
+  \ifchronoh
+  \draw[thin,<->](\csname timer#1start\endcsname,\hpos) --
+                 (\csname timer#1end\endcsname,\hpos);
+  \else
   \draw[thin,<->](\hpos,\csname timer#1start\endcsname) --
-               (\hpos,\csname timer#1end\endcsname);
+                 (\hpos,\csname timer#1end\endcsname);
+  \fi
+  \fi
 }
 
 \newcommand{\chronoendtimerA} {\chronoendtimer{A}{1}}
@@ -172,49 +229,63 @@
 %%: A sends to B
 
 \newcommand{\AB}[2][]{ % [keys], label
+  \setlength{\savedtrans}{\trans}
   \pgfkeys{/chrono/global/.activate family}
-  \setlength{\oldprop}{\prop}
   \pgfkeysfiltered{/chrono/.cd,#1}
-  \chronoarrow[#1]{1}{\pAs}{\prop}{#2}
-  \setlength{\pBr}{\pAs}
-  \addtolength{\pBr}{-\prop}
-  \addtolength{\pAs}{-\chronospacesame}
-  \setlength{\prop}{\oldprop}
+  \chronoarrow[#1]{1}{\pAs}{#2}
+  \setlength{\pBr}{\pAs}\addto{\pBr}{\prop}
+  \addto{\pBr}{\trans}
+  \addto{\pAs}{\trans}
+  \addto{\pAs}{\chronospacesame}
+  \setlength{\trans}{\savedtrans}
   \ifchronosync
-  \setlength{\pBs}{\pBr}\addtolength{\pBs}{-\chronospaceother}
+  \setlength{\pBs}{\pBr}\addto{\pBs}{\chronospaceother}
   \fi
 }
 
 %%: B sends to A 
 
 \newcommand{\BA}[2][]{
+  \setlength{\savedtrans}{\trans}
   \pgfkeys{/chrono/global/.activate family}
-  \setlength{\oldprop}{\prop}
   \pgfkeysfiltered{/chrono/.cd,#1}
-  \chronoarrow[#1]{-1}{\pBs}{\prop}{#2}
-  \setlength{\pAr}{\pBs}
-  \addtolength{\pAr}{-\prop}
-  \addtolength{\pBs}{-\chronospacesame}
-  \setlength{\prop}{\oldprop}
+  \chronoarrow[#1]{-1}{\pBs}{#2}
+  \setlength{\pAr}{\pBs}\addto{\pAr}{\prop}
+  \addto{\pAr}{\trans}
+  \addto{\pBs}{\trans}
+  \addto{\pBs}{\chronospacesame}
+  \setlength{\trans}{\savedtrans}
   \ifchronosync
-  \setlength{\pAs}{\pAr}\addtolength{\pAs}{-\chronospaceother}
+  \setlength{\pAs}{\pAr}\addto{\pAs}{\chronospaceother}
   \fi
 }
 
-\newcommand{\Await}[1][1cm]{\addtolength{\pAs}{-#1}}
-\newcommand{\Bwait}[1][1cm]{\addtolength{\pBs}{-#1}}
+\newcommand{\Await}[1][1cm]{\addto{\pAs}{#1}}
+\newcommand{\Bwait}[1][1cm]{\addto{\pBs}{#1}}
 
 %%: A waits for B, B waits for A (usefull only in fullduplex mode)
 
-\newcommand{\AwaitB}{\setlength{\pAs}{\pAr}\addtolength{\pAs}{-\chronospaceother}}
-\newcommand{\BwaitA}{\setlength{\pBs}{\pBr}\addtolength{\pBs}{-\chronospaceother}}
+\newcommand{\AwaitB}{\setlength{\pAs}{\pAr}\addto{\pAs}{\chronospaceother}}
+\newcommand{\BwaitA}{\setlength{\pBs}{\pBr}\addto{\pBs}{\chronospaceother}}
 
 %%: A,B waits for its current timer to expire
 
-\newcommand{\Awaittimer}{\ifnum \pAs>\timerAend\setlength{\pAs}{\timerAend}\fi}
-\newcommand{\Awaittimeri}{\ifnum \pAs>\timerAiend\setlength{\pAs}{\timerAiend}\fi}
-\newcommand{\Bwaittimer}{\setlength{\pBs}{\timerBend}}
-\newcommand{\Bwaittimeri}{\setlength{\pBs}{\timerBiend}}
+\newcommand{\Awaittimer}{
+  \ifchronoh \ifnum \pAs<\timerAend\setlength{\pAs}{\timerAend}\fi
+  \else      \ifnum \pAs>\timerAend\setlength{\pAs}{\timerAend}\fi
+  \fi}
+\newcommand{\Awaittimeri}{
+  \ifchronoh \ifnum \pAs<\timerAiend\setlength{\pAs}{\timerAiend}\fi
+  \else      \ifnum \pAs>\timerAiend\setlength{\pAs}{\timerAiend}\fi
+  \fi}
+\newcommand{\Bwaittimer}{
+  \ifchronoh \ifnum \pBs<\timerBend\setlength{\pBs}{\timerBend}\fi
+  \else      \ifnum \pBs>\timerBend\setlength{\pBs}{\timerBend}\fi
+  \fi}
+\newcommand{\Bwaittimeri}{
+  \ifchronoh \ifnum \pBs<\timerBeind\setlength{\pBs}{\timerBiend}\fi
+  \else      \ifnum \pBs>\timerBiend\setlength{\pBs}{\timerBiend}\fi
+  \fi}
 
 
 %%: A sends a timed frame to B
@@ -256,16 +327,16 @@
 
 %%: A sets a timer and sends a frame when it expires
 
-\newcommand{\ABdelayed}[3]{ % len, tlabel, flabel
-  \settimerA{\pAr}{#1}{#2}
-  \setlength{\pAs}{\pAr}\addtolength{\pAs}{-#1}
-  \AB{#3}
+\newcommand{\ABdelayed}[4][]{ % keys, len, tlabel, flabel
+  \settimerA{\pAr}{#2}{#3}
+  \setlength{\pAs}{\pAr}\addto{\pAs}{#2}
+  \AB[#1]{#4}
   \chronoendtimerA}
 
-\newcommand{\BAdelayed}[3]{ % len, tlabel, flabel
-  \settimerB{\pBr}{#1}{#2}
-  \setlength{\pBs}{\pBr}\addtolength{\pBs}{-#1}
-  \BA{#3}
+\newcommand{\BAdelayed}[4][]{ % keys, len, tlabel, flabel
+  \settimerB{\pBr}{#2}{#3}
+  \setlength{\pBs}{\pBr}\addto{\pBs}{#2}
+  \BA[#1]{#4}
   \chronoendtimerB}
 
 %%: A sets a timer and after a delay sends a frame that cancels it
@@ -273,16 +344,14 @@
 
 \newcommand{\ABstop}[4]{ % len, tlabel, delay, flabel
   \settimerA{\pAr}{#1}{#2}
-  \newlength{\chronoxx}
-  \setlength{\chronoxx}{\pAr}\addtolength{\chronoxx}{-#3}
+  \setlength{\chronoxx}{\pAr}\addto{\chronoxx}{#3}
   \canceltimerA{\chronoxx}
   \setlength{\pAs}{\chronoxx}
   \AB{#4}}
 
 \newcommand{\BAstop}[4]{ % len, tlabel, delay, flabel
   \settimerB{\pBr}{#1}{#2}
-  \newlength{\chronoxx}
-  \setlength{\chronoxx}{\pBr}\addtolength{\chronoxx}{-#3}
+  \setlength{\chronoxx}{\pBr}\addto{\chronoxx}{#3}
   \canceltimerB{\chronoxx}
   \setlength{\pBs}{\chronoxx}
   \BA{#4}}
@@ -291,17 +360,24 @@
 %%%%%% side decorations (eg for TCP)
 
 \newcommand{\chronoAaction}[2]{
-  \draw[->](-\chronowidth/2-6mm,#1)  node[left]{#2} --++(0:5mm);}
+  \ifchronoh\else
+  \draw[->](-\chronowidth/2-6mm,#1)  node[left]{#2} --++(0:5mm);
+  \fi}
 
 \newcommand{\chronoBaction}[2]{
-  \draw[->](\chronowidth/2+6mm,#1)  node[right]{#2} --++(180:5mm);}
+  \ifchronoh\else
+  \draw[->](\chronowidth/2+6mm,#1)  node[right]{#2} --++(180:5mm);
+  \fi}
 
 \newcommand{\chronoAstate}[2]{
+  \ifchronoh\else
   \draw(-\chronowidth/2-6mm,#1) node[draw,left]{\textsc{#2}};
-}
+  \fi}
 \newcommand{\chronoBstate}[2]{
+  \ifchronoh\else
   \draw(\chronowidth/2+6mm,#1) node[draw,right]{\textsc{#2}};
-}
+  \fi}
+
 \newcommand{\Astate}[1]{\chronoAstate{\pAs}{#1}}
 \newcommand{\Bstate}[1]{\chronoBstate{\pBs}{#1}}
 
@@ -324,10 +400,10 @@
 \newcommand{\later}[1]{
   \setlength{\chronolaterpos}{\pAs}
   \setlength{\chronolaterlen}{#1}
-  \addtolength{\pAs}{-#1}
-  \addtolength{\pAr}{-#1}
-  \addtolength{\pBs}{-#1}
-  \addtolength{\pBr}{-#1}
+  \addto{\pAs}{#1}
+  \addto{\pAr}{#1}
+  \addto{\pBs}{#1}
+  \addto{\pBr}{#1}
   \chronolatertrue}
 
 \newcommand{\chronofinishtimers}{
@@ -344,6 +420,10 @@
 \newenvironment{chrono}[1][]{
   \newcommand{\fullduplex}{\chronosyncfalse}
   \newcommand{\halfduplex}{\chronosynctrue}
+  \chronohfalse
+  \setlength{\trans}{0cm}
+  \def\chronoarrow{\chronoarrowv}
+  \def\y{-1}
   \pgfkeys{/chrono/.cd,#1}\begin{tikzpicture}\sffamily
   }
   {
@@ -354,18 +434,31 @@
     \def\chronopos{\ifnum \pAr<\pBr \pAr\else\pBr\fi}
     \ifnum \chronopos>\pAs \def\chronopos{\pAs}\fi
     \ifnum \chronopos>\pBs \def\chronopos{\pBs}\fi
-    \draw[thin](-\chronowidth/2,\chronospacesame/2) node[above]{\chronoAname}-- (-\chronowidth/2,\chronopos);
-    \draw[thin](\chronowidth/2,\chronospacesame/2) node[above]{\chronoBname}-- (\chronowidth/2,\chronopos);
+    \draw[thin](-\chronowidth/2,-\y\chronospacesame/2) node[above]{\chronoAname}-- (-\chronowidth/2,\chronopos);
+    \draw[thin](\chronowidth/2,-\y\chronospacesame/2) node[above]{\chronoBname}-- (\chronowidth/2,\chronopos);
 
     % erase part of the vertical lines if later is set
     \ifchronolater
-      \def\hpos{\chronolaterpos-\chronolaterlen/2+\chronolaterdashedlen/2}
-      \draw[white,dashed](-\chronowidth/2,\hpos) -- ++(0,-\chronolaterdashedlen);
-      \draw[white,dashed]( \chronowidth/2,\hpos) -- ++(0,-\chronolaterdashedlen);
+      \def\hpos{\chronolaterpos+\y\chronolaterlen/2-\y\chronolaterdashedlen/2}
+      \draw[white,dashed](-\chronowidth/2,\hpos) -- ++(0,\y\chronolaterdashedlen);
+      \draw[white,dashed]( \chronowidth/2,\hpos) -- ++(0,\y\chronolaterdashedlen);
     \fi
   \end{tikzpicture}
 }
 
+\newenvironment{hchrono}[1][]{
+  \newcommand{\fullduplex}{\chronosyncfalse}
+  \newcommand{\halfduplex}{\chronosynctrue}
+  \chronohtrue
+  \setlength{\chronospacesame}{0cm}
+  \setlength{\chronospaceother}{0cm}
+  \setlength{\chronowidth}{1.5cm}
+  \pgfkeys{/chrono/.cd,#1}
+  \def\chronoarrow{\chronoarrowh}
+  \def\y{1}
+  \begin{tikzpicture}\sffamily
+  }
+{\end{tikzpicture}}  
 
 % Pbs:
 % - with no sync bad labels are a bit too close on the start
