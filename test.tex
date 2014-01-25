@@ -150,6 +150,23 @@
   \AB{DATA3}
   \BAdelayed[trans]{1cm}{ack}{ACK4}}
 
+\def\testxiii{
+\pgfkeys{/chrono/.cd,timerioffset=3mm}
+                      \Bactionstate{close}{LastAck}
+                      \BAtimed{FIN}{3.5cm}{retrans}
+  \Astate{TimeWait}
+  \settimerA{\pAs}{5cm}{2xMSL}
+  \AB[trans,lost]{ACK}
+                      \Bwaittimer
+                      \BAcancel{FIN}
+  \settimerAi{\pAs}{5cm}{2xMSL}
+  \AB[trans]{ACK}
+
+                      \Bstate{Closed}
+  \Awaittimeri
+  \Astate{Closed}
+}
+
 \begin{chrono}
   \test
 \end{chrono}
@@ -240,18 +257,26 @@
 
 \hspace{-2cm}
 \begin{chrono}[prop=7mm,A=client,B=serveur]
-\testxi\end{chrono}
+\testxi
+\end{chrono}
 \hfill
 \begin{hchrono}[prop=7mm,A=client,B=serveur,trans]
 \rotate
 \testxi
 \end{hchrono}
 \vfill
-\begin{chrono}%[prop=0cm]
+\begin{chrono}[prop=0cm]
 \testxii
 \end{chrono}
 \begin{hchrono}%[prop=0cm]
 \testxii
+\end{hchrono}
+
+\begin{chrono}
+\testxiii
+\end{chrono}
+\begin{hchrono}
+\testxiii
 \end{hchrono}
 
 \end{document}

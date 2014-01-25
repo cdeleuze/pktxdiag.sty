@@ -3,6 +3,7 @@
 %% Awaittimer annulé par BAcancel -> ok ?
 
 %% timerAoffset, timerAioffset => don't change during the timer!
+%% => only in env?
 
 \RequirePackage{tikz}
 \RequirePackage{pgfkeys}
@@ -23,6 +24,7 @@
   /chrono/.belongs to family=/chrono/global,
 }
 \pgfkeys{/pgf/key filters/active families/.install key filter}
+
 \pgfkeys{/chrono/prop/.default=1cm,/chrono/prop/.code=\setlength{\prop}{#1}}
 \pgfkeys{/chrono/trans/.default=8mm,/chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi}
 \pgfkeys{/chrono/wait/.default=1cm,/chrono/wait/.code=\setlength{\wait}{#1}}
@@ -31,12 +33,19 @@
 \pgfkeys{/chrono/bad/.default=true,/chrono/bad/.code=\chronobadtrue}
 
 \pgfkeys{/chrono/timerAoffset/.code=\setlength{\timerAoffset}{#1}}
+\pgfkeys{/chrono/timerBoffset/.code=\setlength{\timerBoffset}{#1}}
 \pgfkeys{/chrono/timerAioffset/.code=\setlength{\timerAioffset}{#1}}
+\pgfkeys{/chrono/timerBioffset/.code=\setlength{\timerBioffset}{#1}}
+\pgfkeys{/chrono/timeroffset/.code=\setlength{\timerAoffset}{#1}\setlength{\timerBoffset}{#1}}
+\pgfkeys{/chrono/timerioffset/.code=\setlength{\timerAioffset}{#1}\setlength{\timerBioffset}{#1}}
+
+\pgfkeys{/chrono/actionoffset/.code=\setlength{\chronoactionoffset}{#1}}
+
+\pgfkeys{/chrono/spacesame/.code=\setlength{\chronospacesame}{#1}}
+\pgfkeys{/chrono/spaceother/.code=\setlength{\chronospaceother}{#1}}
 
 % chrono env keys
 \pgfkeys{/chrono/width/.code=\setlength{\chronowidth}{#1}}
-\pgfkeys{/chrono/spacesame/.code=\setlength{\chronospacesame}{#1}}
-\pgfkeys{/chrono/spaceother/.code=\setlength{\chronospaceother}{#1}}
 \pgfkeys{/chrono/A/.code=\def\chronoAname{#1}}
 \pgfkeys{/chrono/A/.default=A}
 \pgfkeys{/chrono/B/.code=\def\chronoBname{#1}}
@@ -60,6 +69,7 @@
 \newlength{\chronospacesame}\setlength{\chronospacesame}{1cm}
 \newlength{\chronospaceother}\setlength{\chronospaceother}{5mm}
 \newlength{\chronowidth}\setlength{\chronowidth}{3cm}
+\newlength{\chronoactionoffset}\setlength{\chronoactionoffset}{1mm}
 
 \newif\ifchronobad\chronobadfalse
 \newif\ifchronolost\chronolostfalse
@@ -361,12 +371,12 @@
 
 \newcommand{\chronoAaction}[2]{
   \ifchronoh\else
-  \draw[->](-\chronowidth/2-6mm,#1)  node[left]{#2} --++(0:5mm);
+  \draw[->](-\chronowidth/2-6mm,#1-\y\chronoactionoffset)  node[left]{#2} --++(0:5mm);
   \fi}
 
 \newcommand{\chronoBaction}[2]{
   \ifchronoh\else
-  \draw[->](\chronowidth/2+6mm,#1)  node[right]{#2} --++(180:5mm);
+  \draw[->](\chronowidth/2+6mm,#1-\y\chronoactionoffset)  node[right]{#2} --++(180:5mm);
   \fi}
 
 \newcommand{\chronoAstate}[2]{
@@ -424,7 +434,7 @@
   \setlength{\trans}{0cm}
   \def\chronoarrow{\chronoarrowv}
   \def\y{-1}
-  \pgfkeys{/chrono/.cd,#1}\begin{tikzpicture}\sffamily
+  \begin{tikzpicture}\pgfkeys{/chrono/.cd,#1}\sffamily
   }
   {
     % finish drawing all timers
