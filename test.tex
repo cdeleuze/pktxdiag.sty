@@ -121,8 +121,7 @@
   \AB[trans]{ACK}
                  \Bstate{Established}
 
-  \later{3cm}
-
+\later{3cm}
 
   \Astate{Established}\Bstate{Established}
   \Await
@@ -132,7 +131,7 @@
                       \BA[trans]{ACK}
   \Astate{FinWait2}
 
-  \later{2cm}
+\later{2cm}
 
                       \Bactionstate{close}{LastAck}
                       \BA{FIN}
@@ -140,6 +139,7 @@
   \settimerA{\pAs}{5cm}{2xMSL}
   \AB[trans]{ACK}
                       \Bstate{Closed}
+\later{2cm}
   \Awaittimer
   \Astate{Closed}
 }

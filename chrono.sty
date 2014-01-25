@@ -29,15 +29,16 @@
 \pgfkeys{/chrono/trans/.default=8mm,/chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi}
 \pgfkeys{/chrono/wait/.default=1cm,/chrono/wait/.code=\setlength{\wait}{#1}}
 \pgfkeys{/chrono/nowait/.default=5mm,/chrono/nowait/.code=\setlength{\wait}{-1cm}\addtolength{\wait}{#1}}
-\pgfkeys{/chrono/lost/.default=true,/chrono/lost/.code=\chronolosttrue}
-\pgfkeys{/chrono/bad/.default=true,/chrono/bad/.code=\chronobadtrue}
+
+\pgfkeys{/chrono/lost/.is if=chronolost}
+\pgfkeys{/chrono/bad/.is if=chronobad}
 
 \pgfkeys{/chrono/timerAoffset/.code=\setlength{\timerAoffset}{#1}}
 \pgfkeys{/chrono/timerBoffset/.code=\setlength{\timerBoffset}{#1}}
 \pgfkeys{/chrono/timerAioffset/.code=\setlength{\timerAioffset}{#1}}
 \pgfkeys{/chrono/timerBioffset/.code=\setlength{\timerBioffset}{#1}}
-\pgfkeys{/chrono/timeroffset/.code=\setlength{\timerAoffset}{#1}\setlength{\timerBoffset}{#1}}
-\pgfkeys{/chrono/timerioffset/.code=\setlength{\timerAioffset}{#1}\setlength{\timerBioffset}{#1}}
+\pgfkeys{/chrono/timeroffset/.style={timerAoffset=#1,timerBoffset=#1}}
+\pgfkeys{/chrono/timerioffset/.style={timerAioffset=#1,timerBioffset=#1}}
 
 \pgfkeys{/chrono/actionoffset/.code=\setlength{\chronoactionoffset}{#1}}
 
@@ -403,18 +404,37 @@
 \newif\ifchronolater
 \newlength{\chronolaterpos}
 \newlength{\chronolaterlen}
+\newif\ifchronolateri
+\newlength{\chronolaterposi}
+\newlength{\chronolaterleni}
+\newif\ifchronolaterii
+\newlength{\chronolaterposii}
+\newlength{\chronolaterlenii}
 \newlength{\chronolaterdashedlen}
 \setlength{\chronolaterdashedlen}{1cm}
 
 
 \newcommand{\later}[1]{
+  \ifchronolateri
+  \setlength{\chronolaterposii}{\pAs}
+  \setlength{\chronolaterlenii}{#1}
+  \chronolateriitrue
+  \else
+  \ifchronolater
+  \setlength{\chronolaterposi}{\pAs}
+  \setlength{\chronolaterleni}{#1}
+  \chronolateritrue
+  \else
   \setlength{\chronolaterpos}{\pAs}
   \setlength{\chronolaterlen}{#1}
+  \chronolatertrue
+  \fi
+  \fi
   \addto{\pAs}{#1}
   \addto{\pAr}{#1}
   \addto{\pBs}{#1}
   \addto{\pBr}{#1}
-  \chronolatertrue}
+}
 
 \newcommand{\chronofinishtimers}{
   \iftimerAactive\chronoendtimerA\Awaittimer\fi
@@ -425,6 +445,23 @@
   \iftimerBcancel\Bwaittimer\fi
   \iftimerAicancel\Awaittimeri\fi
   \iftimerBicancel\Bwaittimeri\fi
+}
+
+% erase part of the vertical lines
+\newcommand{\chronodrawlater}[2]{
+  \def\tpos{#1+\y#2/2-\y\chronolaterdashedlen/2}
+
+  % vertical lines
+  \draw[white,dashed](-\chronowidth/2,\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \draw[white,dashed]( \chronowidth/2,\tpos) -- ++(0,\y\chronolaterdashedlen);
+
+  % timer lines
+  \ifchronoh\else
+  \draw[white,dashed](-\chronowidth/2-\timerAoffset,\tpos)  -- ++(0,\y\chronolaterdashedlen);
+  \draw[white,dashed](-\chronowidth/2-\timerAioffset,\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \draw[white,dashed]( \chronowidth/2-\timerBoffset,\tpos)  -- ++(0,\y\chronolaterdashedlen);
+  \draw[white,dashed]( \chronowidth/2-\timerBioffset,\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \fi
 }
 
 \newenvironment{chrono}[1][]{
@@ -447,12 +484,10 @@
     \draw[thin](-\chronowidth/2,-\y\chronospacesame/2) node[above]{\chronoAname}-- (-\chronowidth/2,\chronopos);
     \draw[thin](\chronowidth/2,-\y\chronospacesame/2) node[above]{\chronoBname}-- (\chronowidth/2,\chronopos);
 
-    % erase part of the vertical lines if later is set
-    \ifchronolater
-      \def\hpos{\chronolaterpos+\y\chronolaterlen/2-\y\chronolaterdashedlen/2}
-      \draw[white,dashed](-\chronowidth/2,\hpos) -- ++(0,\y\chronolaterdashedlen);
-      \draw[white,dashed]( \chronowidth/2,\hpos) -- ++(0,\y\chronolaterdashedlen);
-    \fi
+    % process later(s)
+    \ifchronolater\chronodrawlater{\chronolaterpos}{\chronolaterlen}\fi
+    \ifchronolateri\chronodrawlater{\chronolaterposi}{\chronolaterleni}\fi
+    \ifchronolaterii\chronodrawlater{\chronolaterposii}{\chronolaterlenii}\fi
   \end{tikzpicture}
 }
 
