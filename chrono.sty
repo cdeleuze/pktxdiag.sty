@@ -116,7 +116,7 @@
 \newlength{\savedtrans}
 \newlength{\chronodelay}
 
-\newcommand{\addto}[2]{
+\newcommand{\chronoaddto}[2]{
   \ifnum \y=1\addtolength{#1}{#2}\else\addtolength{#1}{-#2}\fi
 }
 
@@ -225,7 +225,7 @@
   \def\timeroffset{\csname timer#4offset\endcsname}
   \setlength{\timerstart}{#1}
   \addtolength{\timerstart}{\trans}
-  \setlength{\timerend}{#1}\addto{\timerend}{#2}\addto{\timerend}{\trans}
+  \setlength{\timerend}{#1}\chronoaddto{\timerend}{#2}\chronoaddto{\timerend}{\trans}
   \def\hpos{#5\chronowidth/2+#5\timeroffset}
   \ifchronoh\else
   \ifchronoh
@@ -296,14 +296,14 @@
   \pgfkeysfiltered{/chrono/.cd,#1}
   \chronoarrow[#1]{1}{\pAs}{#2}
 %  \show\prop
-  \setlength{\pBr}{\pAs}\addto{\pBr}{\prop}
-  \addto{\pBr}{\trans}
-  \addto{\pAs}{\trans}
-  \addto{\pAs}{\chronospacesame}
+  \setlength{\pBr}{\pAs}\chronoaddto{\pBr}{\prop}
+  \chronoaddto{\pBr}{\trans}
+  \chronoaddto{\pAs}{\trans}
+  \chronoaddto{\pAs}{\chronospacesame}
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
   \ifchronosync
-  \setlength{\pBs}{\pBr}\addto{\pBs}{\chronospaceother}
+  \setlength{\pBs}{\pBr}\chronoaddto{\pBs}{\chronospaceother}
   \fi
 }
 
@@ -315,24 +315,24 @@
   \pgfkeys{/chrono/global/.activate family}
   \pgfkeysfiltered{/chrono/.cd,#1}
   \chronoarrow[#1]{-1}{\pBs}{#2}
-  \setlength{\pAr}{\pBs}\addto{\pAr}{\prop}
-  \addto{\pAr}{\trans}
-  \addto{\pBs}{\trans}
-  \addto{\pBs}{\chronospacesame}
+  \setlength{\pAr}{\pBs}\chronoaddto{\pAr}{\prop}
+  \chronoaddto{\pAr}{\trans}
+  \chronoaddto{\pBs}{\trans}
+  \chronoaddto{\pBs}{\chronospacesame}
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
   \ifchronosync
-  \setlength{\pAs}{\pAr}\addto{\pAs}{\chronospaceother}
+  \setlength{\pAs}{\pAr}\chronoaddto{\pAs}{\chronospaceother}
   \fi
 }
 
-\newcommand{\Await}[1][1cm]{\addto{\pAs}{#1}}
-\newcommand{\Bwait}[1][1cm]{\addto{\pBs}{#1}}
+\newcommand{\Await}[1][1cm]{\chronoaddto{\pAs}{#1}}
+\newcommand{\Bwait}[1][1cm]{\chronoaddto{\pBs}{#1}}
 
 %%: A waits for B, B waits for A (usefull only in fullduplex mode)
 
-\newcommand{\AwaitB}{\setlength{\pAs}{\pAr}\addto{\pAs}{\chronospaceother}}
-\newcommand{\BwaitA}{\setlength{\pBs}{\pBr}\addto{\pBs}{\chronospaceother}}
+\newcommand{\AwaitB}{\setlength{\pAs}{\pAr}\chronoaddto{\pAs}{\chronospaceother}}
+\newcommand{\BwaitA}{\setlength{\pBs}{\pBr}\chronoaddto{\pBs}{\chronospaceother}}
 
 %%: A,B waits for its current timer to expire
 
@@ -394,13 +394,13 @@
 
 \newcommand{\ABdelayed}[4][]{ % keys, len, tlabel, flabel
   \settimerA{\pAr}{#2}{#3}
-  \setlength{\pAs}{\pAr}\addto{\pAs}{#2}
+  \setlength{\pAs}{\pAr}\chronoaddto{\pAs}{#2}
   \AB[#1]{#4}
   \chronoendtimerA}
 
 \newcommand{\BAdelayed}[4][]{ % keys, len, tlabel, flabel
   \settimerB{\pBr}{#2}{#3}
-  \setlength{\pBs}{\pBr}\addto{\pBs}{#2}
+  \setlength{\pBs}{\pBr}\chronoaddto{\pBs}{#2}
   \BA[#1]{#4}
   \chronoendtimerB}
 
@@ -409,14 +409,14 @@
 
 \newcommand{\ABstop}[4]{ % len, tlabel, delay, flabel
   \settimerA{\pAr}{#1}{#2}
-  \setlength{\chronoxx}{\pAr}\addto{\chronoxx}{#3}
+  \setlength{\chronoxx}{\pAr}\chronoaddto{\chronoxx}{#3}
   \canceltimerA{\chronoxx}
   \setlength{\pAs}{\chronoxx}
   \AB{#4}}
 
 \newcommand{\BAstop}[4]{ % len, tlabel, delay, flabel
   \settimerB{\pBr}{#1}{#2}
-  \setlength{\chronoxx}{\pBr}\addto{\chronoxx}{#3}
+  \setlength{\chronoxx}{\pBr}\chronoaddto{\chronoxx}{#3}
   \canceltimerB{\chronoxx}
   \setlength{\pBs}{\chronoxx}
   \BA{#4}}
@@ -487,10 +487,10 @@
   \chronolatertrue
   \fi
   \fi
-  \addto{\pAs}{#1}
-  \addto{\pAr}{#1}
-  \addto{\pBs}{#1}
-  \addto{\pBr}{#1}
+  \chronoaddto{\pAs}{#1}
+  \chronoaddto{\pAr}{#1}
+  \chronoaddto{\pBs}{#1}
+  \chronoaddto{\pBr}{#1}
 }
 
 \newcommand{\chronofinishtimers}{
@@ -532,8 +532,8 @@
   }
   {
     \ifchronosync\else
-    \setlength{\pBs}{\pBr}\addto{\pBs}{\chronospaceother}
-    \setlength{\pAs}{\pAr}\addto{\pAs}{\chronospaceother}
+    \setlength{\pBs}{\pBr}\chronoaddto{\pBs}{\chronospaceother}
+    \setlength{\pAs}{\pAr}\chronoaddto{\pAs}{\chronospaceother}
     \fi
 
     % finish drawing all timers
