@@ -1,5 +1,5 @@
 %% TODO: wait, nowait
-%% Pb: fullduplex, picture ends at \pBr, not \pBr + \chronospaceother
+
 %% Awaittimer annulé par BAcancel -> ok ?
 
 %% timerAoffset, timerAioffset => don't change during the timer!
@@ -18,32 +18,56 @@
 % arrow cmd keys
 \pgfkeys{
   /chrono/global/.is family,
-  /chrono/wait/.belongs to family=/chrono/global,
-  /chrono/nowait/.belongs to family=/chrono/global,
+%  /chrono/wait/.belongs to family=/chrono/global,
+%  /chrono/nowait/.belongs to family=/chrono/global,
   /chrono/trans/.belongs to family=/chrono/global,
+  /chrono/prop/.belongs to family=/chrono/global,
   /chrono/.belongs to family=/chrono/global,
 }
+
+%% ZZZ do we need that? yes for prop and trans...
 \pgfkeys{/pgf/key filters/active families/.install key filter}
 
 \pgfkeys{/chrono/prop/.default=1cm,/chrono/prop/.code=\setlength{\prop}{#1}}
 \pgfkeys{/chrono/trans/.default=8mm,/chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi}
-\pgfkeys{/chrono/wait/.default=1cm,/chrono/wait/.code=\setlength{\wait}{#1}}
-\pgfkeys{/chrono/nowait/.default=5mm,/chrono/nowait/.code=\setlength{\wait}{-1cm}\addtolength{\wait}{#1}}
+\pgfkeys{/chrono/delayed/.default=4cm,/chrono/delayed/.code=\chronodelayedtrue\setlength{\chronodelay}{#1}}
+
+%\pgfkeys{/chrono/wait/.default=1cm,/chrono/wait/.code=\setlength{\wait}{#1}}
+%\pgfkeys{/chrono/nowait/.default=5mm,/chrono/nowait/.code=\setlength{\wait}{-1cm}\addtolength{\wait}{#1}}
 
 \pgfkeys{/chrono/lost/.is if=chronolost}
 \pgfkeys{/chrono/bad/.is if=chronobad}
 
-\pgfkeys{/chrono/timerAoffset/.code=\setlength{\timerAoffset}{#1}}
+
+\pgfkeys{/chrono/timer time offset/.code=\setlength{\timertimeoffset}{#1}}
+\pgfkeys{/chrono/timerAoffset/.code=\setlength{\timerAoffset}{#1}
+  \iftimerAright\addtolength{\timerAoffset}{3mm}\fi}
+\pgfkeys{/chrono/timerAioffset/.code=\setlength{\timerAioffset}{#1}
+  \iftimerAright\addtolength{\timerAioffset}{3mm}\fi}
+
 \pgfkeys{/chrono/timerBoffset/.code=\setlength{\timerBoffset}{#1}}
-\pgfkeys{/chrono/timerAioffset/.code=\setlength{\timerAioffset}{#1}}
 \pgfkeys{/chrono/timerBioffset/.code=\setlength{\timerBioffset}{#1}}
+
 \pgfkeys{/chrono/timeroffset/.style={timerAoffset=#1,timerBoffset=#1}}
 \pgfkeys{/chrono/timerioffset/.style={timerAioffset=#1,timerBioffset=#1}}
 
-\pgfkeys{/chrono/actionoffset/.code=\setlength{\chronoactionoffset}{#1}}
+\pgfkeys{/chrono/timerAbottomup/.is if=timerAbottomup}
+\pgfkeys{/chrono/timerAright/.code={
+    \iftimerAright\else
+       \addtolength{\timerAoffset}{3mm}\addtolength{\timerAioffset}{3mm}
+       \timerArighttrue
+    \fi}}
 
-\pgfkeys{/chrono/spacesame/.code=\setlength{\chronospacesame}{#1}}
-\pgfkeys{/chrono/spaceother/.code=\setlength{\chronospaceother}{#1}}
+% since we fail to define several keys in a \if
+\pgfkeys{/chrono/reverse/.style={/tikz/rotate=180,/tikz/above}}
+
+\pgfkeys{/chrono/action time offset/.code=\setlength{\chronoactiontimeoffset}{#1}}
+\pgfkeys{/chrono/action offset/.code=\setlength{\chronoactionoffset}{#1}}
+\pgfkeys{/chrono/action length/.code=\setlength{\chronoactionlength}{#1}}
+\pgfkeys{/chrono/state offset/.code=\setlength{\chronostateoffset}{#1}}
+
+\pgfkeys{/chrono/space same/.code=\setlength{\chronospacesame}{#1}}
+\pgfkeys{/chrono/space other/.code=\setlength{\chronospaceother}{#1}}
 
 % chrono env keys
 \pgfkeys{/chrono/width/.code=\setlength{\chronowidth}{#1}}
@@ -54,8 +78,13 @@
 
 %%%%%% various definitions
 
+
+\newif\iftimerAbottomup
+\newif\iftimerAright
+
 \def\chronoAname{}
 \def\chronoBname{}
+\def\ped@actualprop{}
 
 \newif\ifchronoh\chronohfalse
 
@@ -70,16 +99,22 @@
 \newlength{\chronospacesame}\setlength{\chronospacesame}{1cm}
 \newlength{\chronospaceother}\setlength{\chronospaceother}{5mm}
 \newlength{\chronowidth}\setlength{\chronowidth}{3cm}
+\newlength{\chronoactiontimeoffset}\setlength{\chronoactiontimeoffset}{1mm}
 \newlength{\chronoactionoffset}\setlength{\chronoactionoffset}{1mm}
+\newlength{\chronoactionlength}\setlength{\chronoactionlength}{5mm}
+\newlength{\chronostateoffset}\setlength{\chronostateoffset}{12mm}
 
 \newif\ifchronobad\chronobadfalse
 \newif\ifchronolost\chronolostfalse
+\newif\ifchronodelayed\chronodelayedfalse
 \newif\ifchronosync\chronosynctrue
 
-\newlength{\wait}\setlength{\wait}{0cm}
+%\newlength{\wait}\setlength{\wait}{0cm}
 \newlength{\prop}\setlength{\prop}{0.5cm}
+\newlength{\savedprop}
 \newlength{\trans}\setlength{\trans}{1.5cm}
 \newlength{\savedtrans}
+\newlength{\chronodelay}
 
 \newcommand{\addto}[2]{
   \ifnum \y=1\addtolength{#1}{#2}\else\addtolength{#1}{-#2}\fi
@@ -106,9 +141,17 @@
 
                  --++(#2*\chronowidth/\lost/3,\y\prop/\lost/3);
     \else
+    \ifchronodelayed
+       \draw[fleche] (#2*-\chronowidth/2,\chronopos) 
+       .. controls (0,\chronopos+\y\prop/2) and (0,\chronopos-\chronodelay)
+%       .. controls (\chronowidth/2,\chronopos+\y\prop/2) and (-\chronowidth/2,\chronopos-\chronodelay)
+       .. (#2*\chronowidth/2, \chronopos-\chronodelay+\y\prop/2)
+                   node[above,sloped,pos=0.1]{#4};%
 
+    \else
        \draw[fleche] (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,\y\prop/\lost)
                    node[above,sloped,\ifchronosync midway\else near start\fi]{#4};%
+    \fi
     \fi
   }
 }
@@ -138,6 +181,7 @@
 
 %%%%%% handling of timers
 
+\newlength{\timertimeoffset}
 \newlength{\timerAstart}
 \newlength{\timerAend}
 \newlength{\timerAoffset}
@@ -151,6 +195,7 @@
 \newlength{\timerBiend}
 \newlength{\timerBioffset}
 
+\setlength{\timertimeoffset}{0.2mm}
 \setlength{\timerAoffset}{4mm}
 \setlength{\timerBoffset}{4mm}
 \setlength{\timerAioffset}{9mm}
@@ -184,15 +229,20 @@
   \def\hpos{#5\chronowidth/2+#5\timeroffset}
   \ifchronoh\else
   \ifchronoh
-  \draw[thin,dotted,<->](\timerstart,\hpos) -- (\timerend,\hpos) node[midway,#6,sloped]{#3};
+  \draw[thin,dotted,<->](\timerstart,\hpos) -- (\timerend,\hpos) node[midway,sloped,#6]{#3};
   \else
-  \draw[thin,dotted,<->](\hpos,\timerstart) -- (\hpos,\timerend) node[midway,#6,sloped]{#3};
+  \draw[thin,dotted,<->](\hpos,\timerstart-\timertimeoffset) -- (\hpos,\timerend+\timertimeoffset) node[midway,sloped,#6]{#3};
   \fi
   \fi
 }
 
-\newcommand{\settimerA}[3]{\settimer{#1}{#2}{#3}{A}{\y}{below}}
-\newcommand{\settimerAi}[3]{\settimer{#1}{#2}{#3}{Ai}{\y}{below}}
+\newcommand{\settimerA}[3]{\settimer{#1}{#2}{#3}{A}{\y}{%
+    \iftimerAright above\else
+    \iftimerAbottomup/chrono/reverse\else below\fi\fi}}
+\newcommand{\settimerAi}[3]{\settimer{#1}{#2}{#3}{Ai}{\y}{%
+    \iftimerAright above\else
+    \iftimerAbottomup/chrono/reverse\else below\fi\fi}}
+
 \newcommand{\settimerB}[3]{\settimer{#1}{#2}{#3}{B}{-\y}{above}}
 \newcommand{\settimerBi}[3]{\settimer{#1}{#2}{#3}{Bi}{-\y}{above}}
 
@@ -205,7 +255,7 @@
   \ifchronoh
   \draw[thin,<-](\csname timer#2start\endcsname,\hpos) --(#1,\hpos);
   \else
-  \draw[thin,<-](\hpos,\csname timer#2start\endcsname) --(\hpos,#1);
+  \draw[thin,<-](\hpos,\csname timer#2start\endcsname-\timertimeoffset) --(\hpos,#1);
   \fi
   \fi
 }
@@ -224,8 +274,8 @@
   \draw[thin,<->](\csname timer#1start\endcsname,\hpos) --
                  (\csname timer#1end\endcsname,\hpos);
   \else
-  \draw[thin,<->](\hpos,\csname timer#1start\endcsname) --
-                 (\hpos,\csname timer#1end\endcsname);
+  \draw[thin,<->](\hpos,\csname timer#1start\endcsname-\timertimeoffset) --
+                 (\hpos,\csname timer#1end\endcsname+\timertimeoffset);
   \fi
   \fi
 }
@@ -241,14 +291,17 @@
 
 \newcommand{\AB}[2][]{ % [keys], label
   \setlength{\savedtrans}{\trans}
+  \setlength{\savedprop}{\prop}
   \pgfkeys{/chrono/global/.activate family}
   \pgfkeysfiltered{/chrono/.cd,#1}
   \chronoarrow[#1]{1}{\pAs}{#2}
+%  \show\prop
   \setlength{\pBr}{\pAs}\addto{\pBr}{\prop}
   \addto{\pBr}{\trans}
   \addto{\pAs}{\trans}
   \addto{\pAs}{\chronospacesame}
   \setlength{\trans}{\savedtrans}
+  \setlength{\prop}{\savedprop}
   \ifchronosync
   \setlength{\pBs}{\pBr}\addto{\pBs}{\chronospaceother}
   \fi
@@ -258,6 +311,7 @@
 
 \newcommand{\BA}[2][]{
   \setlength{\savedtrans}{\trans}
+  \setlength{\savedprop}{\prop}
   \pgfkeys{/chrono/global/.activate family}
   \pgfkeysfiltered{/chrono/.cd,#1}
   \chronoarrow[#1]{-1}{\pBs}{#2}
@@ -266,6 +320,7 @@
   \addto{\pBs}{\trans}
   \addto{\pBs}{\chronospacesame}
   \setlength{\trans}{\savedtrans}
+  \setlength{\prop}{\savedprop}
   \ifchronosync
   \setlength{\pAs}{\pAr}\addto{\pAs}{\chronospaceother}
   \fi
@@ -283,20 +338,19 @@
 
 \newcommand{\Awaittimer}{
   \ifchronoh \ifnum \pAs<\timerAend\setlength{\pAs}{\timerAend}\fi
-  \else      \ifnum \pAs>\timerAend\setlength{\pAs}{\timerAend}\fi
-  \fi}
+  \else      \ifnum \pAs>\timerAend\setlength{\pAs}{\timerAend}\fi   \fi}
+
 \newcommand{\Awaittimeri}{
   \ifchronoh \ifnum \pAs<\timerAiend\setlength{\pAs}{\timerAiend}\fi
-  \else      \ifnum \pAs>\timerAiend\setlength{\pAs}{\timerAiend}\fi
-  \fi}
+  \else      \ifnum \pAs>\timerAiend\setlength{\pAs}{\timerAiend}\fi \fi}
+
 \newcommand{\Bwaittimer}{
   \ifchronoh \ifnum \pBs<\timerBend\setlength{\pBs}{\timerBend}\fi
-  \else      \ifnum \pBs>\timerBend\setlength{\pBs}{\timerBend}\fi
-  \fi}
+  \else      \ifnum \pBs>\timerBend\setlength{\pBs}{\timerBend}\fi   \fi}
+
 \newcommand{\Bwaittimeri}{
   \ifchronoh \ifnum \pBs<\timerBeind\setlength{\pBs}{\timerBiend}\fi
-  \else      \ifnum \pBs>\timerBiend\setlength{\pBs}{\timerBiend}\fi
-  \fi}
+  \else      \ifnum \pBs>\timerBiend\setlength{\pBs}{\timerBiend}\fi \fi}
 
 
 %%: A sends a timed frame to B
@@ -372,21 +426,24 @@
 
 \newcommand{\chronoAaction}[2]{
   \ifchronoh\else
-  \draw[->](-\chronowidth/2-6mm,#1-\y\chronoactionoffset)  node[left]{#2} --++(0:5mm);
+  \draw[<-](-\chronowidth/2-\chronoactionoffset,#1-\y\chronoactiontimeoffset)
+            -- ++(180:\chronoactionlength) node[left]{#2};
   \fi}
 
 \newcommand{\chronoBaction}[2]{
   \ifchronoh\else
-  \draw[->](\chronowidth/2+6mm,#1-\y\chronoactionoffset)  node[right]{#2} --++(180:5mm);
+  \draw[<-](\chronowidth/2+\chronoactionoffset,#1-\y\chronoactiontimeoffset)
+            -- ++(0:\chronoactionlength) node[right]{#2};
   \fi}
 
 \newcommand{\chronoAstate}[2]{
   \ifchronoh\else
-  \draw(-\chronowidth/2-6mm,#1) node[draw,left]{\textsc{#2}};
+  \draw(-\chronowidth/2-\chronostateoffset,#1) node[draw,left]{\textsc{#2}};
   \fi}
+
 \newcommand{\chronoBstate}[2]{
   \ifchronoh\else
-  \draw(\chronowidth/2+6mm,#1) node[draw,right]{\textsc{#2}};
+  \draw(\chronowidth/2+\chronostateoffset,#1) node[draw,right]{\textsc{#2}};
   \fi}
 
 \newcommand{\Astate}[1]{\chronoAstate{\pAs}{#1}}
@@ -474,11 +531,15 @@
   \begin{tikzpicture}\pgfkeys{/chrono/.cd,#1}\sffamily
   }
   {
+    \ifchronosync\else
+    \setlength{\pBs}{\pBr}\addto{\pBs}{\chronospaceother}
+    \setlength{\pAs}{\pAr}\addto{\pAs}{\chronospaceother}
+    \fi
+
     % finish drawing all timers
     \chronofinishtimers
 
     % bottom of vert lines is the minimum of A and B (negative values)
-    \def\chronopos{\ifnum \pAr<\pBr \pAr\else\pBr\fi}
     \ifnum \chronopos>\pAs \def\chronopos{\pAs}\fi
     \ifnum \chronopos>\pBs \def\chronopos{\pBs}\fi
     \draw[thin](-\chronowidth/2,-\y\chronospacesame/2) node[above]{\chronoAname}-- (-\chronowidth/2,\chronopos);
@@ -506,11 +567,6 @@
 {\end{tikzpicture}}  
 
 % Pbs:
-% - with no sync bad labels are a bit too close on the start
-%   => ok with near end rather than midway
-
-% - vertical lines do not extend to timers
-%   => use ATwait
 
 % * cahier des charges
 
@@ -534,11 +590,6 @@
 % lost
 % bad
 
-% arrows are vspaced /chronovspace (5mm) by default, modified by:
-
-% wait --- add even more vspace (def 1cm)
-% nowait --set vspace (default 5mm)
-
 % propagation time is 5mm by default
 % prop  -- change it (def 1cm)
 
@@ -554,10 +605,6 @@
 
 % * TODO
 
-% ok timers for B
-
-% multiple timers for A (more left)
-
 % delayed frame \verb+--\__+
 
 % expAB{DATA} send frame at end of timer -- should not do it if cancelled...
@@ -566,11 +613,3 @@
 % others)? => not sure...
 % expAB{DATA} does not sync
 % waitAB{DATA} syncs
-
-% ok first draw full dotted line, at timer start? (+ timer label)
-% ok cancel draw partial plain line
-% ?? exp/wait draw full plain line
-
-% ok draw timer when exp or wait or reuse or end env
-
-% ok label on top of vert lines

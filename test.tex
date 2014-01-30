@@ -5,6 +5,8 @@
 \begin{document}
 
 \def\rotate{\pgfkeys{/tikz/rotate=90,/tikz/transform shape}}
+\pgfkeys{/chrono/timerAright}%,/chrono/state offset=6mm}
+
 
 \def\test{
   \setlength{\pBr}{0cm}
@@ -13,8 +15,6 @@
   \Await
   \AB[lost]{lost}
   \AB[bad]{bad}
-  \AB[wait]{wait}
-  \AB[wait,bad]{wait,bad}
   \AB{DATA4}
   \AB[prop=1mm]{prop=1mm}
   \AB{DATA6}
@@ -22,14 +22,11 @@
   \AB{DATA7}
   \AB[prop=2cm]{prop=2cm}
   \AB{DATA8}
-  \AB[nowait]{nowait}
-  \AB[nowait=4mm]{nowait=4mm}
-  \AB[nowait=8mm]{nowait=8mm}
 }
 \def\testi{\AB{DATA1}
   \AB{DATA2}
   \BA[trans]{ACK3}
-  \setlength{\chronospacesame}{5mm}
+  \pgfkeys{/chrono/space same=5mm}
   \AB{DATA1}
   \AB{DATA2}
   \BA[trans]{ACK3}}
@@ -65,7 +62,7 @@
 
 \def\testiv{
   \AB{DATA1}
-  \ABtimed{DATA2}{3cm}{temporisateur}
+  \ABtimed[delayed=3cm]{DATA2}{3cm}{temporisateur}
   \AB{DATA3}
   \Awaittimer
   \AB{DATA2}}
@@ -90,7 +87,7 @@
 \def\testviii{
   \ABtimed{DATA1}{3cm}{retrans}
   \Awaittimer
-  \AB{toto}
+%  \AB{toto}
   \ABtimed{DATA1}{3cm}{retrans}
   \BAcancel[trans]{ACK}}
 
@@ -230,7 +227,7 @@
 \testvii
 \end{hchrono}
 \vspace{3cm}
-\begin{chrono}
+\begin{chrono}[timer time offset=2mm]
 \testviii
 \end{chrono}
 \hfill
@@ -246,7 +243,7 @@
 \testix
 \end{hchrono}
 \vfill
-\begin{chrono}
+\begin{chrono}[]
 \testx
 \end{chrono}
 \hfill
@@ -256,7 +253,8 @@
 \vfill
 
 \hspace{-2cm}
-\begin{chrono}[prop=7mm,A=client,B=serveur]
+\begin{chrono}[prop=7mm,A=client,B=serveur,action time
+  offset=0mm,action offset=2mm]
 \testxi
 \end{chrono}
 \hfill
