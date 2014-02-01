@@ -13,11 +13,12 @@
   \setlength{\pAr}{0cm}
   \AB{DATA1}
   \Await
-  \AB[lost]{lost}
-  \AB[bad]{bad}
+  \AB[lost,color=red,dashed]{lost}
+  \BA[lost]{aussi}
+  \AB[bad,thin]{bad}
   \AB{DATA4}
   \AB[prop=1mm]{prop=1mm}
-  \AB{DATA6}
+  \AB[text=green,font=\itshape]{DATA6}
   \AB[prop]{prop}
   \AB{DATA7}
   \AB[prop=2cm]{prop=2cm}
@@ -164,11 +165,11 @@
   \Astate{Closed}
 }
 
-\begin{chrono}
+\begin{chrono}[color=blue,cross for lost]%,/chrono/fleche/.append style={color=yellow}]
   \test
 \end{chrono}
 \hfill
-\begin{hchrono}
+\begin{hchrono}[cross for lost]
 \rotate
   \test
 \end{hchrono}

@@ -11,8 +11,10 @@
 \usetikzlibrary{arrows}
 %\usetikzlibrary{calc}
 
-\tikzset{fleche/.style={very thick, ->, >=latex}}
+\tikzset{/chrono/fleche/.style={/tikz/.cd, very thick, ->, >=latex,/chrono/.cd}}
 
+\pgfkeys{/chrono/.search also={/tikz}}
+\pgfkeys{/chrono/label/.search also={/chrono,/tikz}}
 %%%%%% option keys
 
 % arrow cmd keys
@@ -21,7 +23,13 @@
 %  /chrono/wait/.belongs to family=/chrono/global,
 %  /chrono/nowait/.belongs to family=/chrono/global,
   /chrono/trans/.belongs to family=/chrono/global,
+  /chrono/sh/.belongs to family=/chrono/global,
   /chrono/prop/.belongs to family=/chrono/global,
+  /chrono/delayed/.belongs to family=/chrono/global,
+  /chrono/snote/.belongs to family=/chrono/global,
+  /chrono/rnote/.belongs to family=/chrono/global,
+  /chrono/snoteoffset/.belongs to family=/chrono/global,
+  /chrono/rnoteoffset/.belongs to family=/chrono/global,
   /chrono/.belongs to family=/chrono/global,
 }
 
@@ -30,14 +38,27 @@
 
 \pgfkeys{/chrono/prop/.default=1cm,/chrono/prop/.code=\setlength{\prop}{#1}}
 \pgfkeys{/chrono/trans/.default=8mm,/chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi}
+\pgfkeys{/chrono/sh/.style=trans=5mm}
 \pgfkeys{/chrono/delayed/.default=4cm,/chrono/delayed/.code=\chronodelayedtrue\setlength{\chronodelay}{#1}}
 
 %\pgfkeys{/chrono/wait/.default=1cm,/chrono/wait/.code=\setlength{\wait}{#1}}
 %\pgfkeys{/chrono/nowait/.default=5mm,/chrono/nowait/.code=\setlength{\wait}{-1cm}\addtolength{\wait}{#1}}
 
 \pgfkeys{/chrono/lost/.is if=chronolost}
+\pgfkeys{/chrono/cross for lost/.is if=chronocrosslost}
 \pgfkeys{/chrono/bad/.is if=chronobad}
+\pgfkeys{/chrono/snote/.code=\gdef\chronosnote{#1}}
+\pgfkeys{/chrono/rnote/.code=\gdef\chronornote{#1}}
+\pgfkeys{/chrono/snoteoffset/.code=\def\chronosnoteoffset{#1}}
+\pgfkeys{/chrono/snoteoffset/.default=0}
+\pgfkeys{/chrono/rnoteoffset/.code=\def\chronornoteoffset{#1}}
+\pgfkeys{/chrono/rnoteoffset/.default=0}
+\pgfkeys{/chrono/noteoffset/.style={snoteoffset=#1,rnoteoffset=#1}}
 
+\def\chronosnote{~}
+\def\chronornote{~}
+\def\chronosnoteoffset{3mm}
+\def\chronornoteoffset{3mm}
 
 \pgfkeys{/chrono/timer time offset/.code=\setlength{\timertimeoffset}{#1}}
 \pgfkeys{/chrono/timerAoffset/.code=\setlength{\timerAoffset}{#1}
@@ -106,6 +127,7 @@
 
 \newif\ifchronobad\chronobadfalse
 \newif\ifchronolost\chronolostfalse
+\newif\ifchronocrosslost\chronocrosslostfalse
 \newif\ifchronodelayed\chronodelayedfalse
 \newif\ifchronosync\chronosynctrue
 
@@ -126,11 +148,11 @@
 \newcommand{\chronoarrowv}[4][]{
   \setlength{\chronopos}{#3}
   {
-    \pgfkeys{/chrono/.cd,#1}
+    \begin{scope}[/chrono/.cd,fleche,#1]
     \ifchronolost\def\lost{2}\else\def\lost{1}\fi
     \ifchronobad
 
-       \draw[fleche] (#2*-\chronowidth/2,\chronopos)
+       \draw (#2*-\chronowidth/2,\chronopos)
                  --++(#2*\chronowidth/\lost/3,\y\prop/\lost/3)
 
                  \ifchronosync\else node[near end,above,sloped]{#4}\fi
@@ -140,43 +162,53 @@
                    \ifchronosync node[midway,above,sloped]{#4}\fi}
 
                  --++(#2*\chronowidth/\lost/3,\y\prop/\lost/3);
+                   \ifchronolost\ifchronocrosslost \draw[-]
+                   (#2*2mm,\chronopos+\y\prop/2)node{\Large $\times$}\fi\fi;%
     \else
     \ifchronodelayed
-       \draw[fleche] (#2*-\chronowidth/2,\chronopos) 
+       \draw (#2*-\chronowidth/2,\chronopos) 
        .. controls (0,\chronopos+\y\prop/2) and (0,\chronopos-\chronodelay)
 %       .. controls (\chronowidth/2,\chronopos+\y\prop/2) and (-\chronowidth/2,\chronopos-\chronodelay)
-       .. (#2*\chronowidth/2, \chronopos-\chronodelay+\y\prop/2)
+       .. (#2*\chronowidth/2, \chronopos-\chronodelay+\y\prop)
                    node[above,sloped,pos=0.1]{#4};%
 
     \else
-       \draw[fleche] (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,\y\prop/\lost)
-                   node[above,sloped,\ifchronosync midway\else near start\fi]{#4};%
+       \draw (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,\y\prop/\lost)
+                   node[above,sloped,\ifchronosync midway\else near
+                   start\fi]{#4};
+                   \ifchronolost\ifchronocrosslost \draw[-]
+                   (#2*2mm,\chronopos+\y\prop/2)node{\Large $\times$}\fi\fi;%
     \fi
     \fi
-  }
+  \end{scope}
+}
 }
 
 \newcommand{\chronoarrowh}[4][]{
+  \begin{scope}[/chrono/.cd,fleche,|-|,#1]
   \setlength{\chronopos}{#3}
   \setlength{\chronopostrans}{\chronopos}
   \ifnum #2=1\setlength{\chronoxx}{1mm}\else\setlength{\chronoxx}{-7mm}\fi
   {
-    \pgfkeys{/chrono/.cd,#1}
     \addtolength{\chronopostrans}{\trans}
     \ifchronolost\def\lost{2}\else\def\lost{1}\fi
     \ifchronobad
 
-       \draw[fleche,|-|] (\chronopos,#2*\chronowidth/2) --++(\trans/3,0)
+       \draw[] (\chronopos,#2*\chronowidth/2) --++(\trans/3,0)
                  decorate[decoration=zigzag,segment length=2mm]
                  {--++(\trans/3,0) node[above=\chronoxx,midway]{#4}}
                  --++(\trans/3,0);
     \else
 
-       \draw[fleche,|-|] (\chronopos,#2*\chronowidth/2)
+       \draw[] (\chronopos,#2*\chronowidth/2)
        -- ++(\trans,0) node[above=\chronoxx,midway]{#4};
     \fi
-    \draw[->] (\chronopostrans,#2*\chronowidth/2) -- ++(\prop/\lost,#2*-\chronowidth/\lost);%
+    \draw[thin,->] (\chronopostrans,#2*\chronowidth/2) -- ++(\prop/\lost,#2*-\chronowidth/\lost);%
+    \ifchronolost\ifchronocrosslost \draw[-]
+    (\chronopostrans+\prop/2,#2*-2mm) node{\Large $\times$}\fi\fi;%
+
   }
+  \end{scope}
 }
 
 %%%%%% handling of timers
@@ -294,12 +326,26 @@
   \setlength{\savedprop}{\prop}
   \pgfkeys{/chrono/global/.activate family}
   \pgfkeysfiltered{/chrono/.cd,#1}
+
+  \ifchronoh\else\if\chronosnote~\else
+  \draw (-\chronowidth/2-\chronosnoteoffset,\pAs) node[left]{\chronosnote};\fi\fi
+
   \chronoarrow[#1]{1}{\pAs}{#2}
-%  \show\prop
   \setlength{\pBr}{\pAs}\chronoaddto{\pBr}{\prop}
   \chronoaddto{\pBr}{\trans}
   \chronoaddto{\pAs}{\trans}
   \chronoaddto{\pAs}{\chronospacesame}
+
+
+  \ifchronoh\else\if\chronornote~\else
+  \draw (\chronowidth/2+\chronornoteoffset,\pBr-\chronodelay) node[right]{\chronornote};\fi
+
+  \gdef\chronosnote{~}
+  \gdef\chronornote{~}\fi
+
+  \chronodelayedfalse
+  \setlength\chronodelay{0mm}
+
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
   \ifchronosync
@@ -314,11 +360,22 @@
   \setlength{\savedprop}{\prop}
   \pgfkeys{/chrono/global/.activate family}
   \pgfkeysfiltered{/chrono/.cd,#1}
+
+  \ifchronoh\else\if\chronosnote~\else
+  \draw (\chronowidth/2+\chronosnoteoffset,\pBs) node[right]{\chronosnote};\fi\fi
+
   \chronoarrow[#1]{-1}{\pBs}{#2}
   \setlength{\pAr}{\pBs}\chronoaddto{\pAr}{\prop}
   \chronoaddto{\pAr}{\trans}
   \chronoaddto{\pBs}{\trans}
   \chronoaddto{\pBs}{\chronospacesame}
+
+  \ifchronoh\else\if\chronornote~\else
+  \draw (-\chronowidth/2-\chronornoteoffset,\pAr) node[left]{\chronornote};\fi
+
+  \gdef\chronosnote{~}
+  \gdef\chronornote{~}\fi
+
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
   \ifchronosync
@@ -493,6 +550,14 @@
   \chronoaddto{\pBr}{#1}
 }
 
+% \newcommand{\later}[1]{
+%   \pgfkeys{/chrono/later/.append/.expanded={,\pAs/#1}}
+%   \addto{\pAs}{#1}
+%   \addto{\pAr}{#1}
+%   \addto{\pBs}{#1}
+%   \addto{\pBr}{#1}
+% }
+
 \newcommand{\chronofinishtimers}{
   \iftimerAactive\chronoendtimerA\Awaittimer\fi
   \iftimerBactive\chronoendtimerB\Bwaittimer\fi
@@ -549,6 +614,12 @@
     \ifchronolater\chronodrawlater{\chronolaterpos}{\chronolaterlen}\fi
     \ifchronolateri\chronodrawlater{\chronolaterposi}{\chronolaterleni}\fi
     \ifchronolaterii\chronodrawlater{\chronolaterposii}{\chronolaterlenii}\fi
+    % \pgfkeys{/chrono/later/.show value}
+    % \pgfkeys{/chrono/later/.get=\laters}
+    % \foreach \p / \l in \laters {
+    %   \show\p \show\l
+    %  \chronodrawlater{\p}{\l}
+    % }
   \end{tikzpicture}
 }
 
@@ -564,7 +635,9 @@
   \def\y{1}
   \begin{tikzpicture}\sffamily
   }
-{\end{tikzpicture}}  
+{\draw (-\chronospacesame/2,\chronowidth/2) node [left]{\chronoAname};
+\draw (-\chronospacesame/2,-\chronowidth/2) node [left]{\chronoBname};
+\end{tikzpicture}}  
 
 % Pbs:
 
