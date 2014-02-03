@@ -194,13 +194,13 @@
     \ifchronolost\def\lost{2}\else\def\lost{1}\fi
     \ifchronobad
 
-       \draw[] (\chronopos,#2*\chronowidth/2) --++(\trans/3,0)
+       \draw (\chronopos,#2*\chronowidth/2) --++(\trans/3,0)
                  decorate[decoration=zigzag,segment length=2mm]
                  {--++(\trans/3,0) node[above=\chronoxx,midway]{#4}}
                  --++(\trans/3,0);
     \else
 
-       \draw[] (\chronopos,#2*\chronowidth/2)
+       \draw (\chronopos,#2*\chronowidth/2)
        -- ++(\trans,0) node[above=\chronoxx,midway]{#4};
     \fi
     \draw[thin,->] (\chronopostrans,#2*\chronowidth/2) -- ++(\prop/\lost,#2*-\chronowidth/\lost);%
@@ -226,6 +226,11 @@
 \newlength{\timerBistart}
 \newlength{\timerBiend}
 \newlength{\timerBioffset}
+
+\newlength{\chronoAhaddoffset}\setlength{\chronoAhaddoffset}{0mm}
+\newlength{\chronoAihaddoffset}\setlength{\chronoAihaddoffset}{0mm}
+\newlength{\chronoBhaddoffset}\setlength{\chronoBhaddoffset}{7mm}
+\newlength{\chronoBihaddoffset}\setlength{\chronoBihaddoffset}{7mm}
 
 \setlength{\timertimeoffset}{0.2mm}
 \setlength{\timerAoffset}{4mm}
@@ -255,16 +260,14 @@
   \def\timerstart{\csname timer#4start\endcsname}
   \def\timerend{\csname timer#4end\endcsname}
   \def\timeroffset{\csname timer#4offset\endcsname}
+  \def\timerhoffset{\csname chrono#4haddoffset\endcsname}
   \setlength{\timerstart}{#1}
-  \addtolength{\timerstart}{\trans}
-  \setlength{\timerend}{#1}\chronoaddto{\timerend}{#2}\chronoaddto{\timerend}{\trans}
+  \setlength{\timerend}{#1}\chronoaddto{\timerend}{#2}
   \def\hpos{#5\chronowidth/2+#5\timeroffset}
-  \ifchronoh\else
   \ifchronoh
-  \draw[thin,dotted,<->](\timerstart,\hpos) -- (\timerend,\hpos) node[midway,sloped,#6]{#3};
+  \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset) -- (\timerend,\hpos-\timerhoffset) node[midway,sloped,#6]{#3};
   \else
   \draw[thin,dotted,<->](\hpos,\timerstart-\timertimeoffset) -- (\hpos,\timerend+\timertimeoffset) node[midway,sloped,#6]{#3};
-  \fi
   \fi
 }
 
@@ -283,12 +286,11 @@
   \csname timer#2activefalse\endcsname
   \csname timer#2canceltrue\endcsname
   \def\hpos{-#3\chronowidth/2-#3\csname timer#2offset\endcsname}
-  \ifchronoh\else
+  \def\timerhoffset{\csname chrono#2haddoffset\endcsname}
   \ifchronoh
-  \draw[thin,<-](\csname timer#2start\endcsname,\hpos) --(#1,\hpos);
+  \draw[thin,<-](\csname timer#2start\endcsname,\hpos-\timerhoffset) --(#1,\hpos-\timerhoffset);
   \else
   \draw[thin,<-](\hpos,\csname timer#2start\endcsname-\timertimeoffset) --(\hpos,#1);
-  \fi
   \fi
 }
 
@@ -301,21 +303,20 @@
   \csname timer#1activefalse\endcsname
   \csname timer#1cancelfalse\endcsname
   \def\hpos{-#2\chronowidth/2-#2\csname timer#1offset\endcsname}
-  \ifchronoh\else
+  \def\timerhoffset{\csname chrono#1haddoffset\endcsname}
   \ifchronoh
-  \draw[thin,<->](\csname timer#1start\endcsname,\hpos) --
-                 (\csname timer#1end\endcsname,\hpos);
+  \draw[thin,<->](\csname timer#1start\endcsname,\hpos-\timerhoffset) --
+                 (\csname timer#1end\endcsname,\hpos-\timerhoffset);
   \else
   \draw[thin,<->](\hpos,\csname timer#1start\endcsname-\timertimeoffset) --
                  (\hpos,\csname timer#1end\endcsname+\timertimeoffset);
   \fi
-  \fi
 }
 
-\newcommand{\chronoendtimerA} {\chronoendtimer{A}{1}}
-\newcommand{\chronoendtimerAi}{\chronoendtimer{Ai}{1}}
-\newcommand{\chronoendtimerB} {\chronoendtimer{B}{-1}}
-\newcommand{\chronoendtimerBi}{\chronoendtimer{Bi}{-1}}
+\newcommand{\chronoendtimerA} {\chronoendtimer{A}{-\y}}
+\newcommand{\chronoendtimerAi}{\chronoendtimer{Ai}{-\y}}
+\newcommand{\chronoendtimerB} {\chronoendtimer{B}{\y}}
+\newcommand{\chronoendtimerBi}{\chronoendtimer{Bi}{\y}}
 
 %%%%%% high-level commands
 
@@ -406,26 +407,34 @@
   \else      \ifnum \pBs>\timerBend\setlength{\pBs}{\timerBend}\fi   \fi}
 
 \newcommand{\Bwaittimeri}{
-  \ifchronoh \ifnum \pBs<\timerBeind\setlength{\pBs}{\timerBiend}\fi
+  \ifchronoh \ifnum \pBs<\timerBiend\setlength{\pBs}{\timerBiend}\fi
   \else      \ifnum \pBs>\timerBiend\setlength{\pBs}{\timerBiend}\fi \fi}
 
 
 %%: A sends a timed frame to B
 
 \newcommand{\ABtimed}[4][]{  % [keys], flabel, len, tlabel
-  \settimerA{\pAs}{#3}{#4}
+  \setlength{\chronoxx}{\pAs}
+  \addtolength{\chronoxx}{\trans}
+  \settimerA{\chronoxx}{#3}{#4}
   \AB[#1]{#2}}
 
 \newcommand{\ABtimedi}[4][]{  % [keys], flabel, len, tlabel
-  \settimerAi{\pAs}{#3}{#4}
+  \setlength{\chronoxx}{\pAs}
+  \addtolength{\chronoxx}{\trans}
+  \settimerAi{\chronoxx}{#3}{#4}
   \AB[#1]{#2}}
 
 \newcommand{\BAtimed}[4][]{  % [keys], flabel, len, tlabel
-  \settimerB{\pBs}{#3}{#4}
+  \setlength{\chronoxx}{\pBs}
+  \addtolength{\chronoxx}{\trans}
+  \settimerB{\chronoxx}{#3}{#4}
   \BA[#1]{#2}}
 
 \newcommand{\BAtimedi}[4][]{  % [keys], flabel, len, tlabel
-  \settimerBi{\pBs}{#3}{#4}
+  \setlength{\chronoxx}{\pBs}
+  \addtolength{\chronoxx}{\trans}
+  \settimerBi{\chronoxx}{#3}{#4}
   \BA[#1]{#2}
 }
 
@@ -634,9 +643,12 @@
   \def\y{1}
   \begin{tikzpicture}[/chrono/.cd,#1]\sffamily
   }
-  {\draw (-\chronospacesame/2,\chronowidth/2) node [left]{\chronoAname};
-   \draw (-\chronospacesame/2,-\chronowidth/2) node [left]{\chronoBname};
-   \end{tikzpicture}}  
+  {
+    % finish drawing all timers
+    \chronofinishtimers
+    \draw (-\chronospacesame/2,\chronowidth/2) node [left]{\chronoAname};
+    \draw (-\chronospacesame/2,-\chronowidth/2) node [left]{\chronoBname};
+  \end{tikzpicture}}  
 
 % Pbs:
 

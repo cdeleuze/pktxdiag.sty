@@ -18,7 +18,7 @@
   \AB[bad,thin]{bad}
   \AB{DATA4}
   \AB[prop=1mm]{prop=1mm}
-  \AB[text=green,font=\itshape]{DATA6}
+  \AB[text=green,font={\itshape\rmfamily}]{DATA6}
   \AB[prop]{prop}
   \AB{DATA7}
   \AB[prop=2cm]{prop=2cm}
@@ -108,6 +108,15 @@
   \AB{DATA2}}
 
 \def\testxi{
+  \BA{DATA1}
+  \BAtimed{DATA2}{3cm}{temporisateur}
+  \ABcancel[trans]{ACK}
+  \BAtimedi{DATA3}{3cm}{temporisateur2}
+  \ABcanceli[trans]{ACK}
+  \BAtimed{DATA3}{3cm}{tempo3}  
+  \BA{DATA2}}
+
+\def\testxii{
   \Astate{Closed}\Bstate{Closed}
   \Await         \Bwait
   \Await         \Bactionstate{passive open}{listen}
@@ -141,14 +150,14 @@
   \Awaittimer
   \Astate{Closed}
 }
-\def\testxii{
+\def\testxiii{
   \AB{DATA1}
   \AB{DATA2}
   \BA[trans]{ACK3}
   \AB{DATA3}
   \BAdelayed[trans]{1cm}{ack}{ACK4}}
 
-\def\testxiii{
+\def\testxiv{
 \pgfkeys{/chrono/.cd,timerioffset=3mm}
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
@@ -227,7 +236,7 @@
 \begin{hchrono}[A=client,B=serveur]
 \testvii
 \end{hchrono}
-\vspace{3cm}
+\vfill
 \begin{chrono}[timer time offset=2mm]
 \testviii
 \end{chrono}
@@ -248,34 +257,45 @@
 \testx
 \end{chrono}
 \hfill
+\begin{chrono}[]
+\testxi
+\end{chrono}
+
 \begin{hchrono}
 \testx
+\end{hchrono}
+
+\bigskip
+
+\begin{hchrono}
+\testxi
 \end{hchrono}
 \vfill
 
 \hspace{-2cm}
 \begin{chrono}[prop=7mm,A=client,B=serveur,action time
   offset=0mm,action offset=2mm]
-\testxi
+\testxii
 \end{chrono}
 \hfill
 \begin{hchrono}[prop=7mm,A=client,B=serveur,trans]
 \rotate
-\testxi
+\testxii
 \end{hchrono}
 \vfill
 \begin{chrono}[prop=0cm]
-\testxii
+\testxiii
 \end{chrono}
 \begin{hchrono}%[prop=0cm]
-\testxii
+\testxiii
 \end{hchrono}
 
 \begin{chrono}
-\testxiii
+\testxiv
 \end{chrono}
+
 \begin{hchrono}[A=toto,B=taratata]
-\testxiii
+\testxiv
 \end{hchrono}
 
 \end{document}
