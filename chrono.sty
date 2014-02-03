@@ -328,7 +328,7 @@
   \pgfkeysfiltered{/chrono/.cd,#1}
 
   \ifchronoh\else\if\chronosnote~\else
-  \draw (-\chronowidth/2-\chronosnoteoffset,\pAs) node[left]{\chronosnote};\fi\fi
+  \draw (-\chronowidth/2-\chronosnoteoffset,\pAs) node[align=left,left]{\chronosnote};\fi\fi
 
   \chronoarrow[#1]{1}{\pAs}{#2}
   \setlength{\pBr}{\pAs}\chronoaddto{\pBr}{\prop}
@@ -338,7 +338,7 @@
 
 
   \ifchronoh\else\if\chronornote~\else
-  \draw (\chronowidth/2+\chronornoteoffset,\pBr-\chronodelay) node[right]{\chronornote};\fi
+  \draw (\chronowidth/2+\chronornoteoffset,\pBr-\chronodelay) node[align=right,right]{\chronornote};\fi
 
   \gdef\chronosnote{~}
   \gdef\chronornote{~}\fi
@@ -362,7 +362,7 @@
   \pgfkeysfiltered{/chrono/.cd,#1}
 
   \ifchronoh\else\if\chronosnote~\else
-  \draw (\chronowidth/2+\chronosnoteoffset,\pBs) node[right]{\chronosnote};\fi\fi
+  \draw (\chronowidth/2+\chronosnoteoffset,\pBs) node[align=right,right]{\chronosnote};\fi\fi
 
   \chronoarrow[#1]{-1}{\pBs}{#2}
   \setlength{\pAr}{\pBs}\chronoaddto{\pAr}{\prop}
@@ -371,7 +371,7 @@
   \chronoaddto{\pBs}{\chronospacesame}
 
   \ifchronoh\else\if\chronornote~\else
-  \draw (-\chronowidth/2-\chronornoteoffset,\pAr) node[left]{\chronornote};\fi
+  \draw (-\chronowidth/2-\chronornoteoffset,\pAr) node[align=left,left]{\chronornote};\fi
 
   \gdef\chronosnote{~}
   \gdef\chronornote{~}\fi

@@ -1,0 +1,383 @@
+\documentclass{article}
+\usepackage{chrono}
+\usepackage[francais]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{a4wide}
+\usepackage{float}
+
+\newenvironment{fchrono}[2][]{\begin{figure}[H]\centering\begin{chrono}[#1]\gdef\mycap{#2}}
+{\end{chrono}\caption{\mycap}\end{figure}}
+
+\newenvironment{fhchrono}[2][]{\begin{figure}[H]\centering\begin{hchrono}[#1]\gdef\mycap{#2}}
+{\end{hchrono}\caption{\mycap}\end{figure}}
+
+\begin{document}
+
+
+\pgfkeys{/chrono/timerAbottomup}
+
+\section{NE321}
+
+\subsection{Stop and wait}
+
+\begin{figure}[H]
+\begin{chrono}
+  \ABtimed{DATA}{3cm}{temporisateur}
+  \BAcancel{ACK}
+\end{chrono}
+\hfill
+\begin{chrono}
+  \ABtimed{DATA}{3cm}{temporisateur}
+  \BA[lost]{ACK}
+  \Awaittimer
+  \ABtimed{DATA}{3cm}{temporisateur}
+  \BAcancel{ACK}
+\end{chrono}
+
+\bigskip
+
+\begin{chrono}
+  \ABtimed[lost]{DATA}{3cm}{temporisateur}
+  \Awaittimer
+  \ABtimed{DATA}{3cm}{temporisateur}
+  \BAcancel{ACK}
+\end{chrono}
+\hfill
+\begin{chrono}[prop]
+  \fullduplex
+  \ABtimed{DATA}{2cm}{temporisateur}
+  \BwaitA
+  \Awaittimer
+  \ABtimedi{DATA}{2cm}{}
+  \BAcanceli{ACK}
+  \BA{ACK}
+\end{chrono}
+\caption{Stop \& Wait}
+\end{figure}
+
+\begin{figure}[H]\centering
+\begin{chrono}
+  \AB{D0}
+  \BA{ACK1}
+  \AB{D1}
+  \BA{ACK0}
+  \AB{D0}
+\end{chrono}
+\caption{Stop \& Wait avec numéros de séquence sur 1 bit}
+\end{figure}
+
+\subsection{HDLC}
+
+\begin{chrono}
+     \ABtimed[lost]{SABME}{2cm}{T1}
+     \Awaittimer
+     \AB{SABME}
+              \BA{UA}
+\later{2cm}
+     \AB{DISC}
+              \BA{UA}
+\end{chrono}
+\hfill
+\begin{chrono}
+  \AB{I 0,0}
+           \BA{I 0,1}
+  \AB{I 1,1}
+  \AB{I 2,1}
+           \BA{I 1,3}
+  \AB{I 3,2}
+           \BA{I 2,4}
+           \BA{I 3,4}
+  \AB{RR4}
+\end{chrono}
+\hfill
+\begin{chrono}
+  \BA{I 3,0}
+  \AB{RNR 4}
+  \Bwait[1.5cm]
+  \BA{RR 0,P}
+  \AB{RNR 4,F}
+  \Bwait[1.5cm]
+  \BA{RR 0,P}
+  \AB{RR 4,F}
+  \BA{I 4,0}
+\end{chrono}
+
+\begin{chrono}
+  \AB{I 3,0}
+  \AB[lost]{I 4,0}
+  \AB[rnote=$\times$]{I 5,0}
+  \BA{REJ 4}
+  \AB{I 4,0}
+  \AB{I 5,0}
+  \AB{I 6,0}
+\end{chrono}
+\hfill
+\begin{chrono}[noteoffset=1mm]
+  \fullduplex
+  \AB{I 3,0}
+  \BwaitA
+  \BA{RR 4}
+  \AB[bad]{I 4,0}
+  \BwaitA \BA{SREJ 4}
+  \AB[rnote=$-$]{I 5,0}
+  \AB{I 4,0}
+  \BwaitA \BA{RR6}
+  \AB{I 6,0}
+  \AB{I 7,0}
+\end{chrono}
+\hfill
+\begin{chrono}
+  \AB{I 2,0}
+  \fullduplex
+             \BA{RR3}
+  \ABtimed[lost]{I 3,0}{3cm}{T1}
+
+  \Awaittimer
+  \halfduplex
+  \AB{RR 0,P}
+             \BA{RR 3,F}
+  \AB{I 3,0}
+             \BA{RR 4}
+\end{chrono}
+
+\subsection{HDLC horizontaux}
+
+
+\begin{fhchrono}[A,B,prop=4mm]{Exercice 25}
+  \AB[sh]{SABM}
+           \BA[sh]{UA}
+  \fullduplex
+  \AB{I 0,0}
+             \BwaitA
+             \Bwait[4mm]
+  \AB{I 1,0}
+             \BA{I 0,1}
+  \AB{I 2,0}
+             \BA{I 1,2}
+  \AB{I 3,1}
+             \BA{I 2,3}
+             \BA{I 3,4}
+  \AwaitB
+  \Await
+  \AB[sh]{RR 4}
+  \Await
+  \AB[sh]{DISC}
+  \BwaitA   \BA[sh]{UA}
+\end{fhchrono}
+
+\section{NE210}
+
+\subsection{blabla}
+
+\begin{figure}[H]
+  \centering
+  \begin{chrono}[A=André,B=Bertrand]
+    \AB{Bonjour}
+                \BA{Bonjour}
+    \AB{Comment ça va ?}
+                \BA{Bien et toi ?}
+    \AB{Bien merci}
+                \BA{Blabla}
+    \AB{blabla}
+
+\later{1cm}
+
+    \AB{Au revoir}
+                \BA{Au revoir}
+  \end{chrono}%% ZZZ indication du temps
+  \caption{Protocole de conversation}
+\end{figure}
+
+\subsection{TFTP}
+
+\begin{fchrono}[A=C,B=S]{Tentative de chargement d'un fichier inexistant}
+  \AB{RRQ(fichier)}
+  \BA{ERROR (01)}
+\end{fchrono}
+
+\begin{fchrono}[A=C,B=S]{Transfert réussi d'un fichier de 1084 octets}
+  \AB{RRQ(fichier)}
+                     \BA{DATA1 (512)} %% ZZZ annotations
+  \AB{ACK1}
+                     \BA{DATA2 (512)}
+  \AB{ACK2}
+                     \BA[snote={< 512 octets}]{DATA3 (60)}
+  \AB{ACK3}
+\end{fchrono}
+
+\begin{fchrono}[A=C,B=S]{Perte d'un message pendant le transfert}
+  \AB{RRQ(fichier)}
+                     \BA{DATA1} %% ZZZ annotations
+  \AB{ACK1}
+                     \BAtimed[lost]{DATA2}{2.5cm}{}
+                     \Bwaittimer
+                     \BA{DATA2}
+  \AB{ACK2}
+                     \BA{DATA3}
+  \AB{ACK3}
+\end{fchrono}
+
+\subsection{TCP}
+
+\begin{figure}[H]\centering
+\begin{chrono}
+  \Astate{Closed}\Bstate{Closed}
+  \Await         \Bwait
+  \Await         \Bactionstate{passive open}{listen}
+  \Aactionstate{active open}{Syn-Sent}
+  \AB{SYN}
+                 \Bstate{SynRecvd}
+                 \BA{SYN+ACK}
+  \Astate{Established}
+  \AB[trans]{ACK}
+                 \Bstate{Established}
+  \Await
+\end{chrono}
+\caption{Ouverture de connexion}
+\end{figure}
+
+\begin{figure}[H]\centering
+\begin{chrono}  
+  \Astate{Established}\Bstate{Established}
+  \Await
+  \Aactionstate{close}{FinWait1}
+  \AB{FIN}
+                      \Bstate{CloseWait}
+                      \BA[trans]{ACK}
+  \Astate{FinWait2}
+
+\later{2cm}
+
+                      \Bactionstate{close}{LastAck}
+                      \BA{FIN}
+  \Astate{TimeWait}
+  \settimerA{\pAs}{5cm}{2xMSL}
+  \AB[trans]{ACK}
+                      \Bstate{Closed}
+\later{2cm}
+  \Awaittimer
+  \Astate{Closed}
+\end{chrono}
+\caption{Fermeture de connexion}
+\end{figure}
+
+\begin{fchrono}[timerioffset=3mm]{L'état TIME-WAIT}
+%  \pgfkeys{/chrono/.cd,timerioffset=3mm}
+                      \Bactionstate{close}{LastAck}
+                      \BAtimed{FIN}{3.5cm}{retrans}
+  \Astate{TimeWait}
+  \settimerA{\pAs}{5cm}{2xMSL}
+  \AB[trans,lost]{ACK}
+                      \Bwaittimer
+                      \BAcancel{FIN}
+  \settimerAi{\pAs}{5cm}{2xMSL}
+  \AB[trans]{ACK}
+
+                      \Bstate{Closed}
+  \Awaittimeri
+  \Astate{Closed}
+\end{fchrono}
+
+\begin{fchrono}[timerioffset=3mm]{Sans l'état TIME-WAIT}
+%  \pgfkeys{/chrono/.cd,timerioffset=3mm}
+                      \Bactionstate{close}{LastAck}
+                      \BAtimed{FIN}{3.5cm}{retrans}
+  \Astate{Closed}
+  \AB[trans,lost,cross for lost]{ACK}
+                      \Bwaittimer
+                      \BA{FIN}
+  \AB{RST}
+
+                      \Bstate{Error}
+\end{fchrono}
+
+\begin{fchrono}{sans le TIME-WAIT}
+  \Astate{Established}\Bstate{Established}
+  \AB{DATA}
+                     \BA[delayed=1cm]{ACK}
+  \AB[delayed=11cm,dotted,rnoteoffset=1mm,rnote=oups !]{DATA} 
+                     \Bactionstate{close}{Fin-Wait1}
+                     \BA{FIN}
+  \Astate{Close-Wait}
+  \AB{ACK}
+                     \Bstate{Fin-Wait2}
+  \Aactionstate{close}{Last-Ack}
+  \AB{FIN}
+                     \Bstate{Closed}
+                     \BA{ACK}
+  \Astate{Closed}
+
+\later{2cm}
+
+  \Await         \Bactionstate{passive open}{listen}
+  \Aactionstate{active open}{Syn-Sent}
+  \AB{SYN}
+                 \Bstate{SynRecvd}
+                 \BA{SYN+ACK}
+  \Astate{Established}
+  \AB[trans]{ACK}
+                 \Bstate{Established}
+  \Await
+\end{fchrono}
+
+\begin{fchrono}[width=6cm,A=Navigateur,B=Serveur]{Conversation TCP}
+\NoAutoSpaceBeforeFDP
+
+\AB[snote=segment 1]{SYN 143256:143256(0)}
+  
+\BA[snote=segment 2]{SYN 250712:250712(0) ACK ?}
+
+\AB[snote=segment 3]{143257:143357(100) ACK ?}
+
+\BA[snote=segment 4]{250713:251713(1000) ACK ?}
+
+\AB[snote=segment 5]{FIN ?:?(?) ACK ?}
+  
+\BA[snote=segment 6]{ACK ?}
+
+\BA[snote=segment 7]{FIN ?:?(?) ACK ?}
+
+\AB[snote=segment 8]{ACK ?}
+\end{fchrono}
+
+\begin{fchrono}[prop=1cm,width=6cm,A=émetteur,B=récepteur]{Contrôle de flot TCP}
+  \newcommand{\buf}[2]{
+    \begin{scope}[shift={(\chronowidth/2+1cm,\pBr-3.75mm)},x=7.5mm]
+      %% xscale so that we reason on a 4k buffer (of length 3cm)
+    \draw (0,0) rectangle +(4,0.75);
+    \draw[->] (#1,0.90) -- +(0,4mm);
+    \draw[<-] (#2,-0.10) -- +(0,-4mm);
+    \ifnum#1>#2
+    \filldraw[gray!30,draw=black] (#1,0) rectangle (4,0.75);
+    \filldraw[gray!30,draw=black] (0,0) rectangle (#2,0.75);
+    \else
+    \filldraw[gray!30,draw=black] (#1,0) rectangle (#2,0.75);
+    \fi
+  \end{scope}
+}
+
+\buf{0}{0}
+
+\Await
+\AB[snote=Appli écrit 1 k\\TCP envoie 1 k]{seq=0 (1024)}
+\buf{0}{1}
+
+\BA{ack=~~~~~~~~~~ win= }
+
+\AB[snote=Appli écrit 4k\\TCP envoie 3 k]{seq=~~~~~~~~~~~~}
+\buf{0}{4}
+
+\BA{ack=~~~~~~~~~~ win= }
+\BA[snote=Appli lit 2 k]{ack=~~~~~~~~~ win=}
+\def\pBr{\pBs}
+\buf{2}{4}
+
+\AB[snote=TCP envoie 1 k]{seq=~~~~~~~~}
+\buf{2}{1}
+\BA{ack=~~~~~~~~~~ win= }
+\end{fchrono}
+
+\section{NE520}
+
+
+\end{document}
