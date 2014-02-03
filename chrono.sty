@@ -153,31 +153,31 @@
     \ifchronobad
 
        \draw (#2*-\chronowidth/2,\chronopos)
-                 --++(#2*\chronowidth/\lost/3,\y\prop/\lost/3)
+                 --++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
 
                  \ifchronosync\else node[near end,above,sloped]{#4}\fi
     
                  decorate[decoration=zigzag,segment length=2mm]
-                 {--++(#2*\chronowidth/\lost/3,\y\prop/\lost/3)
+                 {--++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
                    \ifchronosync node[midway,above,sloped]{#4}\fi}
 
-                 --++(#2*\chronowidth/\lost/3,\y\prop/\lost/3);
+                 --++(#2*\chronowidth/\lost/3,-\prop/\lost/3);
                    \ifchronolost\ifchronocrosslost \draw[-]
-                   (#2*2mm,\chronopos+\y\prop/2)node{\Large $\times$}\fi\fi;%
+                   (#2*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;%
     \else
     \ifchronodelayed
        \draw (#2*-\chronowidth/2,\chronopos) 
-       .. controls (0,\chronopos+\y\prop/2) and (0,\chronopos-\chronodelay)
-%       .. controls (\chronowidth/2,\chronopos+\y\prop/2) and (-\chronowidth/2,\chronopos-\chronodelay)
-       .. (#2*\chronowidth/2, \chronopos-\chronodelay+\y\prop)
+       .. controls (0,\chronopos-\prop/2) and (0,\chronopos-\chronodelay)
+%       .. controls (\chronowidth/2,\chronopos-\prop/2) and (-\chronowidth/2,\chronopos-\chronodelay)
+       .. (#2*\chronowidth/2, \chronopos-\chronodelay-\prop)
                    node[above,sloped,pos=0.1]{#4};%
 
     \else
-       \draw (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,\y\prop/\lost)
+       \draw (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,-\prop/\lost)
                    node[above,sloped,\ifchronosync midway\else near
                    start\fi]{#4};
                    \ifchronolost\ifchronocrosslost \draw[-]
-                   (#2*2mm,\chronopos+\y\prop/2)node{\Large $\times$}\fi\fi;%
+                   (#2*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;%
     \fi
     \fi
   \end{scope}
@@ -593,7 +593,7 @@
   \setlength{\trans}{0cm}
   \def\chronoarrow{\chronoarrowv}
   \def\y{-1}
-  \begin{tikzpicture}\pgfkeys{/chrono/.cd,#1}\sffamily
+  \begin{tikzpicture}[/chrono/.cd,#1]\sffamily
   }
   {
     \ifchronosync\else
@@ -630,14 +630,13 @@
   \setlength{\chronospacesame}{0cm}
   \setlength{\chronospaceother}{0cm}
   \setlength{\chronowidth}{1.5cm}
-  \pgfkeys{/chrono/.cd,#1}
   \def\chronoarrow{\chronoarrowh}
   \def\y{1}
-  \begin{tikzpicture}\sffamily
+  \begin{tikzpicture}[/chrono/.cd,#1]\sffamily
   }
-{\draw (-\chronospacesame/2,\chronowidth/2) node [left]{\chronoAname};
-\draw (-\chronospacesame/2,-\chronowidth/2) node [left]{\chronoBname};
-\end{tikzpicture}}  
+  {\draw (-\chronospacesame/2,\chronowidth/2) node [left]{\chronoAname};
+   \draw (-\chronospacesame/2,-\chronowidth/2) node [left]{\chronoBname};
+   \end{tikzpicture}}  
 
 % Pbs:
 
