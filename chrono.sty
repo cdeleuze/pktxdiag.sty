@@ -5,6 +5,7 @@
 %% timerAoffset, timerAioffset => don't change during the timer!
 %% => only in env?
 
+\RequirePackage{xstring}
 \RequirePackage{tikz}
 \RequirePackage{pgfkeys}
 \usetikzlibrary{decorations.pathmorphing}
@@ -38,6 +39,7 @@
 
 \pgfkeys{/chrono/prop/.default=1cm,/chrono/prop/.code=\setlength{\prop}{#1}}
 \pgfkeys{/chrono/trans/.default=8mm,/chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi}
+\pgfkeyssetvalue{/chrono/short trans}{7mm}
 \pgfkeys{/chrono/sh/.style=trans=5mm}
 \pgfkeys{/chrono/delayed/.default=4cm,/chrono/delayed/.code=\chronodelayedtrue\setlength{\chronodelay}{#1}}
 
@@ -96,6 +98,19 @@
 \pgfkeys{/chrono/A/.default=A}
 \pgfkeys{/chrono/B/.code=\def\chronoBname{#1}}
 \pgfkeys{/chrono/B/.default=B}
+
+% by defaults frames whose label starts with ACK are short
+% key no shorts remove this rule
+% key hdlc sets names for HDLC
+% key shorts=list sets the names of short frames
+
+\def\chronoshorts{ACK}
+\def\chronoshortshdlc{RR,RNR,REJ,SREJ,SABM,DISC,UA}
+
+\pgfkeys{/chrono/hdlc/.code=\edef\chronoshorts{\chronoshortshdlc}}
+\pgfkeys{/chrono/shorts/.code=\def\chronoshorts{#1}}
+\pgfkeys{/chrono/no shorts/.code=\def\chronoshorts{}}
+
 
 %%%%%% various definitions
 
@@ -328,6 +343,8 @@
   \pgfkeys{/chrono/global/.activate family}
   \pgfkeysfiltered{/chrono/.cd,#1}
 
+  \chronosettrans{#2}
+
   \ifchronoh\else\if\chronosnote~\else
   \draw (-\chronowidth/2-\chronosnoteoffset,\pAs) node[align=left,left]{\chronosnote};\fi\fi
 
@@ -361,6 +378,8 @@
   \setlength{\savedprop}{\prop}
   \pgfkeys{/chrono/global/.activate family}
   \pgfkeysfiltered{/chrono/.cd,#1}
+
+  \chronosettrans{#2}
 
   \ifchronoh\else\if\chronosnote~\else
   \draw (\chronowidth/2+\chronosnoteoffset,\pBs) node[align=right,right]{\chronosnote};\fi\fi
@@ -523,6 +542,16 @@
   \chronoBaction{\pBs}{#1}
   \chronoBstate{\pBs-5mm}{#2}}
 
+
+\newcommand{\chronosettrans}[1]{
+  \ifchronoh
+  \gdef\toto{\trans}
+  \foreach \x in \chronoshorts {
+    \IfBeginWith{#1}{\x}{\gdef\toto{\pgfkeysvalueof{/chrono/short trans}}}{}
+  }
+  \setlength{\trans}{\toto}
+  \fi
+}
 
 \newif\ifchronolater
 \newlength{\chronolaterpos}

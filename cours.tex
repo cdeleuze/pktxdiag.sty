@@ -143,9 +143,9 @@
 \subsection{HDLC horizontaux}
 
 
-\begin{fhchrono}[A,B,prop=4mm]{Exercice 25}
-  \AB[sh]{SABM}
-           \BA[sh]{UA}
+\begin{fhchrono}[hdlc,short trans=3mm,A,B,prop=4mm]{Exercice 25}
+  \AB{SABM}
+           \BA{UA}
   \fullduplex
   \AB{I 0,0}
              \BwaitA
@@ -159,10 +159,10 @@
              \BA{I 3,4}
   \AwaitB
   \Await
-  \AB[sh]{RR 4}
+  \AB{RR 4}
   \Await
-  \AB[sh]{DISC}
-  \BwaitA   \BA[sh]{UA}
+  \AB{DISC}
+  \BwaitA   \BA{UA}
 \end{fhchrono}
 
 \section{NE210}
@@ -357,6 +357,7 @@
 }
 
 \buf{0}{0}
+\node at (\chronowidth/2+2.5cm,\pBr-1mm) {tampon récepteur};
 
 \Await
 \AB[snote=Appli écrit 1 k\\TCP envoie 1 k]{seq=0 (1024)}

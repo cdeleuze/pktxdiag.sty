@@ -26,30 +26,30 @@
 }
 \def\testi{\AB{DATA1}
   \AB{DATA2}
-  \BA[trans]{ACK3}
+  \BA{ACK3}
   \pgfkeys{/chrono/space same=5mm}
   \AB{DATA1}
   \AB{DATA2}
-  \BA[trans]{ACK3}}
+  \BA{ACK3}}
 \def\testii{
   \AB{DATA1}
   \AB{DATA2}
   \AB{DATA3}
-  \BA[trans]{ACK1}
-  \BA[trans]{ACK2}
-  \BA[trans]{ACK3}
+  \BA{ACK1}
+  \BA{ACK2}
+  \BA{ACK3}
   \AB{DATA4}
   \AB[prop=2cm]{delayed}
-  \BA[trans]{ACK}
+  \BA{ACK}
   \fullduplex
 
-  \BA[trans]{ACK4}
+  \BA{ACK4}
   \AB{DATA5}
-  \BA[trans]{ACK5}
+  \BA{ACK5}
 %  \halfduplex
   \AB[prop=2cm]{delayed}
   \BwaitA
-  \BA[trans]{ACK}
+  \BA{ACK}
 }
 \def\testiii{
  \AB[bad]{DATA1}
@@ -71,7 +71,7 @@
 \def\testv{
  \AB{DATA1}
  \BA{DATA1}
- \ABdelayed[trans]{1cm}{ack}{ACK}}
+ \ABdelayed{1cm}{ack}{ACK}}
 
 \def\testvi{
  \BA{DATA}
@@ -80,7 +80,7 @@
 \def\testvii{
   \AB{DATA1}
   \ABtimed{DATA2}{3cm}{temporisateur}
-  \BAcancel[trans]{ACK}
+  \BAcancel{ACK}
   \Awaittimer
   \AB{DATA3}
   \AB{DATA2}}
@@ -90,7 +90,7 @@
   \Awaittimer
 %  \AB{toto}
   \ABtimed{DATA1}{3cm}{retrans}
-  \BAcancel[trans]{ACK}}
+  \BAcancel{ACK}}
 
 \def\testix{
   \ABtimedi{DATA}{3cm}{yo !}
@@ -101,18 +101,18 @@
 \def\testx{
   \AB{DATA1}
   \ABtimed{DATA2}{3cm}{temporisateur}
-  \BAcancel[trans]{ACK}
+  \BAcancel{ACK}
   \ABtimedi{DATA3}{3cm}{temporisateur2}
-  \BAcanceli[trans]{ACK}
+  \BAcanceli{ACK}
   \ABtimed{DATA3}{3cm}{tempo3}  
   \AB{DATA2}}
 
 \def\testxi{
   \BA{DATA1}
   \BAtimed{DATA2}{3cm}{temporisateur}
-  \ABcancel[trans]{ACK}
+  \ABcancel{ACK}
   \BAtimedi{DATA3}{3cm}{temporisateur2}
-  \ABcanceli[trans]{ACK}
+  \ABcanceli{ACK}
   \BAtimed{DATA3}{3cm}{tempo3}  
   \BA{DATA2}}
 
@@ -125,7 +125,7 @@
                  \Bstate{SynRecvd}
                  \BA{SYN+ACK}
   \Astate{Established}
-  \AB[trans]{ACK}
+  \AB{ACK}
                  \Bstate{Established}
 
 \later{3cm}
@@ -135,7 +135,7 @@
   \Aactionstate{close}{FinWait1}
   \AB{FIN}
                       \Bstate{CloseWait}
-                      \BA[trans]{ACK}
+                      \BA{ACK}
   \Astate{FinWait2}
 
 \later{2cm}
@@ -144,7 +144,7 @@
                       \BA{FIN}
   \Astate{TimeWait}
   \settimerA{\pAs}{5cm}{2xMSL}
-  \AB[trans]{ACK}
+  \AB{ACK}
                       \Bstate{Closed}
 \later{2cm}
   \Awaittimer
@@ -153,9 +153,9 @@
 \def\testxiii{
   \AB{DATA1}
   \AB{DATA2}
-  \BA[trans]{ACK3}
+  \BA{ACK3}
   \AB{DATA3}
-  \BAdelayed[trans]{1cm}{ack}{ACK4}}
+  \BAdelayed{1cm}{ack}{ACK4}}
 
 \def\testxiv{
 \pgfkeys{/chrono/.cd,timerioffset=3mm}
@@ -163,11 +163,11 @@
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{TimeWait}
   \settimerA{\pAs}{5cm}{2xMSL}
-  \AB[trans,lost]{ACK}
+  \AB[lost]{ACK}
                       \Bwaittimer
                       \BAcancel{FIN}
   \settimerAi{\pAs}{5cm}{2xMSL}
-  \AB[trans]{ACK}
+  \AB{ACK}
 
                       \Bstate{Closed}
   \Awaittimeri
@@ -294,7 +294,7 @@
 \testxiv
 \end{chrono}
 
-\begin{hchrono}[A=toto,B=taratata]
+\begin{hchrono}[no shorts,A=toto,B=taratata]
 \testxiv
 \end{hchrono}
 
