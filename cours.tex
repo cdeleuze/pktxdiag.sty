@@ -48,8 +48,9 @@
   \ABtimed{DATA}{2cm}{temporisateur}
   \BwaitA
   \Awaittimer
-  \ABtimedi{DATA}{2cm}{}
-  \BAcanceli{ACK}
+  \ABtimed{DATA}{2cm}{}
+  \BAcancel{ACK}
+  \BwaitA
   \BA{ACK}
 \end{chrono}
 \caption{Stop \& Wait}
@@ -165,6 +166,17 @@
   \BwaitA   \BA{UA}
 \end{fhchrono}
 
+\subsection{PPP}
+
+\begin{fchrono}[A,B]{Négociation LCP}
+\ABtimed{ConfReq}{3.5cm}{Négo pour A}
+\BA{ConfNak}
+\AB{ConfReq}
+\BA{ConfAck}
+\BAtimed{ConfReq}{1.5cm}{Négo pour B}
+\AB{ConfAck}  
+\end{fchrono}
+
 \section{NE210}
 
 \subsection{blabla}
@@ -197,7 +209,7 @@
 
 \begin{fchrono}[A=C,B=S]{Transfert réussi d'un fichier de 1084 octets}
   \AB{RRQ(fichier)}
-                     \BA{DATA1 (512)} %% ZZZ annotations
+                     \BA{DATA1 (512)}
   \AB{ACK1}
                      \BA{DATA2 (512)}
   \AB{ACK2}
@@ -207,7 +219,7 @@
 
 \begin{fchrono}[A=C,B=S]{Perte d'un message pendant le transfert}
   \AB{RRQ(fichier)}
-                     \BA{DATA1} %% ZZZ annotations
+                     \BA{DATA1}
   \AB{ACK1}
                      \BAtimed[lost]{DATA2}{2.5cm}{}
                      \Bwaittimer
@@ -315,7 +327,7 @@
                  \Bstate{SynRecvd}
                  \BA{SYN+ACK}
   \Astate{Established}
-  \AB[trans]{ACK}
+  \AB{ACK}
                  \Bstate{Established}
   \Await
 \end{fchrono}
