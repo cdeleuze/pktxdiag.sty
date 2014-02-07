@@ -10,7 +10,7 @@
 \RequirePackage{pgfkeys}
 \usetikzlibrary{decorations.pathmorphing}
 \usetikzlibrary{arrows}
-%\usetikzlibrary{calc}
+\usetikzlibrary{calc}
 
 \tikzset{/chrono/fleche/.style={/tikz/.cd, very thick, ->, >=latex,/chrono/.cd}}
 
@@ -29,6 +29,7 @@
   /chrono/rnote/.belongs to family=/chrono/global,
   /chrono/snoteoffset/.belongs to family=/chrono/global,
   /chrono/rnoteoffset/.belongs to family=/chrono/global,
+  /chrono/name/.belongs to family=/chrono/global,
   /chrono/.belongs to family=/chrono/global,
 }
 
@@ -51,11 +52,13 @@
 \pgfkeys{/chrono/rnoteoffset/.code=\def\chronornoteoffset{#1}}
 \pgfkeys{/chrono/rnoteoffset/.default=0}
 \pgfkeys{/chrono/noteoffset/.style={snoteoffset=#1,rnoteoffset=#1}}
+\pgfkeys{/chrono/name/.code=\def\chrononame{#1}}
 
 \def\chronosnote{\relax}
 \def\chronornote{\relax}
 \def\chronosnoteoffset{3mm}
 \def\chronornoteoffset{3mm}
+\def\chrononame{delayed}
 
 \pgfkeys{/chrono/timerAoffset/.code=\setlength{\timerAoffset}{#1}
   \iftimerAright\addtolength{\timerAoffset}{3mm}\fi}
@@ -65,8 +68,8 @@
 \pgfkeys{/chrono/timerBoffset/.code=\setlength{\timerBoffset}{#1}}
 \pgfkeys{/chrono/timerBioffset/.code=\setlength{\timerBioffset}{#1}}
 
-\pgfkeys{/chrono/timeroffset/.style={timerAoffset=#1,timerBoffset=#1}}
-\pgfkeys{/chrono/timerioffset/.style={timerAioffset=#1,timerBioffset=#1}}
+\pgfkeys{/chrono/timer offset/.style={/chrono/timerAoffset=#1,/chrono/timerBoffset=#1}}
+\pgfkeys{/chrono/timeri offset/.style={/chrono/timerAioffset=#1,/chrono/timerBioffset=#1}}
 
 \pgfkeys{/chrono/timerAbottomup/.is if=timerAbottomup}
 \pgfkeys{/chrono/timerAright/.code={
@@ -360,8 +363,14 @@
     \gdef\chronornote{\relax}
   \fi
 
-  \chronodelayedfalse
-  \setlength\chronodelay{0mm}
+  \ifchronodelayed
+    % no simpler way to _copy_ the length value?
+    \pgfmathqparse{\pBr-\chronodelay}
+    \pgfkeyslet{/chrono/values/B/\chrononame}{\pgfmathresult}
+
+    \chronodelayedfalse
+    \setlength\chronodelay{0mm}
+  \fi
 
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
@@ -390,13 +399,20 @@
   \chronoaddto{\pBs}{\chronospacesame}
 
   \ifchronoh\else\if\chronornote\relax\else
-    \node[align=left,left] at (-\chronowidth/2-\chronornoteoffset,\pAr) {\chronornote};\fi
+    \node[align=left,left] at (-\chronowidth/2-\chronornoteoffset,\pAr-\chronodelay)
+         {\chronornote};\fi
     \gdef\chronosnote{\relax}
     \gdef\chronornote{\relax}
   \fi
 
-  \chronodelayedfalse
-  \setlength\chronodelay{0mm}
+  \ifchronodelayed
+    % no simpler way to _copy_ the length value?
+    \pgfmathqparse{\pAr-\chronodelay}
+    \pgfkeyslet{/chrono/values/A/\chrononame}{\pgfmathresult}
+
+    \chronodelayedfalse
+    \setlength\chronodelay{0mm}
+  \fi
 
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
@@ -412,6 +428,16 @@
 
 \newcommand{\AwaitB}{\setlength{\pAs}{\pAr}\chronoaddto{\pAs}{\chronospaceother}}
 \newcommand{\BwaitA}{\setlength{\pBs}{\pBr}\chronoaddto{\pBs}{\chronospaceother}}
+
+%% arg is name set in the delayed frame (key name, defaults to delayed)
+\newcommand{\Awaitdelayed}[1][delayed]{
+  \setlength{\pAr}{\pgfkeysvalueof{/chrono/values/A/#1}pt}
+  \AwaitB}
+
+\newcommand{\Bwaitdelayed}[1][delayed]{
+  \setlength{\pBr}{\pgfkeysvalueof{/chrono/values/B/#1}pt}
+  \BwaitA}
+  
 
 %%: A,B waits for its current timer to expire
 

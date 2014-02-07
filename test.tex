@@ -9,8 +9,6 @@
 
 
 \def\test{
-  \setlength{\pBr}{0cm}
-  \setlength{\pAr}{0cm}
   \AB{DATA1}
   \Await
   \AB[lost,color=red,dashed]{lost}
@@ -158,7 +156,7 @@
   \BAdelayed{1cm}{ack}{ACK4}}
 
 \def\testxiv{
-\pgfkeys{/chrono/.cd,timerioffset=3mm}
+\pgfkeys{/chrono/.cd,timeri offset=3mm}
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{TimeWait}
@@ -297,5 +295,15 @@
 \begin{hchrono}[no shorts,A=toto,B=taratata]
 \testxiv
 \end{hchrono}
+
+\begin{chrono}
+  \AB{DATA1}
+  \AB[delayed=2cm]{DATA2}
+  \AB[delayed,name=n2,rnote=named n2]{DATA3}
+  \Bwaitdelayed
+  \BA{ACK3}
+  \Bwaitdelayed[n2]
+  \BA[snote=waited for n2]{ACK4}
+\end{chrono}
 
 \end{document}

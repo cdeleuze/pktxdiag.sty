@@ -4,6 +4,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{a4wide}
 \usepackage{float}
+\usepackage{subfigure}
 
 \newenvironment{fchrono}[2][]{\begin{figure}[H]\centering\begin{chrono}[#1]\gdef\mycap{#2}}
 {\end{chrono}\caption{\mycap}\end{figure}}
@@ -273,8 +274,9 @@
 \caption{Fermeture de connexion}
 \end{figure}
 
-\begin{fchrono}[timerioffset=3mm]{L'état TIME-WAIT}
-%  \pgfkeys{/chrono/.cd,timerioffset=3mm}
+\begin{figure}[h]
+\hspace{-1cm}\subfigure[avec]{
+\begin{chrono}[state offset=7mm,timeri offset=3mm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{TimeWait}
@@ -288,10 +290,9 @@
                       \Bstate{Closed}
   \Awaittimeri
   \Astate{Closed}
-\end{fchrono}
-
-\begin{fchrono}[timerioffset=3mm]{Sans l'état TIME-WAIT}
-%  \pgfkeys{/chrono/.cd,timerioffset=3mm}
+\end{chrono}}\hfill
+\subfigure[sans]{
+\begin{chrono}[state offset=7mm,timeri offset=3mm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{Closed}
@@ -301,11 +302,45 @@
   \AB{RST}
 
                       \Bstate{Error}
-\end{fchrono}
+\end{chrono}}
+  \caption{État TIME-WAIT : retransmission du FIN}
+\end{figure}
 
-\begin{fchrono}{sans le TIME-WAIT}
+\clearpage
+
+\begin{figure}[H]
+\pgfkeys{/chrono/state offset=5mm,/chrono/timer offset=2mm}
+\hspace{-2cm}
+\subfigure[un vieux FIN]{
+\begin{chrono}[timeri offset=3mm,width=2cm]
+                      \Bactionstate{close}{LastAck}
+                      \BAtimed{FIN}{3.5cm}{retrans}
+  \Astate{Closed}
+  \AB[delayed=3cm]{ACK}
+                      \Bwaittimer
+                      \BA[delayed=6cm]{FIN}
+                      \Bstate{Closed}
+
+\later{2cm}
+  
+                      \Bactionstate{passive open}{Listen}
+  \Await
+  \Aactionstate{active open}{SynSent}
+  \AB{SYN}
+                      \Bstate{SynRecvd}
+                      \BA{SYN-ACK}
+  \Astate{Established}
+  \AB{ACK}
+                      \Bstate{Established}
+  \Awaitdelayed
+  \Astate{CloseWait}
+  \AB{ACK}
+\end{chrono}}
+%\hfill
+\subfigure[un vieux DATA]{
+\begin{chrono}[width=2cm]
   \Astate{Established}\Bstate{Established}
-  \AB{DATA}
+  \ABtimed{DATA}{2cm}{retrans}
                      \BA[delayed=1cm]{ACK}
   \AB[delayed=11cm,dotted,rnoteoffset=1mm,rnote=oups !]{DATA} 
                      \Bactionstate{close}{Fin-Wait1}
@@ -330,7 +365,9 @@
   \AB{ACK}
                  \Bstate{Established}
   \Await
-\end{fchrono}
+\end{chrono}}
+  \caption{Sans le TIME-WAIT : insertion de paquets retardés dans une nouvelle connexion}
+\end{figure}
 
 \begin{fchrono}[width=6cm,A=Navigateur,B=Serveur]{Conversation TCP}
 \NoAutoSpaceBeforeFDP
