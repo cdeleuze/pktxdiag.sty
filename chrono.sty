@@ -172,7 +172,8 @@
 \newlength{\prop}\setlength{\prop}{0.5cm}
 \newlength{\savedprop}
 \newlength{\trans}\setlength{\trans}{2cm}
-\newlength{\savedtrans}
+\newlength{\savedtrans}  %% to keep default value accross frames
+\newlength{\ltrans}      %% last used trans value (for timer functions)
 \newlength{\chronodelay}
 
 \newcommand{\chronoaddto}[2]{
@@ -427,6 +428,7 @@
   \fi
 
   \pgfkeyssetvalue{/chrono/id}{default}
+  \setlength{\ltrans}{\trans}
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
   \ifchronosync
@@ -471,6 +473,7 @@
   \fi
 
   \pgfkeyssetvalue{/chrono/id}{default}
+  \setlength{\ltrans}{\trans}
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
   \ifchronosync
@@ -519,28 +522,27 @@
 
 \newcommand{\ABtimed}[4][]{  % [keys], flabel, len, tlabel
   \setlength{\chronoxx}{\pAs}
+  \AB[#1]{#2}
   \addtolength{\chronoxx}{\trans}
-  \settimerA{\chronoxx}{#3}{#4}
-  \AB[#1]{#2}}
+  \settimerA{\chronoxx}{#3}{#4}}
 
 \newcommand{\ABtimedi}[4][]{  % [keys], flabel, len, tlabel
   \setlength{\chronoxx}{\pAs}
-  \addtolength{\chronoxx}{\trans}
-  \settimerAi{\chronoxx}{#3}{#4}
-  \AB[#1]{#2}}
+  \AB[#1]{#2}
+  \addtolength{\chronoxx}{\ltrans}
+  \settimerAi{\chronoxx}{#3}{#4}}
 
 \newcommand{\BAtimed}[4][]{  % [keys], flabel, len, tlabel
   \setlength{\chronoxx}{\pBs}
-  \addtolength{\chronoxx}{\trans}
-  \settimerB{\chronoxx}{#3}{#4}
-  \BA[#1]{#2}}
+  \BA[#1]{#2}
+  \addtolength{\chronoxx}{\ltrans}
+  \settimerB{\chronoxx}{#3}{#4}}
 
 \newcommand{\BAtimedi}[4][]{  % [keys], flabel, len, tlabel
   \setlength{\chronoxx}{\pBs}
-  \addtolength{\chronoxx}{\trans}
-  \settimerBi{\chronoxx}{#3}{#4}
   \BA[#1]{#2}
-}
+  \addtolength{\chronoxx}{\ltrans}
+  \settimerBi{\chronoxx}{#3}{#4}}
 
 %%: A sends a frame that cancels B's timer
 
