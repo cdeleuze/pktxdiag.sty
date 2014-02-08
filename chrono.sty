@@ -12,7 +12,10 @@
 \usetikzlibrary{arrows}
 \usetikzlibrary{calc}
 
-\tikzset{/chrono/fleche/.style={/tikz/.cd, very thick, ->, >=latex,/chrono/.cd}}
+\colorlet{graphicbackground}{white}
+
+%% removed the >=latex, since it does not conform to opacity=...
+\tikzset{/chrono/fleche/.style={/tikz/.cd, very thick, ->,/chrono/.cd}}
 
 \pgfkeys{/chrono/.search also={/tikz}}
 \pgfkeys{/chrono/label/.search also={/chrono,/tikz}}
@@ -30,6 +33,7 @@
   /chrono/snoteoffset/.belongs to family=/chrono/global,
   /chrono/rnoteoffset/.belongs to family=/chrono/global,
   /chrono/name/.belongs to family=/chrono/global,
+  /chrono/id/.belongs to family=/chrono/global,
   /chrono/.belongs to family=/chrono/global,
 }
 
@@ -37,7 +41,7 @@
 \pgfkeys{/pgf/key filters/active families/.install key filter}
 
 \pgfkeys{/chrono/prop/.default=1cm,/chrono/prop/.code=\setlength{\prop}{#1}}
-\pgfkeys{/chrono/trans/.default=8mm,/chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi}
+\pgfkeys{/chrono/trans/.default=10mm,/chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi}
 \pgfkeyssetvalue{/chrono/short trans}{7mm}
 \pgfkeys{/chrono/sh/.style=trans=5mm}
 \pgfkeys{/chrono/delayed/.default=4cm,/chrono/delayed/.code=\chronodelayedtrue\setlength{\chronodelay}{#1}}
@@ -53,6 +57,28 @@
 \pgfkeys{/chrono/rnoteoffset/.default=0}
 \pgfkeys{/chrono/noteoffset/.style={snoteoffset=#1,rnoteoffset=#1}}
 \pgfkeys{/chrono/name/.code=\def\chrononame{#1}}
+\pgfkeys{/chrono/opacity/.style={/tikz/opacity=#1,/tikz/text opacity=#1}}
+
+\pgfkeys{/chrono/show label2/.is if=showlabelii}
+\pgfkeys{/chrono/hide label/.is if=hidelabel}
+\pgfkeyssetvalue{/chrono/ghost}{0}
+\pgfkeys{/chrono/hide/.code=\chronosethides{#1}}
+
+\pgfkeyssetvalue{/chrono/label2}{}
+
+%% the default id
+\pgfkeyssetvalue{/chrono/id}{default}
+\pgfkeyssetvalue{/chrono/ids/default}{}
+\pgfkeyssetvalue{/chrono/ids/default/opacity}{1}
+
+%% can not use \foreach since it creates a local scope! :-(
+\newcommand{\chronosethides}[1]{
+  \pgfkeyssetvalue{/chrono/ids/#1/opacity}{\pgfkeysvalueof{/chrono/ghost}}
+%  \foreach \x in { #1 } {
+%    \pgfkeyssetvalue{/chrono/ids/\x/opacity}{\pgfkeysvalueof{/chrono/ghost}}
+%  }
+}
+
 
 \def\chronosnote{\relax}
 \def\chronornote{\relax}
@@ -115,6 +141,8 @@
 \newif\iftimerAbottomup
 \newif\iftimerAright
 
+\newif\ifshowlabelii
+\newif\ifhidelabel
 
 \newif\ifchronoh\chronohfalse
 
@@ -143,13 +171,31 @@
 %\newlength{\wait}\setlength{\wait}{0cm}
 \newlength{\prop}\setlength{\prop}{0.5cm}
 \newlength{\savedprop}
-\newlength{\trans}\setlength{\trans}{1.5cm}
+\newlength{\trans}\setlength{\trans}{2cm}
 \newlength{\savedtrans}
 \newlength{\chronodelay}
 
 \newcommand{\chronoaddto}[2]{
   \ifnum \y=1\addtolength{#1}{#2}\else\addtolength{#1}{-#2}\fi
 }
+
+% the drawn frame label can be made of:
+%  - l1 label (passed as arg to commands)
+%  - the l2 label (passed as label2 option key)
+%  - both
+
+\newcommand{\chrononodelabel}[2][1]{ % 1/-1, l1 label
+  \ifshowlabelii\ifhidelabel\itshape \pgfkeysvalueof{/chrono/label2}\else
+  \ifnum #1=1
+  \begin{tabular}{c}
+    \itshape \pgfkeysvalueof{/chrono/label2}\\
+    #2
+  \end{tabular}\else
+  \begin{tabular}{c} % for A in hchrono, we want label2 to be below
+    #2 \\
+    \itshape \pgfkeysvalueof{/chrono/label2}
+  \end{tabular}\fi
+  \fi\else\ifhidelabel{}\else#2\fi\fi}
 
 % #1 is keys, #2 is 1 or -1 (arrow direction),
 % #3 is start pos, #4 is label
@@ -164,11 +210,11 @@
        \draw (#2*-\chronowidth/2,\chronopos)
                  --++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
 
-                 \ifchronosync\else node[near end,above,sloped]{#4}\fi
+                 \ifchronosync\else node[near end,above,sloped]{\chrononodelabel{#4}}\fi
     
                  decorate[decoration=zigzag,segment length=2mm]
                  {--++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
-                   \ifchronosync node[midway,above,sloped]{#4}\fi}
+                   \ifchronosync node[midway,above,sloped]{\chrononodelabel{#4}}\fi}
 
                  --++(#2*\chronowidth/\lost/3,-\prop/\lost/3);
                    \ifchronolost\ifchronocrosslost \draw[-]
@@ -179,12 +225,12 @@
        .. controls (0,\chronopos-\prop/2) and (0,\chronopos-\chronodelay)
 %       .. controls (\chronowidth/2,\chronopos-\prop/2) and (-\chronowidth/2,\chronopos-\chronodelay)
        .. (#2*\chronowidth/2, \chronopos-\chronodelay-\prop)
-                   node[above,sloped,pos=0.1]{#4};
+                   node[above,sloped,pos=0.1]{\chrononodelabel{#4}};
 
     \else
        \draw (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,-\prop/\lost)
                    node[above,sloped,\ifchronosync midway\else near
-                   start\fi]{#4};
+                   start\fi]{\chrononodelabel{#4}};
                    \ifchronolost\ifchronocrosslost \draw[-]
                    (#2*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
     \fi
@@ -197,7 +243,7 @@
   \begin{scope}[/chrono/.cd,fleche,|-|,#1]
   \setlength{\chronopos}{#3}
   \setlength{\chronopostrans}{\chronopos}
-  \ifnum #2=1\setlength{\chronoxx}{1mm}\else\setlength{\chronoxx}{-7mm}\fi
+  \ifnum #2=1\def\toto{above}\else\def\toto{below}\fi
   {
     \addtolength{\chronopostrans}{\trans}
     \ifchronolost\def\lost{2}\else\def\lost{1}\fi
@@ -205,12 +251,12 @@
 
        \draw (\chronopos,#2*\chronowidth/2) --++(\trans/3,0)
                  decorate[decoration=zigzag,segment length=2mm]
-                 {--++(\trans/3,0) node[above=\chronoxx,midway]{#4}}
+                 {--++(\trans/3,0) node[\toto=1mm,midway]{\chrononodelabel[#2]{#4}}}
                  --++(\trans/3,0);
     \else
 
        \draw (\chronopos,#2*\chronowidth/2)
-       -- ++(\trans,0) node[above=\chronoxx,midway]{#4};
+       -- ++(\trans,0) node[\toto=1mm,midway]{\chrononodelabel[#2]{#4}};
     \fi
     \draw[thin,->] (\chronopostrans,#2*\chronowidth/2)
              -- ++ (\prop/\lost,#2*-\chronowidth/\lost);
@@ -335,6 +381,13 @@
 \newcommand{\chronoendtimerB} {\chronoendtimer{B}{\y}}
 \newcommand{\chronoendtimerBi}{\chronoendtimer{Bi}{\y}}
 
+%% set opacity into \chronoopa, based on current value of key /chrono/id
+\newcommand{\chronosetopa}{
+ \pgfkeysgetvalue{/chrono/id}{\chronoid}
+ \pgfkeysifdefined{/chrono/ids/\chronoid/opacity}
+ {\def\chronoopa{\pgfkeysvalueof{/chrono/ids/\chronoid/opacity}}}
+ {\def\chronoopa{1}}}
+
 %%%%%% high-level commands
 
 %%: A sends to B
@@ -350,7 +403,8 @@
     \node[align=left,left] at (-\chronowidth/2-\chronosnoteoffset,\pAs) {\chronosnote};\fi
   \fi
 
-  \chronoarrow[#1]{1}{\pAs}{#2}
+  \chronosetopa
+  \chronoarrow[#1,opacity=\chronoopa]{1}{\pAs}{#2}
   \setlength{\pBr}{\pAs}\chronoaddto{\pBr}{\prop}
   \chronoaddto{\pBr}{\trans}
   \chronoaddto{\pAs}{\trans}
@@ -372,6 +426,7 @@
     \setlength\chronodelay{0mm}
   \fi
 
+  \pgfkeyssetvalue{/chrono/id}{default}
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
   \ifchronosync
@@ -392,7 +447,8 @@
     \node[align=right,right] at (\chronowidth/2+\chronosnoteoffset,\pBs) {\chronosnote};\fi
   \fi
 
-  \chronoarrow[#1]{-1}{\pBs}{#2}
+  \chronosetopa
+  \chronoarrow[#1,opacity=\chronoopa]{-1}{\pBs}{#2}
   \setlength{\pAr}{\pBs}\chronoaddto{\pAr}{\prop}
   \chronoaddto{\pAr}{\trans}
   \chronoaddto{\pBs}{\trans}
@@ -414,6 +470,7 @@
     \setlength\chronodelay{0mm}
   \fi
 
+  \pgfkeyssetvalue{/chrono/id}{default}
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
   \ifchronosync
@@ -429,7 +486,7 @@
 \newcommand{\AwaitB}{\setlength{\pAs}{\pAr}\chronoaddto{\pAs}{\chronospaceother}}
 \newcommand{\BwaitA}{\setlength{\pBs}{\pBr}\chronoaddto{\pBs}{\chronospaceother}}
 
-%% arg is name set in the delayed frame (key name, defaults to delayed)
+%%: arg is name set in the delayed frame (key name, defaults to delayed)
 \newcommand{\Awaitdelayed}[1][delayed]{
   \setlength{\pAr}{\pgfkeysvalueof{/chrono/values/A/#1}pt}
   \AwaitB}
@@ -634,16 +691,16 @@
 
   % vertical lines
   \ifchronoh\else
-  \draw[white,dashed](-\chronowidth/2,\tpos) -- ++(0,\y\chronolaterdashedlen);
-  \draw[white,dashed]( \chronowidth/2,\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed](-\chronowidth/2,\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed]( \chronowidth/2,\tpos) -- ++(0,\y\chronolaterdashedlen);
   \fi
 
   % timer lines
   \ifchronoh\else
-  \draw[white,dashed](-\chronowidth/2-\timerAoffset,\tpos)  -- ++(0,\y\chronolaterdashedlen);
-  \draw[white,dashed](-\chronowidth/2-\timerAioffset,\tpos) -- ++(0,\y\chronolaterdashedlen);
-  \draw[white,dashed]( \chronowidth/2-\timerBoffset,\tpos)  -- ++(0,\y\chronolaterdashedlen);
-  \draw[white,dashed]( \chronowidth/2-\timerBioffset,\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed](-\chronowidth/2-\timerAoffset,\tpos)  -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed](-\chronowidth/2-\timerAioffset,\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed]( \chronowidth/2-\timerBoffset,\tpos)  -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed]( \chronowidth/2-\timerBioffset,\tpos) -- ++(0,\y\chronolaterdashedlen);
   \fi
 }
 
@@ -690,7 +747,8 @@
   \chronohtrue
   \setlength{\chronospacesame}{0cm}
   \setlength{\chronospaceother}{0cm}
-  \setlength{\chronowidth}{1.5cm}
+  \setlength{\chronowidth}{1cm}
+  \setlength{\prop}{3mm}
   \def\chronoarrow{\chronoarrowh}
   \def\y{1}
   \begin{tikzpicture}[/chrono/.cd,#1]\sffamily

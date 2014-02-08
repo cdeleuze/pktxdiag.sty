@@ -3,8 +3,9 @@
 \usepackage[francais]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{a4wide}
+%\usepackage{cours}
 \usepackage{float}
-\usepackage{subfigure}
+\usepackage{subfig}
 
 \newenvironment{fchrono}[2][]{\begin{figure}[H]\centering\begin{chrono}[#1]\gdef\mycap{#2}}
 {\end{chrono}\caption{\mycap}\end{figure}}
@@ -142,8 +143,51 @@
              \BA{RR 4}
 \end{chrono}
 
-\subsection{HDLC horizontaux}
+\clearpage
 
+\newcommand{\figxix}{
+           \BA[id=vc1,label2={DATA 2,0 (1)}]{I 3,6}
+\AB{RR 4}
+           \BA[id=vc1,label2={DATA 3,0 (1)}]{I 4,6}
+\AB[id=vc1,label2=RR4 (1),trans]{I 6,5}
+           \BA{RR7}
+           \BA[id=vc1,label2={DATA 4,0 (1)}]{I 5,7}
+\AB{RR 6}
+           \BA[id=vc1,label2={DATA 5,0 (1)}]{I 6,7}
+}
+
+\begin{figure}[H]
+\hfill
+\subfloat[HDLC]{\begin{chrono}[space other=8mm, space same=12mm]
+\figxix
+\end{chrono}}
+\hfill
+\subfloat[X25]{\begin{chrono}[space other=8mm, space same=12mm, hide=default,show
+  label2, hide label]
+\figxix
+\end{chrono}}
+\hfill
+\subfloat[HDLC/X25]{\begin{chrono}[space other=8mm, space same=12mm, show label2]
+\figxix
+\end{chrono}}
+\hfill~
+\caption{Décodage de la figure 19}
+\end{figure}
+
+\begin{figure}[H]
+\begin{hchrono}[hdlc]
+\figxix
+\end{hchrono}
+
+\begin{hchrono}[hdlc,hide=default,show label2,hide label]
+\figxix
+\end{hchrono}
+
+\begin{hchrono}[hdlc, show label2]
+\figxix
+\end{hchrono}
+\caption{Décodage de la figure 19}
+\end{figure}
 
 \begin{fhchrono}[hdlc,short trans=3mm,A,B,prop=4mm]{Exercice 25}
   \AB{SABM}
@@ -203,12 +247,16 @@
 
 \subsection{TFTP}
 
-\begin{fchrono}[A=C,B=S]{Tentative de chargement d'un fichier inexistant}
+\begin{figure}[H]
+\pgfkeys{/chrono/A=C,/chrono/B=S,/chrono/width=2.7cm}
+\subfloat[Tentative de chargement d'un fichier inexistant]{
+\begin{chrono}[]
   \AB{RRQ(fichier)}
   \BA{ERROR (01)}
-\end{fchrono}
-
-\begin{fchrono}[A=C,B=S]{Transfert réussi d'un fichier de 1084 octets}
+\end{chrono}}
+\hfill
+\subfloat[Transfert réussi d'un fichier de 1084 octets]{
+\begin{chrono}[A=C,B=S]
   \AB{RRQ(fichier)}
                      \BA{DATA1 (512)}
   \AB{ACK1}
@@ -216,9 +264,10 @@
   \AB{ACK2}
                      \BA[snote={< 512 octets}]{DATA3 (60)}
   \AB{ACK3}
-\end{fchrono}
-
-\begin{fchrono}[A=C,B=S]{Perte d'un message pendant le transfert}
+\end{chrono}}
+\hfill
+\subfloat[Perte d'un message pendant le transfert]{
+\begin{chrono}[A=C,B=S]
   \AB{RRQ(fichier)}
                      \BA{DATA1}
   \AB{ACK1}
@@ -228,7 +277,9 @@
   \AB{ACK2}
                      \BA{DATA3}
   \AB{ACK3}
-\end{fchrono}
+\end{chrono}}
+  \caption{TFTP}
+\end{figure}
 
 \subsection{TCP}
 
@@ -237,7 +288,7 @@
   \Astate{Closed}\Bstate{Closed}
   \Await         \Bwait
   \Await         \Bactionstate{passive open}{listen}
-  \Aactionstate{active open}{Syn-Sent}
+  \Aactionstate{active open}{SynSent}
   \AB{SYN}
                  \Bstate{SynRecvd}
                  \BA{SYN+ACK}
@@ -274,8 +325,8 @@
 \caption{Fermeture de connexion}
 \end{figure}
 
-\begin{figure}[h]
-\hspace{-1cm}\subfigure[avec]{
+\begin{figure}[H]
+\hspace{-1cm}\subfloat[avec]{
 \begin{chrono}[state offset=7mm,timeri offset=3mm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
@@ -291,7 +342,7 @@
   \Awaittimeri
   \Astate{Closed}
 \end{chrono}}\hfill
-\subfigure[sans]{
+\subfloat[sans]{
 \begin{chrono}[state offset=7mm,timeri offset=3mm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
@@ -311,7 +362,7 @@
 \begin{figure}[H]
 \pgfkeys{/chrono/state offset=5mm,/chrono/timer offset=2mm}
 \hspace{-2cm}
-\subfigure[un vieux FIN]{
+\subfloat[un vieux FIN]{
 \begin{chrono}[timeri offset=3mm,width=2cm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
@@ -336,19 +387,19 @@
   \Astate{CloseWait}
   \AB{ACK}
 \end{chrono}}
-%\hfill
-\subfigure[un vieux DATA]{
+\hfill
+\subfloat[un vieux DATA]{
 \begin{chrono}[width=2cm]
   \Astate{Established}\Bstate{Established}
   \ABtimed{DATA}{2cm}{retrans}
                      \BA[delayed=1cm]{ACK}
   \AB[delayed=11cm,dotted,rnoteoffset=1mm,rnote=oups !]{DATA} 
-                     \Bactionstate{close}{Fin-Wait1}
+                     \Bactionstate{close}{FinWait1}
                      \BA{FIN}
-  \Astate{Close-Wait}
+  \Astate{CloseWait}
   \AB{ACK}
-                     \Bstate{Fin-Wait2}
-  \Aactionstate{close}{Last-Ack}
+                     \Bstate{FinWait2}
+  \Aactionstate{close}{LastAck}
   \AB{FIN}
                      \Bstate{Closed}
                      \BA{ACK}
@@ -356,11 +407,11 @@
 
 \later{2cm}
 
-  \Await         \Bactionstate{passive open}{listen}
-  \Aactionstate{active open}{Syn-Sent}
+  \Await         \Bactionstate{passive open}{Listen}
+  \Aactionstate{active open}{SynSent}
   \AB{SYN}
                  \Bstate{SynRecvd}
-                 \BA{SYN+ACK}
+                 \BA{SYN-ACK}
   \Astate{Established}
   \AB{ACK}
                  \Bstate{Established}
