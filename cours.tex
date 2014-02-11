@@ -162,7 +162,7 @@
 \figxix
 \end{chrono}}
 \hfill
-\subfloat[X25]{\begin{chrono}[space other=8mm, space same=12mm, hide=default,show
+\subfloat[X25]{\begin{chrono}[space other=8mm, space same=12mm, hide=main,show
   label2, hide label]
 \figxix
 \end{chrono}}
@@ -179,7 +179,7 @@
 \figxix
 \end{hchrono}
 
-\begin{hchrono}[hdlc,hide=default,show label2,hide label]
+\begin{hchrono}[hdlc,hide=main,show label2,hide label]
 \figxix
 \end{hchrono}
 
@@ -478,6 +478,59 @@
 \BA{ack=~~~~~~~~~~ win= }
 \end{fchrono}
 
+
+\def\ftp{
+  \AB[id=tcp]{SYN}
+               \BA[id=tcp]{SYN-ACK}
+  \AB[id=tcp]{ACK}
+
+               \BA{220}
+  \AB{USER guest}
+               \BA{331}
+  \AB{PASS xxxx}
+               \BA{230}
+   \AB{SYST}
+               \BA{215 Unix}
+   \AB{PORT 192,168,130,20,217,116}
+               \BA{200}
+   \AB{RETR toto}
+               \BA{150}
+
+               \BA[id=data]{SYN}
+   \AB[id=data]{SYN-ACK}
+               \BA[id=data]{ACK}
+               \BA[id=data]{data}
+               \BA[id=data]{FIN}
+   \AB[id=data]{ACK}
+   \AB[id=data]{FIN,ACK}
+               \BA[id=data]{ACK}
+
+               \BA{226}
+   \AB{QUIT}
+               \BA{221}
+
+               \BA[id=tcp]{FIN}
+   \AB[id=tcp]{FIN,ACK}
+               \BA[id=tcp]{ACK}
+}
+
+{
+\derivestyle{data}{default}{green,line width=3pt}
+\derivestyle{tcp}{default}{gray}
+\setflowstyle{data}{data}
+\setflowstyle{tcp}{tcp}
+
+\begin{chrono}[width=5cm,prop=2mm]
+  \ftp
+\end{chrono}
+\begin{chrono}[width=5cm,prop=2mm,hide=data,hide=tcp]
+  \ftp
+\end{chrono}
+\begin{chrono}[prop=2mm,hide=main,hide=tcp]
+\derivestyle{data}{default}{orange,line width=1pt}
+  \ftp
+\end{chrono}
+}
 \section{NE520}
 
 

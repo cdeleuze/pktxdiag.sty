@@ -14,11 +14,8 @@
 
 \colorlet{graphicbackground}{white}
 
-%% removed the >=latex, since it does not conform to opacity=...
-\tikzset{/chrono/fleche/.style={/tikz/.cd, very thick, ->,/chrono/.cd}}
-
 \pgfkeys{/chrono/.search also={/tikz}}
-\pgfkeys{/chrono/label/.search also={/chrono,/tikz}}
+
 %%%%%% option keys
 
 % arrow cmd keys
@@ -65,19 +62,6 @@
 \pgfkeys{/chrono/hide/.code=\chronosethides{#1}}
 
 \pgfkeyssetvalue{/chrono/label2}{}
-
-%% the default id
-\pgfkeyssetvalue{/chrono/id}{default}
-\pgfkeyssetvalue{/chrono/ids/default}{}
-\pgfkeyssetvalue{/chrono/ids/default/opacity}{1}
-
-%% can not use \foreach since it creates a local scope! :-(
-\newcommand{\chronosethides}[1]{
-  \pgfkeyssetvalue{/chrono/ids/#1/opacity}{\pgfkeysvalueof{/chrono/ghost}}
-%  \foreach \x in { #1 } {
-%    \pgfkeyssetvalue{/chrono/ids/\x/opacity}{\pgfkeysvalueof{/chrono/ghost}}
-%  }
-}
 
 
 \def\chronosnote{\relax}
@@ -135,8 +119,45 @@
 \pgfkeys{/chrono/no shorts/.code=\def\chronoshorts{}}
 
 
-%%%%%% various definitions
+%%%%%% flows
 
+%% the 'main' flowid
+\pgfkeyssetvalue{/chrono/id}{main}
+\pgfkeyssetvalue{/chrono/flows/main}{}
+
+%% default parameters for ids
+\pgfkeyssetvalue{/chrono/default}{}
+\pgfkeyssetvalue{/chrono/default/opacity}{1}
+
+%% can not use \foreach since it creates a local scope! :-(
+\newcommand{\chronosethides}[1]{
+  \pgfkeyssetvalue{/chrono/flows/#1/opacity}{\pgfkeysvalueof{/chrono/ghost}}
+%  \foreach \x in { #1 } {
+%    \pgfkeyssetvalue{/chrono/ids/\x/opacity}{\pgfkeysvalueof{/chrono/ghost}}
+%  }
+}
+
+
+%%%%%% styles
+
+%% define a style: name to set of options
+\newcommand{\definestyle}[2]{
+  \pgfkeys{/chrono/styles/#1/.style={#2}}}
+
+%% make #1 (dynamically) inherit #2, adding #3 options
+\newcommand{\derivestyle}[3]{
+  \definestyle{#1}{/chrono/styles/#2,#3}}
+
+%% give a style to a flow
+\newcommand{\setflowstyle}[2]{
+  \pgfkeys{/chrono/flows/#1/style/.initial=#2}}
+
+%% the default style
+%% removed the >=latex, since it does not obey opacity=...
+\definestyle{default}{very thick, ->}
+
+
+%%%%%% various definitions
 
 \newif\iftimerAbottomup
 \newif\iftimerAright
@@ -204,7 +225,7 @@
 \newcommand{\chronoarrowv}[4][]{
   \setlength{\chronopos}{#3}
   {
-    \begin{scope}[/chrono/.cd,fleche,#1]
+    \begin{scope}[/chrono/.cd,#1]
     \ifchronolost\def\lost{2}\else\def\lost{1}\fi
     \ifchronobad
 
@@ -241,7 +262,7 @@
 }
 
 \newcommand{\chronoarrowh}[4][]{
-  \begin{scope}[/chrono/.cd,fleche,|-|,#1]
+  \begin{scope}[/chrono/.cd,#1,|-|]
   \setlength{\chronopos}{#3}
   \setlength{\chronopostrans}{\chronopos}
   \ifnum #2=1\def\toto{above}\else\def\toto{below}\fi
@@ -382,14 +403,21 @@
 \newcommand{\chronoendtimerB} {\chronoendtimer{B}{\y}}
 \newcommand{\chronoendtimerBi}{\chronoendtimer{Bi}{\y}}
 
-%% set opacity into \chronoopa, based on current value of key /chrono/id
-\newcommand{\chronosetopa}{
- \pgfkeysgetvalue{/chrono/id}{\chronoid}
- \pgfkeysifdefined{/chrono/ids/\chronoid/opacity}
- {\def\chronoopa{\pgfkeysvalueof{/chrono/ids/\chronoid/opacity}}}
- {\def\chronoopa{1}}}
+
+\newcommand{\chronogetconf}[3]{
+  \pgfkeysifdefined{/chrono/flows/#1/#2}
+  {\def#3{\pgfkeysvalueof{/chrono/flows/#1/#2}}}
+  {\def#3{\pgfkeysvalueof{/chrono/default/#2}}}}
+
 
 %%%%%% high-level commands
+
+%% pAs               pBs
+%% pBr               pAr
+%% align=left,left   align=right,right    + horizontal pos for snote
+%% align=right,rigth align=left,left      + horizontal pos for rnote
+%% A                 B
+%% pBs               pAs
 
 %%: A sends to B
 
@@ -404,8 +432,12 @@
     \node[align=left,left] at (-\chronowidth/2-\chronosnoteoffset,\pAs) {\chronosnote};\fi
   \fi
 
-  \chronosetopa
-  \chronoarrow[#1,opacity=\chronoopa]{1}{\pAs}{#2}
+  \pgfkeysgetvalue{/chrono/id}{\chronoid}
+  \chronogetconf{\chronoid}{opacity}{\chronoopa}
+  \pgfkeysifdefined{/chrono/flows/\chronoid/style}
+  {\chronoarrow[/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/style},#1,opacity=\chronoopa]{1}{\pAs}{#2}}
+  {\chronoarrow[/chrono/styles/default,#1,opacity=\chronoopa]{1}{\pAs}{#2}}
+
   \setlength{\pBr}{\pAs}\chronoaddto{\pBr}{\prop}
   \chronoaddto{\pBr}{\trans}
   \chronoaddto{\pAs}{\trans}
@@ -427,7 +459,7 @@
     \setlength\chronodelay{0mm}
   \fi
 
-  \pgfkeyssetvalue{/chrono/id}{default}
+  \pgfkeyssetvalue{/chrono/id}{main}
   \setlength{\ltrans}{\trans}
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
@@ -449,8 +481,12 @@
     \node[align=right,right] at (\chronowidth/2+\chronosnoteoffset,\pBs) {\chronosnote};\fi
   \fi
 
-  \chronosetopa
-  \chronoarrow[#1,opacity=\chronoopa]{-1}{\pBs}{#2}
+  \pgfkeysgetvalue{/chrono/id}{\chronoid}
+  \chronogetconf{\chronoid}{opacity}{\chronoopa}
+  \pgfkeysifdefined{/chrono/flows/\chronoid/style}
+  {\chronoarrow[/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/style},#1,opacity=\chronoopa]{-1}{\pBs}{#2}}
+  {\chronoarrow[/chrono/styles/default,#1,opacity=\chronoopa]{-1}{\pBs}{#2}}
+
   \setlength{\pAr}{\pBs}\chronoaddto{\pAr}{\prop}
   \chronoaddto{\pAr}{\trans}
   \chronoaddto{\pBs}{\trans}
@@ -472,7 +508,7 @@
     \setlength\chronodelay{0mm}
   \fi
 
-  \pgfkeyssetvalue{/chrono/id}{default}
+  \pgfkeyssetvalue{/chrono/id}{main}
   \setlength{\ltrans}{\trans}
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
