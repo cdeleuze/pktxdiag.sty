@@ -156,6 +156,11 @@
            \BA[id=vc1,label2={DATA 5,0 (1)}]{I 6,7}
 }
 
+{ \derivestyle{rr}{default}{orange}
+  \derivestyle{rrl}{labeldefault}{yellow}
+  \setflowstyle{main}{rr}
+  \setflowlabelstyle{main}{rrl}
+
 \begin{figure}[H]
 \hfill
 \subfloat[HDLC]{\begin{chrono}[space other=8mm, space same=12mm]
@@ -188,6 +193,7 @@
 \end{hchrono}
 \caption{Décodage de la figure 19}
 \end{figure}
+}
 
 \begin{fhchrono}[hdlc,short trans=3mm,A,B,prop=4mm]{Exercice 25}
   \AB{SABM}
@@ -518,6 +524,8 @@
 \derivestyle{data}{default}{green,line width=3pt}
 \derivestyle{tcp}{default}{gray}
 \setflowstyle{data}{data}
+\derivestyle{tcplabel}{default}{above,blue,font=\footnotesize\ttfamily}
+\setflowlabelstyle{tcp}{tcplabel}
 \setflowstyle{tcp}{tcp}
 
 \begin{chrono}[width=5cm,prop=2mm]

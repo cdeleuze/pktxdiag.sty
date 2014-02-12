@@ -172,7 +172,7 @@
   \Astate{Closed}
 }
 
-\begin{chrono}[color=blue,cross for lost]%,/chrono/fleche/.append style={color=yellow}]
+\begin{chrono}[color=blue,cross for lost]
   \test
 \end{chrono}
 \hfill
@@ -327,6 +327,32 @@
 \begin{chrono}[hide=1,hide=2]
   \testfilter
 \end{chrono}
+
+{\derivestyle{id1}{default}{green}
+\derivestyle{id1l}{labeldefault}{green!60}
+\derivestyle{id2}{default}{blue,dashed}
+\definestyle{id2l}{above,blue!60}
+\setflowstyle{1}{id1}
+\setflowlabelstyle{1}{id1l}
+\setflowstyle{2}{id2}
+\setflowlabelstyle{2}{id2l}
+\begin{chrono}
+  \testfilter
+\end{chrono}
+\begin{chrono}[hide=1]
+  \testfilter
+\end{chrono}
+\begin{chrono}[hide=2]
+  \testfilter
+\end{chrono}
+\begin{chrono}[hide=2]
+  \definestyle{1b}{above,draw,orange,fill=orange!20,opacity=0.5}
+  \setflowlabelstyle{1}{1b}
+  \testfilter
+\end{chrono}
+}
+
+
 
 \def\testlabelii{
   \AB[label2=Yoooo !]{DATA 1}

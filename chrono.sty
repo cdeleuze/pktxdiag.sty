@@ -152,10 +152,14 @@
 \newcommand{\setflowstyle}[2]{
   \pgfkeys{/chrono/flows/#1/style/.initial=#2}}
 
+\newcommand{\setflowlabelstyle}[2]{
+  \pgfkeys{/chrono/flows/#1/labelstyle/.initial=#2}}
+
 %% the default style
 %% removed the >=latex, since it does not obey opacity=...
 \definestyle{default}{very thick, ->}
 
+\definestyle{labeldefault}{above,sloped}
 
 %%%%%% various definitions
 
@@ -223,6 +227,10 @@
 % #3 is start pos, #4 is label
 
 \newcommand{\chronoarrowv}[4][]{
+  \pgfkeysifdefined{/chrono/flows/\chronoid/labelstyle}
+  {\def\labelstyle{/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/labelstyle}}}
+  {\def\labelstyle{/chrono/styles/labeldefault}}
+
   \setlength{\chronopos}{#3}
   {
     \begin{scope}[/chrono/.cd,#1]
@@ -232,11 +240,11 @@
        \draw (#2*-\chronowidth/2,\chronopos)
                  --++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
 
-                 \ifchronosync\else node[near end,above,sloped]{\chrononodelabel{#4}}\fi
+                 \ifchronosync\else node[near end,\labelstyle]{\chrononodelabel{#4}}\fi
     
                  decorate[decoration=zigzag,segment length=2mm]
                  {--++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
-                   \ifchronosync node[midway,above,sloped]{\chrononodelabel{#4}}\fi}
+                   \ifchronosync node[midway,\labelstyle]{\chrononodelabel{#4}}\fi}
 
                  --++(#2*\chronowidth/\lost/3,-\prop/\lost/3);
                    \ifchronolost\ifchronocrosslost \draw[-]
@@ -247,12 +255,12 @@
        .. controls (0,\chronopos-\prop/2) and (0,\chronopos-\chronodelay)
 %       .. controls (\chronowidth/2,\chronopos-\prop/2) and (-\chronowidth/2,\chronopos-\chronodelay)
        .. (#2*\chronowidth/2, \chronopos-\chronodelay-\prop)
-                   node[above,sloped,pos=0.1]{\chrononodelabel{#4}};
+                   node[\labelstyle,pos=0.1]{\chrononodelabel{#4}};
 
     \else
        \draw (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,-\prop/\lost)
-                   node[above,sloped,\ifchronosync midway\else near
-                   start\fi]{\chrononodelabel{#4}};
+                   node[\ifchronosync midway\else near
+                   start\fi,\labelstyle]{\chrononodelabel{#4}};
                    \ifchronolost\ifchronocrosslost \draw[-]
                    (#2*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
     \fi
@@ -262,6 +270,10 @@
 }
 
 \newcommand{\chronoarrowh}[4][]{
+  \pgfkeysifdefined{/chrono/flows/\chronoid/labelstyle}
+  {\def\labelstyle{/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/labelstyle}}}
+  {\def\labelstyle{/chrono/styles/labeldefault}}
+
   \begin{scope}[/chrono/.cd,#1,|-|]
   \setlength{\chronopos}{#3}
   \setlength{\chronopostrans}{\chronopos}
@@ -273,12 +285,12 @@
 
        \draw (\chronopos,#2*\chronowidth/2) --++(\trans/3,0)
                  decorate[decoration=zigzag,segment length=2mm]
-                 {--++(\trans/3,0) node[\toto=1mm,midway]{\chrononodelabel[#2]{#4}}}
+                 {--++(\trans/3,0) node[\labelstyle,\toto=1mm,midway]{\chrononodelabel[#2]{#4}}}
                  --++(\trans/3,0);
     \else
 
        \draw (\chronopos,#2*\chronowidth/2)
-       -- ++(\trans,0) node[\toto=1mm,midway]{\chrononodelabel[#2]{#4}};
+       -- ++(\trans,0) node[\labelstyle,\toto=1mm,midway]{\chrononodelabel[#2]{#4}};
     \fi
     \draw[thin,->] (\chronopostrans,#2*\chronowidth/2)
              -- ++ (\prop/\lost,#2*-\chronowidth/\lost);
