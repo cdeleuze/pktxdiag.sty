@@ -296,6 +296,8 @@
 \testxiv
 \end{hchrono}
 
+\subsubsection*{named position}
+
 \begin{chrono}
   \AB{DATA1}
   \AB[delayed=2cm]{DATA2}
@@ -305,6 +307,8 @@
   \Bwaitdelayed[n2]
   \BA[snote=waited for n2]{ACK4}
 \end{chrono}
+
+\subsubsection*{filtering}
 
 \def\testfilter{
   \AB[id=1]{DATA 1 (1)}
@@ -327,6 +331,8 @@
 \begin{chrono}[hide=1,hide=2]
   \testfilter
 \end{chrono}
+
+\subsubsection*{filtering, styles, label styles}
 
 {\derivestyle{id1}{default}{green}
 \derivestyle{id1l}{labeldefault}{green!60}
@@ -352,7 +358,7 @@
 \end{chrono}
 }
 
-
+\subsubsection*{labels}
 
 \def\testlabelii{
   \AB[label2=Yoooo !]{DATA 1}
@@ -372,4 +378,19 @@
 \begin{chrono}[show label2,hide label]
   \testlabelii
 \end{chrono}
+
+\subsubsection*{per frame label style}
+
+\def\testframelabelstyle{
+  \AB{toto}
+  \BA[label style=orange]{titi}
+  \AB{tutu}
+  \BA[label style={sloped=false,draw,fill=orange!20,opacity=0.75}]{tata}
+  \AB{toutou}}
+\begin{chrono}
+\testframelabelstyle
+\end{chrono}
+\begin{hchrono}
+\testframelabelstyle
+\end{hchrono}
 \end{document}

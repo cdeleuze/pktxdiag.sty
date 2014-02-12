@@ -9,7 +9,6 @@
 \RequirePackage{tikz}
 \RequirePackage{pgfkeys}
 \usetikzlibrary{decorations.pathmorphing}
-\usetikzlibrary{arrows}
 \usetikzlibrary{calc}
 
 \colorlet{graphicbackground}{white}
@@ -100,7 +99,7 @@
 \pgfkeys{/chrono/space other/.code=\setlength{\chronospaceother}{#1}}
 
 % chrono env keys
-\pgfkeys{/chrono/width/.code=\setlength{\chronowidth}{#1}}
+\pgfkeys{/chrono/width/.code=\def\chronowidth{#1}}
 \pgfkeyssetvalue{/chrono/A}{}
 \pgfkeys{/chrono/A/.default=A}
 \pgfkeyssetvalue{/chrono/B}{}
@@ -161,6 +160,9 @@
 
 \definestyle{labeldefault}{above,sloped}
 
+\pgfkeys{/chrono/styles/thislabel/.style={}}
+\pgfkeys{/chrono/label style/.code=\pgfkeys{/chrono/styles/thislabel/.style={{#1}}}}
+
 %%%%%% various definitions
 
 \newif\iftimerAbottomup
@@ -173,7 +175,6 @@
 
 \newlength{\pAs}\newlength{\pAr}
 \newlength{\pBs}\newlength{\pBr}
-\newlength{\chronopos}
 \newlength{\chronopostrans}
 \newlength{\chronoxx}
 
@@ -181,7 +182,7 @@
 
 \newlength{\chronospacesame}\setlength{\chronospacesame}{1cm}
 \newlength{\chronospaceother}\setlength{\chronospaceother}{5mm}
-\newlength{\chronowidth}\setlength{\chronowidth}{3cm}
+\def\chronowidth{3cm}
 \newlength{\chronoactiontimeoffset}\setlength{\chronoactiontimeoffset}{1mm}
 \newlength{\chronoactionoffset}\setlength{\chronoactionoffset}{1mm}
 \newlength{\chronoactionlength}\setlength{\chronoactionlength}{5mm}
@@ -230,8 +231,9 @@
   \pgfkeysifdefined{/chrono/flows/\chronoid/labelstyle}
   {\def\labelstyle{/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/labelstyle}}}
   {\def\labelstyle{/chrono/styles/labeldefault}}
+  \def\thisls{/chrono/styles/thislabel}
 
-  \setlength{\chronopos}{#3}
+  \def\chronopos{#3}
   {
     \begin{scope}[/chrono/.cd,#1]
     \ifchronolost\def\lost{2}\else\def\lost{1}\fi
@@ -240,11 +242,11 @@
        \draw (#2*-\chronowidth/2,\chronopos)
                  --++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
 
-                 \ifchronosync\else node[near end,\labelstyle]{\chrononodelabel{#4}}\fi
+                 \ifchronosync\else node[near end,\labelstyle,\thisls]{\chrononodelabel{#4}}\fi
     
                  decorate[decoration=zigzag,segment length=2mm]
                  {--++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
-                   \ifchronosync node[midway,\labelstyle]{\chrononodelabel{#4}}\fi}
+                   \ifchronosync node[midway,\labelstyle,\thisls]{\chrononodelabel{#4}}\fi}
 
                  --++(#2*\chronowidth/\lost/3,-\prop/\lost/3);
                    \ifchronolost\ifchronocrosslost \draw[-]
@@ -255,12 +257,12 @@
        .. controls (0,\chronopos-\prop/2) and (0,\chronopos-\chronodelay)
 %       .. controls (\chronowidth/2,\chronopos-\prop/2) and (-\chronowidth/2,\chronopos-\chronodelay)
        .. (#2*\chronowidth/2, \chronopos-\chronodelay-\prop)
-                   node[\labelstyle,pos=0.1]{\chrononodelabel{#4}};
+                   node[\labelstyle,\thisls,pos=0.1]{\chrononodelabel{#4}};
 
     \else
        \draw (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,-\prop/\lost)
                    node[\ifchronosync midway\else near
-                   start\fi,\labelstyle]{\chrononodelabel{#4}};
+                   start\fi,\labelstyle,\thisls]{\chrononodelabel{#4}};
                    \ifchronolost\ifchronocrosslost \draw[-]
                    (#2*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
     \fi
@@ -273,9 +275,10 @@
   \pgfkeysifdefined{/chrono/flows/\chronoid/labelstyle}
   {\def\labelstyle{/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/labelstyle}}}
   {\def\labelstyle{/chrono/styles/labeldefault}}
+  \def\thisls{/chrono/styles/thislabel}
 
   \begin{scope}[/chrono/.cd,#1,|-|]
-  \setlength{\chronopos}{#3}
+  \def\chronopos{#3}
   \setlength{\chronopostrans}{\chronopos}
   \ifnum #2=1\def\toto{above}\else\def\toto{below}\fi
   {
@@ -285,12 +288,12 @@
 
        \draw (\chronopos,#2*\chronowidth/2) --++(\trans/3,0)
                  decorate[decoration=zigzag,segment length=2mm]
-                 {--++(\trans/3,0) node[\labelstyle,\toto=1mm,midway]{\chrononodelabel[#2]{#4}}}
+                 {--++(\trans/3,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\chrononodelabel[#2]{#4}}}
                  --++(\trans/3,0);
     \else
 
        \draw (\chronopos,#2*\chronowidth/2)
-       -- ++(\trans,0) node[\labelstyle,\toto=1mm,midway]{\chrononodelabel[#2]{#4}};
+       -- ++(\trans,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\chrononodelabel[#2]{#4}};
     \fi
     \draw[thin,->] (\chronopostrans,#2*\chronowidth/2)
              -- ++ (\prop/\lost,#2*-\chronowidth/\lost);
@@ -358,7 +361,7 @@
   \def\timerhoffset{\csname chrono#4haddoffset\endcsname}
   \setlength{\timerstart}{#1}
   \setlength{\timerend}{#1}\chronoaddto{\timerend}{#2}
-  \def\hpos{#5\chronowidth/2+#5\timeroffset}
+  \def\hpos{#5*\chronowidth/2+#5\timeroffset}
   \ifchronoh
       \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset)
                          -- (\timerend,\hpos-\timerhoffset) node[midway,sloped,#6]{#3};
@@ -382,7 +385,7 @@
 \newcommand{\canceltimer}[3]{ % pos, A/B, -1/1
   \csname timer#2activefalse\endcsname
   \csname timer#2canceltrue\endcsname
-  \def\hpos{-#3\chronowidth/2-#3\csname timer#2offset\endcsname}
+  \def\hpos{-#3*\chronowidth/2-#3\csname timer#2offset\endcsname}
   \def\timerhoffset{\csname chrono#2haddoffset\endcsname}
   \ifchronoh
   \draw[thin,<-](\csname timer#2start\endcsname,\hpos-\timerhoffset) --(#1,\hpos-\timerhoffset);
@@ -399,7 +402,7 @@
 \newcommand{\chronoendtimer}[2]{
   \csname timer#1activefalse\endcsname
   \csname timer#1cancelfalse\endcsname
-  \def\hpos{-#2\chronowidth/2-#2\csname timer#1offset\endcsname}
+  \def\hpos{-#2*\chronowidth/2-#2\csname timer#1offset\endcsname}
   \def\timerhoffset{\csname chrono#1haddoffset\endcsname}
   \ifchronoh
     \draw[thin,<->](\csname timer#1start\endcsname,\hpos-\timerhoffset)
@@ -797,7 +800,7 @@
   \chronohtrue
   \setlength{\chronospacesame}{0cm}
   \setlength{\chronospaceother}{0cm}
-  \setlength{\chronowidth}{1cm}
+  \def\chronowidth{1cm}
   \setlength{\prop}{3mm}
   \def\chronoarrow{\chronoarrowh}
   \def\y{1}
