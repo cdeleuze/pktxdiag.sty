@@ -69,10 +69,8 @@
 \def\chronornoteoffset{3mm}
 \def\chrononame{delayed}
 
-\pgfkeys{/chrono/timerAoffset/.code=\setlength{\timerAoffset}{#1}
-  \iftimerAright\addtolength{\timerAoffset}{3mm}\fi}
-\pgfkeys{/chrono/timerAioffset/.code=\setlength{\timerAioffset}{#1}
-  \iftimerAright\addtolength{\timerAioffset}{3mm}\fi}
+\pgfkeys{/chrono/timerAoffset/.code=\setlength{\timerAoffset}{#1}}
+\pgfkeys{/chrono/timerAioffset/.code=\setlength{\timerAioffset}{#1}}
 
 \pgfkeys{/chrono/timerBoffset/.code=\setlength{\timerBoffset}{#1}}
 \pgfkeys{/chrono/timerBioffset/.code=\setlength{\timerBioffset}{#1}}
@@ -80,12 +78,8 @@
 \pgfkeys{/chrono/timer offset/.style={/chrono/timerAoffset=#1,/chrono/timerBoffset=#1}}
 \pgfkeys{/chrono/timeri offset/.style={/chrono/timerAioffset=#1,/chrono/timerBioffset=#1}}
 
-\pgfkeys{/chrono/timerAbottomup/.is if=timerAbottomup}
-\pgfkeys{/chrono/timerAright/.code={
-    \iftimerAright\else
-       \addtolength{\timerAoffset}{3mm}\addtolength{\timerAioffset}{3mm}
-       \timerArighttrue
-    \fi}}
+\pgfkeys{/chrono/timerleftbottomup/.is if=timerleftbottomup}
+\pgfkeys{/chrono/timerleftright/.is if=timerleftright}
 
 % since we fail to define several keys in a \if
 \pgfkeys{/chrono/reverse/.style={/tikz/rotate=180,/tikz/above}}
@@ -165,8 +159,8 @@
 
 %%%%%% various definitions
 
-\newif\iftimerAbottomup
-\newif\iftimerAright
+\newif\iftimerleftbottomup
+\newif\iftimerleftright
 
 \newif\ifshowlabelii
 \newif\ifhidelabel
@@ -331,9 +325,9 @@
 \newlength{\timertimeoffset}\setlength{\timertimeoffset}{0.2mm}
 \pgfkeys{/chrono/timer time offset/.code=\setlength{\timertimeoffset}{#1}}
 
-%% in hchrono, B timers need to be offset down
-\newlength{\chronoAhaddoffset}\setlength{\chronoAhaddoffset}{0mm}
-\newlength{\chronoAihaddoffset}\setlength{\chronoAihaddoffset}{0mm}
+%% in hchrono, timers hpos need to be offset up or down
+\newlength{\chronoAhaddoffset}\setlength{\chronoAhaddoffset}{-3mm}
+\newlength{\chronoAihaddoffset}\setlength{\chronoAihaddoffset}{-3mm}
 \newlength{\chronoBhaddoffset}\setlength{\chronoBhaddoffset}{7mm}
 \newlength{\chronoBihaddoffset}\setlength{\chronoBihaddoffset}{7mm}
 
@@ -351,9 +345,13 @@
   \csname chronoendtimer#1\endcsname\fi
 }
 
-%% in horizontal, "left hpos" means grow up, so change sign
-\newcommand{\chronohpos}[2]{
-  \ifchronoh-#1-#2\else#1+#2\fi}
+%% timer h position: base on hpos, l/r alignment and offset
+%% in horizontal, hpos is negated (left/- is up/+)
+%% in vertical, remove 3mm to l timers if timerleftright is set
+\newcommand{\chronotimerhpos}[3]{ % hpos, l/r, offset
+  \ifchronoh-#1+\if #2r-#3\else#3\fi
+  \else
+  #1+\if #2r#3\else\iftimerleftright-#3-3mm\else-#3\fi\fi\fi}
 
 \newcommand{\settimer}[7]{ % start, len, label, A/B, hpos, l/r, above/below
   \chronoendtimerifactive{#4}
@@ -365,7 +363,7 @@
   \def\timerhoffset{\csname chrono#4haddoffset\endcsname}
   \setlength{\timerstart}{#1}
   \setlength{\timerend}{#1}\chronoaddto{\timerend}{#2}
-  \def\hpos{\chronohpos{#5}{\if#6l-\timeroffset\else\timeroffset\fi}}
+  \def\hpos{\chronotimerhpos{#5}{#6}{\timeroffset}}
   \ifchronoh
       \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset)
                          -- (\timerend,\hpos-\timerhoffset) node[midway,sloped,#7]{#3};
@@ -376,11 +374,11 @@
 }
 
 \newcommand{\settimerA}[3]{\settimer{#1}{#2}{#3}{A}{-\chronowidth/2}{l}{%
-    \iftimerAright above\else
-    \iftimerAbottomup/chrono/reverse\else below\fi\fi}}
+    \ifchronoh above\else\iftimerleftright above\else
+    \iftimerleftbottomup/chrono/reverse\else below\fi\fi\fi}}
 \newcommand{\settimerAi}[3]{\settimer{#1}{#2}{#3}{Ai}{-\chronowidth/2}{l}{%
-    \iftimerAright above\else
-    \iftimerAbottomup/chrono/reverse\else below\fi\fi}}
+    \ifchronoh above\else\iftimerleftright above\else
+    \iftimerleftbottomup/chrono/reverse\else below\fi\fi\fi}}
 
 \newcommand{\settimerB}[3]{\settimer{#1}{#2}{#3}{B}{\chronowidth/2}{r}{above}}
 \newcommand{\settimerBi}[3]{\settimer{#1}{#2}{#3}{Bi}{\chronowidth/2}{r}{above}}
@@ -389,7 +387,7 @@
 \newcommand{\canceltimer}[4]{ % pos, A/B, hpos, l/r
   \csname timer#2activefalse\endcsname
   \csname timer#2canceltrue\endcsname
-  \def\hpos{\chronohpos{#3}{\if#4l-\csname timer#2offset\endcsname\else\csname timer#2offset\endcsname\fi}}
+  \def\hpos{\chronotimerhpos{#3}{#4}{\csname timer#2offset\endcsname}}
   \def\timerhoffset{\csname chrono#2haddoffset\endcsname}
   \def\timerend{\csname timer#2end\endcsname}
   \ifchronoh
@@ -416,7 +414,7 @@
   \csname timer#1cancelfalse\endcsname
   \def\timerhoffset{\csname chrono#1haddoffset\endcsname}
   \def\timeroffset{\csname timer#1offset\endcsname}
-  \def\hpos{\chronohpos{#2}{\if#3l-\timeroffset\else\timeroffset\fi}}
+  \def\hpos{\chronotimerhpos{#2}{#3}{\timeroffset}}
   \ifchronoh
     \draw[thin,<->](\csname timer#1start\endcsname,\hpos-\timerhoffset)
                 -- (\csname timer#1end\endcsname,\hpos-\timerhoffset);

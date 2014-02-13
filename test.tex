@@ -5,8 +5,6 @@
 \begin{document}
 
 \def\rotate{\pgfkeys{/tikz/rotate=90,/tikz/transform shape}}
-\pgfkeys{/chrono/timerAright}%,/chrono/state offset=6mm}
-
 
 \def\test{
   \AB{DATA1}
@@ -254,8 +252,7 @@
 \begin{hchrono}
 \testix
 \end{hchrono}
-\vfill
-
+%\vfill
 
 \subsubsection*{Timers}
 
@@ -276,6 +273,51 @@
 \begin{hchrono}
 \testxi
 \end{hchrono}
+\vfill
+
+\subsubsection*{Timers, timerleftright}
+
+{\pgfkeys{/chrono/timerleftright}
+\begin{chrono}[]
+\testx
+\end{chrono}
+\hfill
+\begin{chrono}[]
+\testxi
+\end{chrono}
+
+\begin{hchrono}
+\testx
+\end{hchrono}
+
+\bigskip
+
+\begin{hchrono}
+\testxi
+\end{hchrono}
+}
+
+\subsubsection*{Timers, timerleftbottomup}
+
+{\pgfkeys{/chrono/timerleftbottomup}
+\begin{chrono}[]
+\testx
+\end{chrono}
+\hfill
+\begin{chrono}[]
+\testxi
+\end{chrono}
+
+\begin{hchrono}
+\testx
+\end{hchrono}
+
+\bigskip
+
+\begin{hchrono}
+\testxi
+\end{hchrono}
+}
 \vfill
 
 \hspace{-2cm}
