@@ -224,83 +224,84 @@
   \end{tabular}\fi
   \fi\else\ifhidelabel{}\else#2\fi\fi}
 
-% #1 is keys, #2 is 1 or -1 (arrow direction),
-% #3 is start pos, #4 is label
+% #1 are keys, #2 is sender pos, #3 is receiver pos
+% #4 is start pos, #5 is label, #6 is 1 or -1 (arrow direction),
 
-\newcommand{\chronoarrowv}[4][]{
+\newlength{\chronolen}
+
+\newcommand{\chronoarrowv}[6][]{
   \pgfkeysifdefined{/chrono/flows/\chronoid/labelstyle}
   {\def\labelstyle{/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/labelstyle}}}
   {\def\labelstyle{/chrono/styles/labeldefault}}
   \def\thisls{/chrono/styles/thislabel}
 
-  \def\chronopos{#3}
-  {
-    \begin{scope}[/chrono/.cd,#1]
+  %% tex does not honor arithmetic priorities... pgfmath does.
+  \pgfmathsetlengthmacro{\chronolen}{#3-#2}
+
+  \def\chronopos{#4}
+  \begin{scope}[/chrono/.cd,#1]
     \ifchronolost\def\lost{2}\else\def\lost{1}\fi
     \ifchronobad
 
-       \draw (#2*-\chronowidth/2,\chronopos)
-                 --++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
+       \draw (#2,\chronopos) --++(\chronolen/\lost/3,-\prop/\lost/3)
 
-                 \ifchronosync\else node[near end,\labelstyle,\thisls]{\chrononodelabel{#4}}\fi
+                 \ifchronosync\else node[near end,\labelstyle,\thisls]{\chrononodelabel{#5}}\fi
     
                  decorate[decoration=zigzag,segment length=2mm]
-                 {--++(#2*\chronowidth/\lost/3,-\prop/\lost/3)
-                   \ifchronosync node[midway,\labelstyle,\thisls]{\chrononodelabel{#4}}\fi}
+                 {--++(\chronolen/\lost/3,-\prop/\lost/3)
+                   \ifchronosync node[midway,\labelstyle,\thisls]{\chrononodelabel{#5}}\fi}
 
-                 --++(#2*\chronowidth/\lost/3,-\prop/\lost/3);
+                 --++(\chronolen/\lost/3,-\prop/\lost/3);
                    \ifchronolost\ifchronocrosslost \draw[-]
-                   (#2*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
+                   (#6*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
     \else
     \ifchronodelayed
-       \draw (#2*-\chronowidth/2,\chronopos) 
+       \draw (#2,\chronopos) 
        .. controls (0,\chronopos-\prop/2) and (0,\chronopos-\chronodelay)
-%       .. controls (\chronowidth/2,\chronopos-\prop/2) and (-\chronowidth/2,\chronopos-\chronodelay)
-       .. (#2*\chronowidth/2, \chronopos-\chronodelay-\prop)
-                   node[\labelstyle,\thisls,pos=0.1]{\chrononodelabel{#4}};
+       .. (#3, \chronopos-\chronodelay-\prop)
+                   node[\labelstyle,\thisls,pos=0.1]{\chrononodelabel{#5}};
 
     \else
-       \draw (#2*-\chronowidth/2,\chronopos) -- ++(#2*\chronowidth/\lost,-\prop/\lost)
+       \draw (#2,\chronopos) -- ++(\chronolen/\lost,-\prop/\lost)
                    node[\ifchronosync midway\else near
-                   start\fi,\labelstyle,\thisls]{\chrononodelabel{#4}};
+                   start\fi,\labelstyle,\thisls]{\chrononodelabel{#5}};
                    \ifchronolost\ifchronocrosslost \draw[-]
-                   (#2*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
+                   (#6*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
     \fi
     \fi
   \end{scope}
 }
-}
 
-\newcommand{\chronoarrowh}[4][]{
+\newcommand{\chronoarrowh}[6][]{
   \pgfkeysifdefined{/chrono/flows/\chronoid/labelstyle}
   {\def\labelstyle{/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/labelstyle}}}
   {\def\labelstyle{/chrono/styles/labeldefault}}
   \def\thisls{/chrono/styles/thislabel}
 
-  \begin{scope}[/chrono/.cd,#1,|-|]
-  \def\chronopos{#3}
-  \setlength{\chronopostrans}{\chronopos}
-  \ifnum #2=1\def\toto{above}\else\def\toto{below}\fi
-  {
-    \addtolength{\chronopostrans}{\trans}
-    \ifchronolost\def\lost{2}\else\def\lost{1}\fi
-    \ifchronobad
+  \pgfmathsetlengthmacro{\chronolen}{#2-#3}
 
-       \draw (\chronopos,#2*\chronowidth/2) --++(\trans/3,0)
+  \begin{scope}[/chrono/.cd,#1,|-|]
+  \def\chronopos{#4}
+  \setlength{\chronopostrans}{\chronopos}
+  \ifnum #6=1\def\toto{above}\else\def\toto{below}\fi
+  \addtolength{\chronopostrans}{\trans}
+  \ifchronolost\def\lost{2}\else\def\lost{1}\fi
+  \ifchronobad
+
+       \draw (\chronopos,#3) --++(\trans/3,0)
                  decorate[decoration=zigzag,segment length=2mm]
-                 {--++(\trans/3,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\chrononodelabel[#2]{#4}}}
+                 {--++(\trans/3,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\chrononodelabel[#6]{#5}}}
                  --++(\trans/3,0);
     \else
 
-       \draw (\chronopos,#2*\chronowidth/2)
-       -- ++(\trans,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\chrononodelabel[#2]{#4}};
+       \draw (\chronopos,#3)
+       -- ++(\trans,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\chrononodelabel[#6]{#5}};
     \fi
-    \draw[thin,->] (\chronopostrans,#2*\chronowidth/2)
-             -- ++ (\prop/\lost,#2*-\chronowidth/\lost);
+    \draw[thin,->] (\chronopostrans,#3)
+             -- ++ (\prop/\lost,\chronolen/\lost);
     \ifchronolost\ifchronocrosslost \draw[-]
-    (\chronopostrans+\prop/2,#2*-2mm) node{\Large $\times$}\fi\fi;
+    (\chronopostrans+\prop/2,#6*-2mm) node{\Large $\times$}\fi\fi;
 
-  }
   \end{scope}
 }
 
@@ -450,8 +451,8 @@
   \pgfkeysgetvalue{/chrono/id}{\chronoid}
   \chronogetconf{\chronoid}{opacity}{\chronoopa}
   \pgfkeysifdefined{/chrono/flows/\chronoid/style}
-  {\chronoarrow[/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/style},#1,opacity=\chronoopa]{1}{\pAs}{#2}}
-  {\chronoarrow[/chrono/styles/default,#1,opacity=\chronoopa]{1}{\pAs}{#2}}
+  {\chronoarrow[/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/style},#1,opacity=\chronoopa]{-\chronowidth/2}{\chronowidth/2}{\pAs}{#2}{1}}
+  {\chronoarrow[/chrono/styles/default,#1,opacity=\chronoopa]{-\chronowidth/2}{\chronowidth/2}{\pAs}{#2}{1}}
 
   \setlength{\pBr}{\pAs}\chronoaddto{\pBr}{\prop}
   \chronoaddto{\pBr}{\trans}
@@ -499,8 +500,8 @@
   \pgfkeysgetvalue{/chrono/id}{\chronoid}
   \chronogetconf{\chronoid}{opacity}{\chronoopa}
   \pgfkeysifdefined{/chrono/flows/\chronoid/style}
-  {\chronoarrow[/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/style},#1,opacity=\chronoopa]{-1}{\pBs}{#2}}
-  {\chronoarrow[/chrono/styles/default,#1,opacity=\chronoopa]{-1}{\pBs}{#2}}
+  {\chronoarrow[/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/style},#1,opacity=\chronoopa]{\chronowidth/2}{-\chronowidth/2}{\pBs}{#2}{-1}}
+  {\chronoarrow[/chrono/styles/default,#1,opacity=\chronoopa]{\chronowidth/2}{-\chronowidth/2}{\pBs}{#2}{-1}}
 
   \setlength{\pAr}{\pBs}\chronoaddto{\pAr}{\prop}
   \chronoaddto{\pAr}{\trans}
