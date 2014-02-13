@@ -351,60 +351,72 @@
   \csname chronoendtimer#1\endcsname\fi
 }
 
-\newcommand{\settimer}[6]{ % start, len, label, A/B, 1/-1, above/below
+%% in horizontal, "left hpos" means grow up, so change sign
+\newcommand{\chronohpos}[2]{
+  \ifchronoh-#1-#2\else#1+#2\fi}
+
+\newcommand{\settimer}[7]{ % start, len, label, A/B, hpos, l/r, above/below
   \chronoendtimerifactive{#4}
   \csname timer#4activetrue\endcsname
   \csname timer#4cancelfalse\endcsname
-%  \expandafter\show\csname timer#4start\endcsname
   \def\timerstart{\csname timer#4start\endcsname}
   \def\timerend{\csname timer#4end\endcsname}
   \def\timeroffset{\csname timer#4offset\endcsname}
   \def\timerhoffset{\csname chrono#4haddoffset\endcsname}
   \setlength{\timerstart}{#1}
   \setlength{\timerend}{#1}\chronoaddto{\timerend}{#2}
-  \def\hpos{#5*\chronowidth/2+#5\timeroffset}
+  \def\hpos{\chronohpos{#5}{\if#6l-\timeroffset\else\timeroffset\fi}}
   \ifchronoh
       \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset)
-                         -- (\timerend,\hpos-\timerhoffset) node[midway,sloped,#6]{#3};
+                         -- (\timerend,\hpos-\timerhoffset) node[midway,sloped,#7]{#3};
   \else
       \draw[thin,dotted,<->](\hpos,\timerstart-\timertimeoffset)
-                         -- (\hpos,\timerend+\timertimeoffset) node[midway,sloped,#6]{#3};
+                         -- (\hpos,\timerend+\timertimeoffset) node[midway,sloped,#7]{#3};
   \fi
 }
 
-\newcommand{\settimerA}[3]{\settimer{#1}{#2}{#3}{A}{\y}{%
+\newcommand{\settimerA}[3]{\settimer{#1}{#2}{#3}{A}{-\chronowidth/2}{l}{%
     \iftimerAright above\else
     \iftimerAbottomup/chrono/reverse\else below\fi\fi}}
-\newcommand{\settimerAi}[3]{\settimer{#1}{#2}{#3}{Ai}{\y}{%
+\newcommand{\settimerAi}[3]{\settimer{#1}{#2}{#3}{Ai}{-\chronowidth/2}{l}{%
     \iftimerAright above\else
     \iftimerAbottomup/chrono/reverse\else below\fi\fi}}
 
-\newcommand{\settimerB}[3]{\settimer{#1}{#2}{#3}{B}{-\y}{above}}
-\newcommand{\settimerBi}[3]{\settimer{#1}{#2}{#3}{Bi}{-\y}{above}}
+\newcommand{\settimerB}[3]{\settimer{#1}{#2}{#3}{B}{\chronowidth/2}{r}{above}}
+\newcommand{\settimerBi}[3]{\settimer{#1}{#2}{#3}{Bi}{\chronowidth/2}{r}{above}}
 
 
-\newcommand{\canceltimer}[3]{ % pos, A/B, -1/1
+\newcommand{\canceltimer}[4]{ % pos, A/B, hpos, l/r
   \csname timer#2activefalse\endcsname
   \csname timer#2canceltrue\endcsname
-  \def\hpos{-#3*\chronowidth/2-#3\csname timer#2offset\endcsname}
+  \def\hpos{\chronohpos{#3}{\if#4l-\csname timer#2offset\endcsname\else\csname timer#2offset\endcsname\fi}}
   \def\timerhoffset{\csname chrono#2haddoffset\endcsname}
+  \def\timerend{\csname timer#2end\endcsname}
   \ifchronoh
-  \draw[thin,<-](\csname timer#2start\endcsname,\hpos-\timerhoffset) --(#1,\hpos-\timerhoffset);
+    \ifnum#1>\timerend\typeout{Expired timer!}
+    \node at (#1,\hpos)[draw,red,fill=yellow]{Expired timer!};\else
+    \draw[thin,<-](\csname timer#2start\endcsname,\hpos-\timerhoffset) --(#1,\hpos-\timerhoffset);
+    \fi
   \else
-  \draw[thin,<-](\hpos,\csname timer#2start\endcsname-\timertimeoffset) --(\hpos,#1);
+    \ifnum#1<\timerend\typeout{Expired timer!}
+    \node at (\hpos,#1)[draw,red,fill=yellow]{Expired timer!};\else
+    \draw[thin,<-](\hpos,\csname
+    timer#2start\endcsname-\timertimeoffset) --(\hpos,#1);
+    \fi
   \fi
 }
 
-\newcommand{\canceltimerA}[1]{\canceltimer{#1}{A}{-\y}}
-\newcommand{\canceltimerAi}[1]{\canceltimer{#1}{Ai}{-\y}}
-\newcommand{\canceltimerB}[1]{\canceltimer{#1}{B}{\y}}
-\newcommand{\canceltimerBi}[1]{\canceltimer{#1}{Bi}{\y}}
+\newcommand{\canceltimerA}[1]{\canceltimer{#1}{A}{-\chronowidth/2}{l}}
+\newcommand{\canceltimerAi}[1]{\canceltimer{#1}{Ai}{-\chronowidth/2}{l}}
+\newcommand{\canceltimerB}[1]{\canceltimer{#1}{B}{\chronowidth/2}{r}}
+\newcommand{\canceltimerBi}[1]{\canceltimer{#1}{Bi}{\chronowidth/2}{r}}
 
-\newcommand{\chronoendtimer}[2]{
+\newcommand{\chronoendtimer}[3]{ % A/B, hpos, l/r
   \csname timer#1activefalse\endcsname
   \csname timer#1cancelfalse\endcsname
-  \def\hpos{-#2*\chronowidth/2-#2\csname timer#1offset\endcsname}
   \def\timerhoffset{\csname chrono#1haddoffset\endcsname}
+  \def\timeroffset{\csname timer#1offset\endcsname}
+  \def\hpos{\chronohpos{#2}{\if#3l-\timeroffset\else\timeroffset\fi}}
   \ifchronoh
     \draw[thin,<->](\csname timer#1start\endcsname,\hpos-\timerhoffset)
                 -- (\csname timer#1end\endcsname,\hpos-\timerhoffset);
@@ -414,10 +426,10 @@
   \fi
 }
 
-\newcommand{\chronoendtimerA} {\chronoendtimer{A}{-\y}}
-\newcommand{\chronoendtimerAi}{\chronoendtimer{Ai}{-\y}}
-\newcommand{\chronoendtimerB} {\chronoendtimer{B}{\y}}
-\newcommand{\chronoendtimerBi}{\chronoendtimer{Bi}{\y}}
+\newcommand{\chronoendtimerA} {\chronoendtimer{A}{-\chronowidth/2}{l}}
+\newcommand{\chronoendtimerAi}{\chronoendtimer{Ai}{-\chronowidth/2}{l}}
+\newcommand{\chronoendtimerB} {\chronoendtimer{B}{\chronowidth/2}{r}}
+\newcommand{\chronoendtimerBi}{\chronoendtimer{Bi}{\chronowidth/2}{r}}
 
 
 \newcommand{\chronogetconf}[3]{
@@ -648,38 +660,30 @@
 
 %%%%%% side decorations (eg for TCP)
 
-\newcommand{\chronoAaction}[2]{
+\newcommand{\chronoaction}[4]{ % timepos, hpos, l/r, text
   \ifchronoh\else
-  \draw[<-](-\chronowidth/2-\chronoactionoffset,#1-\y\chronoactiontimeoffset)
-            -- ++(180:\chronoactionlength) node[left]{#2};
+  \if#3l\def\align{left}\else\def\align{right}\fi
+  \draw[<-](#2+\if#3l-\chronoactionoffset\else\chronoactionoffset\fi,#1-\y\chronoactiontimeoffset)
+           -- ++(\if#3l180\else0\fi:\chronoactionlength) node[\align]{#4};
   \fi}
 
-\newcommand{\chronoBaction}[2]{
+\newcommand{\chronostate}[4]{ % timepos, hpos, l/r, text
   \ifchronoh\else
-  \draw[<-](\chronowidth/2+\chronoactionoffset,#1-\y\chronoactiontimeoffset)
-            -- ++(0:\chronoactionlength) node[right]{#2};
+  \if#3l\def\align{left}\else\def\align{right}\fi
+  \draw(#2+\if#3l-\chronostateoffset\else\chronostateoffset\fi,#1)
+       node[draw,\align]{\textsc{#4}};
   \fi}
 
-\newcommand{\chronoAstate}[2]{
-  \ifchronoh\else
-  \draw(-\chronowidth/2-\chronostateoffset,#1) node[draw,left]{\textsc{#2}};
-  \fi}
-
-\newcommand{\chronoBstate}[2]{
-  \ifchronoh\else
-  \draw(\chronowidth/2+\chronostateoffset,#1) node[draw,right]{\textsc{#2}};
-  \fi}
-
-\newcommand{\Astate}[1]{\chronoAstate{\pAs}{#1}}
-\newcommand{\Bstate}[1]{\chronoBstate{\pBs}{#1}}
+\newcommand{\Astate}[1]{\chronostate{\pAs}{-\chronowidth/2}{l}{#1}}
+\newcommand{\Bstate}[1]{\chronostate{\pBs}{\chronowidth/2}{r}{#1}}
 
 \newcommand{\Aactionstate}[2]{
-  \chronoAaction{\pAs}{#1}
-  \chronoAstate{\pAs-5mm}{#2}}
+  \chronoaction{\pAs}{-\chronowidth/2}{l}{#1}
+  \chronostate{\pAs-5mm}{-\chronowidth/2}{l}{#2}}
 
 \newcommand{\Bactionstate}[2]{
-  \chronoBaction{\pBs}{#1}
-  \chronoBstate{\pBs-5mm}{#2}}
+  \chronoaction{\pBs}{\chronowidth/2}{r}{#1}
+  \chronostate{\pBs-5mm}{\chronowidth/2}{r}{#2}}
 
 
 \newcommand{\chronosettrans}[1]{
