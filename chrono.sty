@@ -435,15 +435,26 @@
   {\def#3{\pgfkeysvalueof{/chrono/flows/#1/#2}}}
   {\def#3{\pgfkeysvalueof{/chrono/default/#2}}}}
 
+\newcommand{\chrononote}[5]{ % timepos, hpos, l/r, offset, note
+  \ifchronoh\else\if#5\relax\else
+  \if#3l
+    \node[align=left,left] at (#2-#4, #1) { #5 };
+  \else
+    \node[align=right,right] at (#2+#4, #1) { #5 };
+  \fi\fi\fi}
 
 %%%%%% high-level commands
 
-%% pAs               pBs
-%% pBr               pAr
-%% align=left,left   align=right,right    + horizontal pos for snote
-%% align=right,rigth align=left,left      + horizontal pos for rnote
-%% A                 B
-%% pBs               pAs
+%% starttime    pAs               pBs
+%%              pBr               pAr
+%% l/r s/rnote       r/l s/rnote
+%% sendpos
+%% recvpos
+%% receiversendpos (for halfduplex)
+
+%% A                 B   for chrononame
+
+
 
 %%: A sends to B
 
@@ -454,9 +465,7 @@
   \pgfkeysfiltered{/chrono/.cd,#1}
   \chronosettrans{#2}
 
-  \ifchronoh\else\if\chronosnote\relax\else
-    \node[align=left,left] at (-\chronowidth/2-\chronosnoteoffset,\pAs) {\chronosnote};\fi
-  \fi
+  \chrononote{\pAs}{-\chronowidth/2}{l}{\chronosnoteoffset}{\chronosnote}
 
   \pgfkeysgetvalue{/chrono/id}{\chronoid}
   \chronogetconf{\chronoid}{opacity}{\chronoopa}
@@ -469,12 +478,9 @@
   \chronoaddto{\pAs}{\trans}
   \chronoaddto{\pAs}{\chronospacesame}
 
-  \ifchronoh\else\if\chronornote\relax\else
-    \node [align=right,right] at (\chronowidth/2+\chronornoteoffset,\pBr-\chronodelay)
-          {\chronornote};\fi
-    \gdef\chronosnote{\relax}
-    \gdef\chronornote{\relax}
-  \fi
+  \chrononote{\pBr-\chronodelay}{\chronowidth/2}{r}{\chronornoteoffset}{\chronornote}
+  \gdef\chronosnote{\relax}
+  \gdef\chronornote{\relax}
 
   \ifchronodelayed
     % no simpler way to _copy_ the length value?
@@ -503,9 +509,7 @@
   \pgfkeysfiltered{/chrono/.cd,#1}
   \chronosettrans{#2}
 
-  \ifchronoh\else\if\chronosnote\relax\else
-    \node[align=right,right] at (\chronowidth/2+\chronosnoteoffset,\pBs) {\chronosnote};\fi
-  \fi
+  \chrononote{\pBs}{\chronowidth/2}{r}{\chronosnoteoffset}{\chronosnote}
 
   \pgfkeysgetvalue{/chrono/id}{\chronoid}
   \chronogetconf{\chronoid}{opacity}{\chronoopa}
@@ -518,12 +522,9 @@
   \chronoaddto{\pBs}{\trans}
   \chronoaddto{\pBs}{\chronospacesame}
 
-  \ifchronoh\else\if\chronornote\relax\else
-    \node[align=left,left] at (-\chronowidth/2-\chronornoteoffset,\pAr-\chronodelay)
-         {\chronornote};\fi
-    \gdef\chronosnote{\relax}
-    \gdef\chronornote{\relax}
-  \fi
+  \chrononote{\pAr-\chronodelay}{-\chronowidth/2}{l}{\chronornoteoffset}{\chronornote}
+  \gdef\chronosnote{\relax}
+  \gdef\chronornote{\relax}
 
   \ifchronodelayed
     % no simpler way to _copy_ the length value?
