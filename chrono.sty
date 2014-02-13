@@ -79,7 +79,7 @@
 \pgfkeys{/chrono/timeri offset/.style={/chrono/timerAioffset=#1,/chrono/timerBioffset=#1}}
 
 \pgfkeys{/chrono/timerleftbottomup/.is if=timerleftbottomup}
-\pgfkeys{/chrono/timerleftright/.is if=timerleftright}
+\pgfkeys{/chrono/timerleftbelow/.is if=timerleftbelow}
 
 % since we fail to define several keys in a \if
 \pgfkeys{/chrono/reverse/.style={/tikz/rotate=180,/tikz/above}}
@@ -160,7 +160,7 @@
 %%%%%% various definitions
 
 \newif\iftimerleftbottomup
-\newif\iftimerleftright
+\newif\iftimerleftbelow
 
 \newif\ifshowlabelii
 \newif\ifhidelabel
@@ -347,11 +347,11 @@
 
 %% timer h position: base on hpos, l/r alignment and offset
 %% in horizontal, hpos is negated (left/- is up/+)
-%% in vertical, remove 3mm to l timers if timerleftright is set
+%% in vertical, remove 3mm to l timers if timerleftbelow is not set
 \newcommand{\chronotimerhpos}[3]{ % hpos, l/r, offset
   \ifchronoh-#1+\if #2r-#3\else#3\fi
   \else
-  #1+\if #2r#3\else\iftimerleftright-#3-3mm\else-#3\fi\fi\fi}
+  #1+\if #2r#3\else\iftimerleftbelow-#3\else-#3-3mm\fi\fi\fi}
 
 \newcommand{\settimer}[7]{ % start, len, label, A/B, hpos, l/r, above/below
   \chronoendtimerifactive{#4}
@@ -374,11 +374,11 @@
 }
 
 \newcommand{\settimerA}[3]{\settimer{#1}{#2}{#3}{A}{-\chronowidth/2}{l}{%
-    \ifchronoh above\else\iftimerleftright above\else
-    \iftimerleftbottomup/chrono/reverse\else below\fi\fi\fi}}
+    \ifchronoh above\else\iftimerleftbelow below\else
+    \iftimerleftbottomup/chrono/reverse\else above\fi\fi\fi}}
 \newcommand{\settimerAi}[3]{\settimer{#1}{#2}{#3}{Ai}{-\chronowidth/2}{l}{%
-    \ifchronoh above\else\iftimerleftright above\else
-    \iftimerleftbottomup/chrono/reverse\else below\fi\fi\fi}}
+    \ifchronoh above\else\iftimerleftbelow below\else
+    \iftimerleftbottomup/chrono/reverse\else above\fi\fi\fi}}
 
 \newcommand{\settimerB}[3]{\settimer{#1}{#2}{#3}{B}{\chronowidth/2}{r}{above}}
 \newcommand{\settimerBi}[3]{\settimer{#1}{#2}{#3}{Bi}{\chronowidth/2}{r}{above}}
