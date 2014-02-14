@@ -165,7 +165,7 @@
 \newif\ifshowlabelii
 \newif\ifhidelabel
 
-\newif\ifchronoh\chronohfalse
+\newif\ifchronoh
 
 \newlength{\pAs}\newlength{\pAr}
 \newlength{\pBs}\newlength{\pBr}
@@ -230,7 +230,7 @@
   \def\thisls{/chrono/styles/thislabel}
 
   %% tex does not honor arithmetic priorities... pgfmath does.
-  \pgfmathsetlengthmacro{\chronolen}{#3-#2}
+  \pgfmathsetlength{\chronolen}{#3-#2}
 
   \def\chronopos{#4}
   \begin{scope}[/chrono/.cd,#1]
@@ -272,7 +272,7 @@
   {\def\labelstyle{/chrono/styles/labeldefault}}
   \def\thisls{/chrono/styles/thislabel}
 
-  \pgfmathsetlengthmacro{\chronolen}{#2-#3}
+  \pgfmathsetlength{\chronolen}{#2-#3}
 
   \begin{scope}[/chrono/.cd,#1,|-|]
   \def\chronopos{#4}
@@ -347,11 +347,12 @@
 
 %% timer h position: base on hpos, l/r alignment and offset
 %% in horizontal, hpos is negated (left/- is up/+)
-%% in vertical, remove 3mm to l timers if timerleftbelow is not set
+%% in vertical, remove 3mm to l timers if neither timerleftbelow nor
+%% timerleftbottomup is set
 \newcommand{\chronotimerhpos}[3]{ % hpos, l/r, offset
   \ifchronoh-#1+\if #2r-#3\else#3\fi
   \else
-  #1+\if #2r#3\else\iftimerleftbelow-#3\else-#3-3mm\fi\fi\fi}
+  #1+\if #2r#3\else\iftimerleftbelow-#3\else\iftimerleftbottomup-#3\else-#3-3mm\fi\fi\fi\fi}
 
 \newcommand{\settimer}[7]{ % start, len, label, A/B, hpos, l/r, above/below
   \chronoendtimerifactive{#4}
@@ -430,10 +431,10 @@
 \newcommand{\chronoendtimerBi}{\chronoendtimer{Bi}{\chronowidth/2}{r}}
 
 
-\newcommand{\chronogetconf}[3]{
+\newcommand{\chronogetconf}[2]{
   \pgfkeysifdefined{/chrono/flows/#1/#2}
-  {\def#3{\pgfkeysvalueof{/chrono/flows/#1/#2}}}
-  {\def#3{\pgfkeysvalueof{/chrono/default/#2}}}}
+  {\pgfkeysvalueof{/chrono/flows/#1/#2}}
+  {\pgfkeysvalueof{/chrono/default/#2}}}
 
 \newcommand{\chrononote}[5]{ % timepos, hpos, l/r, offset, note
   \ifchronoh\else\if#5\relax\else
@@ -468,11 +469,12 @@
   \chrononote{\pAs}{-\chronowidth/2}{l}{\chronosnoteoffset}{\chronosnote}
 
   \pgfkeysgetvalue{/chrono/id}{\chronoid}
-  \chronogetconf{\chronoid}{opacity}{\chronoopa}
-  \pgfkeysifdefined{/chrono/flows/\chronoid/style}
-  {\chronoarrow[/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/style},#1,opacity=\chronoopa]{-\chronowidth/2}{\chronowidth/2}{\pAs}{#2}{1}}
-  {\chronoarrow[/chrono/styles/default,#1,opacity=\chronoopa]{-\chronowidth/2}{\chronowidth/2}{\pAs}{#2}{1}}
-
+  \pgfkeysifdefined{/chrono/flows/\chronoid/style}{
+    \def\thisstyle{\pgfkeysvalueof{/chrono/flows/\chronoid/style}}}{
+    \def\thisstyle{default}}
+  \chronoarrow[/chrono/styles/\thisstyle,#1,opacity=\chronogetconf{\chronoid}{opacity}]
+              {-\chronowidth/2}{\chronowidth/2}{\pAs}{#2}{1}
+ 
   \setlength{\pBr}{\pAs}\chronoaddto{\pBr}{\prop}
   \chronoaddto{\pBr}{\trans}
   \chronoaddto{\pAs}{\trans}
@@ -512,10 +514,11 @@
   \chrononote{\pBs}{\chronowidth/2}{r}{\chronosnoteoffset}{\chronosnote}
 
   \pgfkeysgetvalue{/chrono/id}{\chronoid}
-  \chronogetconf{\chronoid}{opacity}{\chronoopa}
-  \pgfkeysifdefined{/chrono/flows/\chronoid/style}
-  {\chronoarrow[/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/style},#1,opacity=\chronoopa]{\chronowidth/2}{-\chronowidth/2}{\pBs}{#2}{-1}}
-  {\chronoarrow[/chrono/styles/default,#1,opacity=\chronoopa]{\chronowidth/2}{-\chronowidth/2}{\pBs}{#2}{-1}}
+  \pgfkeysifdefined{/chrono/flows/\chronoid/style}{
+    \def\thisstyle{\pgfkeysvalueof{/chrono/flows/\chronoid/style}}}{
+    \def\thisstyle{default}}
+  \chronoarrow[/chrono/styles/\thisstyle,#1,opacity=\chronogetconf{\chronoid}{opacity}]
+              {\chronowidth/2}{-\chronowidth/2}{\pBs}{#2}{-1}
 
   \setlength{\pAr}{\pBs}\chronoaddto{\pAr}{\prop}
   \chronoaddto{\pAr}{\trans}
