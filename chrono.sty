@@ -219,11 +219,11 @@
   \fi\else\ifhidelabel{}\else#2\fi\fi}
 
 % #1 are keys, #2 is sender pos, #3 is receiver pos
-% #4 is start pos, #5 is label, #6 is 1 or -1 (arrow direction),
+% #4 is send pos, #5 is label
 
 \newlength{\chronolen}
 
-\newcommand{\chronoarrowv}[6][]{
+\newcommand{\chronoarrowv}[5][]{
   \pgfkeysifdefined{/chrono/flows/\chronoid/labelstyle}
   {\def\labelstyle{/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/labelstyle}}}
   {\def\labelstyle{/chrono/styles/labeldefault}}
@@ -231,6 +231,7 @@
 
   %% tex does not honor arithmetic priorities... pgfmath does.
   \pgfmathsetlength{\chronolen}{#3-#2}
+  \pgfmathsetmacro{\sign}{#2<#3?1:-1}
 
   \def\chronopos{#4}
   \begin{scope}[/chrono/.cd,#1]
@@ -247,7 +248,7 @@
 
                  --++(\chronolen/\lost/3,-\prop/\lost/3);
                    \ifchronolost\ifchronocrosslost \draw[-]
-                   (#6*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
+                   (\sign*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
     \else
     \ifchronodelayed
        \draw (#2,\chronopos) 
@@ -260,41 +261,42 @@
                    node[\ifchronosync midway\else near
                    start\fi,\labelstyle,\thisls]{\chrononodelabel{#5}};
                    \ifchronolost\ifchronocrosslost \draw[-]
-                   (#6*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
+                   (\sign*2mm,\chronopos-\prop/2)node{\Large $\times$}\fi\fi;
     \fi
     \fi
   \end{scope}
 }
 
-\newcommand{\chronoarrowh}[6][]{
+\newcommand{\chronoarrowh}[5][]{
   \pgfkeysifdefined{/chrono/flows/\chronoid/labelstyle}
   {\def\labelstyle{/chrono/styles/\pgfkeysvalueof{/chrono/flows/\chronoid/labelstyle}}}
   {\def\labelstyle{/chrono/styles/labeldefault}}
   \def\thisls{/chrono/styles/thislabel}
 
   \pgfmathsetlength{\chronolen}{#2-#3}
+  \pgfmathtruncatemacro{\sign}{#2<#3?1:-1}
 
   \begin{scope}[/chrono/.cd,#1,|-|]
   \def\chronopos{#4}
   \setlength{\chronopostrans}{\chronopos}
-  \ifnum #6=1\def\toto{above}\else\def\toto{below}\fi
+  \ifnum \sign>0\def\toto{above}\else\def\toto{below}\fi
   \addtolength{\chronopostrans}{\trans}
   \ifchronolost\def\lost{2}\else\def\lost{1}\fi
   \ifchronobad
 
        \draw (\chronopos,#3) --++(\trans/3,0)
                  decorate[decoration=zigzag,segment length=2mm]
-                 {--++(\trans/3,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\chrononodelabel[#6]{#5}}}
+                 {--++(\trans/3,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\chrononodelabel[\sign]{#5}}}
                  --++(\trans/3,0);
     \else
 
        \draw (\chronopos,#3)
-       -- ++(\trans,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\chrononodelabel[#6]{#5}};
+       -- ++(\trans,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\chrononodelabel[\sign]{#5}};
     \fi
     \draw[thin,->] (\chronopostrans,#3)
              -- ++ (\prop/\lost,\chronolen/\lost);
     \ifchronolost\ifchronocrosslost \draw[-]
-    (\chronopostrans+\prop/2,#6*-2mm) node{\Large $\times$}\fi\fi;
+    (\chronopostrans+\prop/2,\sign*-2mm) node{\Large $\times$}\fi\fi;
 
   \end{scope}
 }
@@ -446,49 +448,50 @@
 
 %%%%%% high-level commands
 
-%% starttime    pAs               pBs
-%%              pBr               pAr
+%% sendtime  (pAs)
+%% recvtime  (pBr)
+%% rcvsendtime (pBs) for halfduplex
+
 %% l/r s/rnote       r/l s/rnote
 %% sendpos
 %% recvpos
-%% receiversendpos (for halfduplex)
 
 %% A                 B   for chrononame
 
 
 
-%%: A sends to B
+\newcommand{\chronoframe}[9][]{ % [keys], label,
+  % #3 sendtime, #4 recvtime, #5 rcvsendtime
+  % #6 sendpos #7 recvpos #8 l/r snote (rnote has opposite), #9 receiver name A/B
 
-\newcommand{\AB}[2][]{ % [keys], label
   \setlength{\savedtrans}{\trans}
   \setlength{\savedprop}{\prop}
   \pgfkeys{/chrono/global/.activate family}
   \pgfkeysfiltered{/chrono/.cd,#1}
   \chronosettrans{#2}
 
-  \chrononote{\pAs}{-\chronowidth/2}{l}{\chronosnoteoffset}{\chronosnote}
+  \chrononote{#3}{#6}{#8}{\chronosnoteoffset}{\chronosnote}
 
   \pgfkeysgetvalue{/chrono/id}{\chronoid}
   \pgfkeysifdefined{/chrono/flows/\chronoid/style}{
     \def\thisstyle{\pgfkeysvalueof{/chrono/flows/\chronoid/style}}}{
     \def\thisstyle{default}}
   \chronoarrow[/chrono/styles/\thisstyle,#1,opacity=\chronogetconf{\chronoid}{opacity}]
-              {-\chronowidth/2}{\chronowidth/2}{\pAs}{#2}{1}
+              {#6}{#7}{#3}{#2}
  
-  \setlength{\pBr}{\pAs}\chronoaddto{\pBr}{\prop}
-  \chronoaddto{\pBr}{\trans}
-  \chronoaddto{\pAs}{\trans}
-  \chronoaddto{\pAs}{\chronospacesame}
+  \setlength{#4}{#3}\chronoaddto{#4}{\prop}
+  \chronoaddto{#4}{\trans}
+  \chronoaddto{#3}{\trans}
+  \chronoaddto{#3}{\chronospacesame}
 
-  \chrononote{\pBr-\chronodelay}{\chronowidth/2}{r}{\chronornoteoffset}{\chronornote}
+  \chrononote{#4-\chronodelay}{#7}{\if#8rl\else r\fi}{\chronornoteoffset}{\chronornote}
   \gdef\chronosnote{\relax}
   \gdef\chronornote{\relax}
 
   \ifchronodelayed
     % no simpler way to _copy_ the length value?
-    \pgfmathqparse{\pBr-\chronodelay}
-    \pgfkeyslet{/chrono/values/B/\chrononame}{\pgfmathresult}
-
+    \pgfmathqparse{#4-\chronodelay}
+    \pgfkeyslet{/chrono/values/#9/\chrononame}{\pgfmathresult}
     \chronodelayedfalse
     \setlength\chronodelay{0mm}
   \fi
@@ -498,54 +501,17 @@
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
   \ifchronosync
-    \setlength{\pBs}{\pBr}\chronoaddto{\pBs}{\chronospaceother}
+    \setlength{#5}{#4}\chronoaddto{#5}{\chronospaceother}
   \fi
 }
 
-%%: B sends to A 
+%%: A sends to B, B sends to A
+
+\newcommand{\AB}[2][]{
+  \chronoframe[#1]{#2}{\pAs}{\pBr}{\pBs}{-\chronowidth/2}{\chronowidth/2}{l}{B}}
 
 \newcommand{\BA}[2][]{
-  \setlength{\savedtrans}{\trans}
-  \setlength{\savedprop}{\prop}
-  \pgfkeys{/chrono/global/.activate family}
-  \pgfkeysfiltered{/chrono/.cd,#1}
-  \chronosettrans{#2}
-
-  \chrononote{\pBs}{\chronowidth/2}{r}{\chronosnoteoffset}{\chronosnote}
-
-  \pgfkeysgetvalue{/chrono/id}{\chronoid}
-  \pgfkeysifdefined{/chrono/flows/\chronoid/style}{
-    \def\thisstyle{\pgfkeysvalueof{/chrono/flows/\chronoid/style}}}{
-    \def\thisstyle{default}}
-  \chronoarrow[/chrono/styles/\thisstyle,#1,opacity=\chronogetconf{\chronoid}{opacity}]
-              {\chronowidth/2}{-\chronowidth/2}{\pBs}{#2}{-1}
-
-  \setlength{\pAr}{\pBs}\chronoaddto{\pAr}{\prop}
-  \chronoaddto{\pAr}{\trans}
-  \chronoaddto{\pBs}{\trans}
-  \chronoaddto{\pBs}{\chronospacesame}
-
-  \chrononote{\pAr-\chronodelay}{-\chronowidth/2}{l}{\chronornoteoffset}{\chronornote}
-  \gdef\chronosnote{\relax}
-  \gdef\chronornote{\relax}
-
-  \ifchronodelayed
-    % no simpler way to _copy_ the length value?
-    \pgfmathqparse{\pAr-\chronodelay}
-    \pgfkeyslet{/chrono/values/A/\chrononame}{\pgfmathresult}
-
-    \chronodelayedfalse
-    \setlength\chronodelay{0mm}
-  \fi
-
-  \pgfkeyssetvalue{/chrono/id}{main}
-  \setlength{\ltrans}{\trans}
-  \setlength{\trans}{\savedtrans}
-  \setlength{\prop}{\savedprop}
-  \ifchronosync
-    \setlength{\pAs}{\pAr}\chronoaddto{\pAs}{\chronospaceother}
-  \fi
-}
+  \chronoframe[#1]{#2}{\pBs}{\pAr}{\pAs}{\chronowidth/2}{-\chronowidth/2}{r}{A}}
 
 \newcommand{\Await}[1][1cm]{\chronoaddto{\pAs}{#1}}
 \newcommand{\Bwait}[1][1cm]{\chronoaddto{\pBs}{#1}}
@@ -589,7 +555,7 @@
 \newcommand{\ABtimed}[4][]{  % [keys], flabel, len, tlabel
   \setlength{\chronoxx}{\pAs}
   \AB[#1]{#2}
-  \addtolength{\chronoxx}{\trans}
+  \addtolength{\chronoxx}{\ltrans}
   \settimerA{\chronoxx}{#3}{#4}}
 
 \newcommand{\ABtimedi}[4][]{  % [keys], flabel, len, tlabel
