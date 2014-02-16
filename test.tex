@@ -62,7 +62,7 @@
   \AB{DATA1}
   \ABtimed[delayed=3cm]{DATA2}{3cm}{temporisateur}
   \AB{DATA3}
-  \Awaittimer
+%  \Awaittimer
   \AB{DATA2}}
 
 \def\testv{
@@ -76,7 +76,7 @@
 
 \def\testvii{
   \AB{DATA1}
-  \ABtimed{DATA2}{3cm}{temporisateur}
+  \ABtimed[trans=3cm]{DATA2}{3cm}{temporisateur}
   \BAcancel{ACK}
   \Awaittimer
   \AB{DATA3}
@@ -443,4 +443,5 @@
 \begin{hchrono}
 \testframelabelstyle
 \end{hchrono}
+
 \end{document}
