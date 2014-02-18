@@ -156,6 +156,30 @@
 
 %%%%%% various definitions
 
+\pgfkeys{/chrono/entities/A/pos/.initial=-\chronowidth/2}
+\pgfkeys{/chrono/entities/A/Tsend/.initial=0cm}
+\pgfkeys{/chrono/entities/A/Trecv/.initial=0cm}
+
+\pgfkeys{/chrono/entities/B/pos/.initial=\chronowidth/2}
+\pgfkeys{/chrono/entities/B/Tsend/.initial=0cm}
+\pgfkeys{/chrono/entities/B/Trecv/.initial=0cm}
+
+\newcommand{\chronopos}[1]{\pgfkeysvalueof{/chrono/entities/#1/pos}}
+\newcommand{\chronoTsend}[1]{\pgfkeysvalueof{/chrono/entities/#1/Tsend}}
+\newcommand{\chronoTrecv}[1]{\pgfkeysvalueof{/chrono/entities/#1/Trecv}}
+
+%% beware of 'macro sharing': we use setvalue here!
+%% (note how we use pgfkeyslet in \chronoframe)
+\newcommand{\chronosetTsend}[2]{\pgfkeyssetvalue{/chrono/entities/#1/Tsend}{#2}}
+\newcommand{\chronosetTrecv}[2]{\pgfkeyssetvalue{/chrono/entities/#1/Trecv}{#2}}
+
+%% shortcuts
+\def\pAs{\chronoTsend{A}}
+\def\pBs{\chronoTsend{B}}
+\def\pAr{\chronoTrecv{A}}
+\def\pBr{\chronoTrecv{B}}
+
+
 \newif\iftimerleftbottomup
 \newif\iftimerleftbelow
 
@@ -164,7 +188,6 @@
 
 \newif\ifchronoh
 
-\def\pAs{0cm}\def\pAr{0cm}\def\pBs{0cm}\def\pBr{0cm}
 \newlength{\chronoxx}
 
 %\pgfkeys{/pgf/key filter handlers/log/.install key filter handler}
@@ -194,10 +217,6 @@
   \ifnum \y=1\addtolength{#1}{#2}\else\addtolength{#1}{-#2}\fi
 }
 
-\newcommand{\chaddto}[2]{
-  \pgfmathsetlengthmacro#1{#1+\y*#2}}
-%  \ifnum \y=1\edef#1{#1+#2}\else\edef#1{#1-#2}\fi}
-
 % the drawn frame label can be made of:
 %  - l1 label (passed as arg to commands)
 %  - the l2 label (passed as label2 option key)
@@ -217,7 +236,7 @@
   \fi\else\ifhidelabel{}\else#2\fi\fi}
 
 % #1 are keys, #2 is sender pos, #3 is receiver pos
-% #4 is send pos, #5 is label
+% #4 is send time, #5 is label
 
 \newlength{\chronolen}
 
@@ -451,9 +470,12 @@
 %% A                 B   for chrononame
 
 
-\newcommand{\chronoframe}[9][]{ % [keys], label,
-  % #3 sendtime, #4 recvtime, #5 rcvsendtime
-  % #6 sendpos #7 recvpos #8 l/r snote (rnote has opposite), #9 receiver name A/B
+\newcommand{\chronoframe}[5][]{ % [#1 keys], #2 label, #3 sender #4
+                                % receiver #5 l/r for snote
+
+  \edef\sendpos{\pgfkeysvalueof{/chrono/entities/#3/pos}}
+  \edef\recvpos{\pgfkeysvalueof{/chrono/entities/#4/pos}}
+  \edef\Tsend{\pgfkeysvalueof{/chrono/entities/#3/Tsend}}
 
   \setlength{\savedtrans}{\trans}
   \setlength{\savedprop}{\prop}
@@ -461,26 +483,26 @@
   \pgfkeysfiltered{/chrono/.cd,#1}
   \chronosettrans{#2}
 
-  \chrononote{#3}{#6}{#8}{\chronosnoteoffset}{\chronosnote}
+  \chrononote{\Tsend}{\sendpos}{#5}{\chronosnoteoffset}{\chronosnote}
 
   \pgfkeysgetvalue{/chrono/id}{\chronoid}
   \pgfkeysifdefined{/chrono/flows/\chronoid/style}{
     \def\thisstyle{\pgfkeysvalueof{/chrono/flows/\chronoid/style}}}{
     \def\thisstyle{default}}
   \chronoarrow[/chrono/styles/\thisstyle,#1,opacity=\chronogetconf{\chronoid}{opacity}]
-              {#6}{#7}{#3}{#2}
+              {\sendpos}{\recvpos}{\Tsend}{#2}
  
-  \pgfmathsetlengthmacro#4{#3+\y*\prop+\y*\trans}
-  \pgfmathsetlengthmacro#3{#3+\y*\trans+\y*\chronospacesame}
+  \pgfmathsetlengthmacro\Trecv{\Tsend+\y*\prop+\y*\trans}
+  \pgfmathsetlengthmacro\Tsend{\Tsend+\y*\trans+\y*\chronospacesame}
 
-  \chrononote{#4-\chronodelay}{#7}{\if#8rl\else r\fi}{\chronornoteoffset}{\chronornote}
+  \chrononote{\Trecv-\chronodelay}{\recvpos}{\if#5rl\else r\fi}{\chronornoteoffset}{\chronornote}
   \gdef\chronosnote{\relax}
   \gdef\chronornote{\relax}
 
   \ifchronodelayed
     % no simpler way to _copy_ the length value?
-    \pgfmathqparse{#4-\chronodelay}
-    \pgfkeyslet{/chrono/values/#9/\chrononame}{\pgfmathresult}
+    \pgfmathqparse{\Trecv-\chronodelay}
+    \pgfkeyslet{/chrono/values/#4/\chrononame}{\pgfmathresult}
     \chronodelayedfalse
     \setlength\chronodelay{0mm}
   \fi
@@ -489,54 +511,73 @@
   \setlength{\ltrans}{\trans}
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
+
+  \pgfkeyslet{/chrono/entities/#3/Tsend}{\Tsend}
+  \pgfkeyslet{/chrono/entities/#4/Trecv}{\Trecv}
+
   \ifchronosync
-    \pgfmathsetlengthmacro#5{#4+\y*\chronospaceother}
+    \pgfmathsetlengthmacro\Tsndr{\Trecv+\y*\chronospaceother}
+    \pgfkeyslet{/chrono/entities/#4/Tsend}{\Tsndr}
   \fi
 }
 
 %%: A sends to B, B sends to A
 
 \newcommand{\AB}[2][]{
-  \chronoframe[#1]{#2}{\pAs}{\pBr}{\pBs}{-\chronowidth/2}{\chronowidth/2}{l}{B}}
+  \chronoframe[#1]{#2}{A}{B}{l}}
 
 \newcommand{\BA}[2][]{
-  \chronoframe[#1]{#2}{\pBs}{\pAr}{\pAs}{\chronowidth/2}{-\chronowidth/2}{r}{A}}
+  \chronoframe[#1]{#2}{B}{A}{r}}
 
-\newcommand{\Await}[1][1cm]{\chaddto{\pAs}{#1}}
-\newcommand{\Bwait}[1][1cm]{\chaddto{\pBs}{#1}}
+\newcommand{\chaddtosend}[2]{
+  \pgfmathsetlengthmacro\temp{\chronoTsend{#1}+\y*#2}
+  \pgfkeyslet{/chrono/entities/#1/Tsend}{\temp}}
+
+\newcommand{\chaddtorecv}[2]{
+  \pgfmathsetlengthmacro\temp{\chronoTrecv{#1}+\y*#2}
+  \pgfkeyslet{/chrono/entities/#1/Trecv}{\temp}}
+
+\newcommand{\wait}[2][1cm]{\chaddtosend{#2}{#1}}
+
+\newcommand{\Await}[1][1cm]{\wait[#1]{A}}
+\newcommand{\Bwait}[1][1cm]{\wait[#1]{B}}
 
 %%: A waits for B, B waits for A (usefull only in fullduplex mode)
 
-\newcommand{\AwaitB}{\def\pAs{\pAr}\chaddto{\pAs}{\chronospaceother}}
-\newcommand{\BwaitA}{\def\pBs{\pBr}\chaddto{\pBs}{\chronospaceother}}
+\newcommand{\XwaitY}[2]{
+  \chronosetTsend{#1}{\chronoTrecv{#1}}
+  \chaddtosend{#1}{\chronospaceother}}
+
+\newcommand{\AwaitB}{\XwaitY{A}{B}}
+\newcommand{\BwaitA}{\XwaitY{B}{A}}
 
 %%: arg is name set in the delayed frame (key name, defaults to delayed)
 \newcommand{\Awaitdelayed}[1][delayed]{
-  \def\pAr{\pgfkeysvalueof{/chrono/values/A/#1}pt}
+  \chronosetTrecv{A}{\pgfkeysvalueof{/chrono/values/A/#1}pt}
   \AwaitB}
 
 \newcommand{\Bwaitdelayed}[1][delayed]{
-  \def\pBr{\pgfkeysvalueof{/chrono/values/B/#1}pt}
+  \chronosetTrecv{B}{\pgfkeysvalueof{/chrono/values/B/#1}pt}
   \BwaitA}
   
 
 %%: A,B waits for its current timer to expire
 
 \newcommand{\Awaittimer}{
-  \ifchronoh \ifdim \pAs<\timerAend\def\pAs{\timerAend}\fi
-  \else      \ifdim \pAs>\timerAend\def\pAs{\timerAend}\fi   \fi}
+  \ifchronoh \ifdim \pAs<\timerAend\chronosetTsend{A}{\timerAend}\fi
+  \else      \ifdim \pAs>\timerAend\chronosetTsend{A}{\timerAend}\fi   \fi}
 
 \newcommand{\Awaittimeri}{
-  \ifchronoh \ifdim \pAs<\timerAiend\def\pAs{\timerAiend}\fi
-  \else      \ifdim \pAs>\timerAiend\def\pAs{\timerAiend}\fi \fi}
+  \ifchronoh \ifdim \pAs<\timerAiend\chronosetTsend{A}{\timerAiend}\fi
+  \else      \ifdim \pAs>\timerAiend\chronosetTsend{A}{\timerAiend}\fi \fi}
 
 \newcommand{\Bwaittimer}{
-  \ifchronoh \ifdim \pBs<\timerBend\def\pBs{\timerBend}\fi
-  \else      \ifdim \pBs>\timerBend\def\pBs{\timerBend}\fi   \fi}
+  \ifchronoh \ifdim \pBs<\timerBend\chronosetTsend{B}{\timerBend}\fi
+  \else      \ifdim \pBs>\timerBend\chronosetTsend{B}{\timerBend}\fi   \fi}
 
 \newcommand{\Bwaittimeri}{
-  \ifchronoh \ifdim \pBs<\timerBiend\def\pBs{\timerBiend}\fi
-  \else      \ifdim \pBs>\timerBiend\def\pBs{\timerBiend}\fi \fi}
+  \ifchronoh \ifdim \pBs<\timerBiend\chronosetTsend{B}{\timerBend}\fi
+  \else      \ifdim \pBs>\timerBiend\chronosetTsend{B}{\timerBend}\fi \fi}
 
 
 %%: A sends a timed frame to B
@@ -587,13 +628,13 @@
 
 \newcommand{\ABdelayed}[4][]{ % keys, len, tlabel, flabel
   \settimerA{\pAr}{#2}{#3}
-  \def\pAs{\pAr}\chaddto{\pAs}{#2}
+  \chronosetTsend{A}{\pAr}\chaddtosend{A}{#2}
   \AB[#1]{#4}
   \chronoendtimerA}
 
 \newcommand{\BAdelayed}[4][]{ % keys, len, tlabel, flabel
   \settimerB{\pBr}{#2}{#3}
-  \def\pBs{\pBr}\chaddto{\pBs}{#2}
+  \chronosetTsend{B}{\pBr}\chaddtosend{B}{#2}
   \BA[#1]{#4}
   \chronoendtimerB}
 
@@ -604,14 +645,14 @@
   \settimerA{\pAr}{#1}{#2}
   \setlength{\chronoxx}{\pAr}\chronoaddto{\chronoxx}{#3}
   \canceltimerA{\chronoxx}
-  \def\pAs{\chronoxx}
+  \chronosetTsend{A}{\chronoxx}
   \AB{#4}}
 
 \newcommand{\BAstop}[4]{ % len, tlabel, delay, flabel
   \settimerB{\pBr}{#1}{#2}
   \setlength{\chronoxx}{\pBr}\chronoaddto{\chronoxx}{#3}
   \canceltimerB{\chronoxx}
-  \def\pBs{\chronoxx}
+  \chronosetTsend{B}{\chronoxx}
   \BA{#4}}
 
 
@@ -631,16 +672,16 @@
        node[draw,\align]{\textsc{#4}};
   \fi}
 
-\newcommand{\Astate}[1]{\chronostate{\pAs}{-\chronowidth/2}{l}{#1}}
-\newcommand{\Bstate}[1]{\chronostate{\pBs}{\chronowidth/2}{r}{#1}}
+\newcommand{\Astate}[1]{\chronostate{\pAs}{\chronopos{A}}{l}{#1}}
+\newcommand{\Bstate}[1]{\chronostate{\pBs}{\chronopos{B}}{r}{#1}}
 
 \newcommand{\Aactionstate}[2]{
-  \chronoaction{\pAs}{-\chronowidth/2}{l}{#1}
-  \chronostate{\pAs-5mm}{-\chronowidth/2}{l}{#2}}
+  \chronoaction{\pAs}{\chronopos{A}}{l}{#1}
+  \chronostate{\pAs-5mm}{\chronopos{A}}{l}{#2}}
 
 \newcommand{\Bactionstate}[2]{
-  \chronoaction{\pBs}{\chronowidth/2}{r}{#1}
-  \chronostate{\pBs-5mm}{\chronowidth/2}{r}{#2}}
+  \chronoaction{\pBs}{\chronopos{B}}{r}{#1}
+  \chronostate{\pBs-5mm}{\chronopos{B}}{r}{#2}}
 
 
 \newcommand{\chronosettrans}[1]{
@@ -683,10 +724,10 @@
     \chronolatertrue
   \fi
   \fi
-  \chaddto{\pAs}{#1}
-  \chaddto{\pAr}{#1}
-  \chaddto{\pBs}{#1}
-  \chaddto{\pBr}{#1}
+  \chaddtosend{A}{#1}
+  \chaddtorecv{A}{#1}
+  \chaddtosend{B}{#1}
+  \chaddtorecv{B}{#1}
 }
 
 \newcommand{\chronofinishtimers}{

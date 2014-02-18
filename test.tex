@@ -49,7 +49,7 @@
   \BA{ACK}
 }
 \def\testiii{
- \AB[bad]{DATA1}
+  \AB[bad]{DATA1}
   \BA[bad]{DATA1}
   \chronosyncfalse
   \AB[bad]{DATA2}
@@ -140,8 +140,7 @@
                       \Bactionstate{close}{LastAck}
                       \BA{FIN}
   \Astate{TimeWait}
-  \settimerA{\pAs}{5cm}{2xMSL}
-  \AB{ACK}
+  \ABtimed{ACK}{5cm}{2xMSL}
                       \Bstate{Closed}
 \later{2cm}
   \Awaittimer
@@ -320,7 +319,10 @@
 }
 \vfill
 
-\hspace{-2cm}
+%\hspace{-2cm}
+
+\subsubsection*{States and actions}
+
 \begin{chrono}[prop=7mm,A=client,B=serveur,action time
   offset=0mm,action offset=2mm]
 \testxii

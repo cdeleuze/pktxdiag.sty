@@ -321,8 +321,7 @@
                       \Bactionstate{close}{LastAck}
                       \BA{FIN}
   \Astate{TimeWait}
-  \settimerA{\pAs}{5cm}{2xMSL}
-  \AB[trans]{ACK}
+  \ABtimed[trans]{ACK}{5cm}{2xMSL}
                       \Bstate{Closed}
 \later{2cm}
   \Awaittimer
@@ -337,12 +336,10 @@
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{TimeWait}
-  \settimerA{\pAs}{5cm}{2xMSL}
-  \AB[trans,lost]{ACK}
+  \ABtimed[trans,lost]{ACK}{5cm}{2xMSL}
                       \Bwaittimer
                       \BAcancel{FIN}
-  \settimerAi{\pAs}{5cm}{2xMSL}
-  \AB[trans]{ACK}
+  \ABtimedi[trans]{ACK}{5cm}{2xMSL}
 
                       \Bstate{Closed}
   \Awaittimeri
@@ -447,23 +444,23 @@
 \end{fchrono}
 
 \begin{fchrono}[prop=1cm,width=6cm,A=émetteur,B=récepteur]{Contrôle de flot TCP}
-  \newcommand{\buf}[2]{
-    \begin{scope}[shift={(\chronowidth/2+1cm,\pBr-3.75mm)},x=7.5mm]
+  \newcommand{\buf}[3][0cm]{
+    \begin{scope}[shift={(\chronowidth/2+1cm,\chronoTrecv{B}-3.75mm-#1)},x=7.5mm]
       %% xscale so that we reason on a 4k buffer (of length 3cm)
     \draw (0,0) rectangle +(4,0.75);
-    \draw[->] (#1,0.90) -- +(0,4mm);
-    \draw[<-] (#2,-0.10) -- +(0,-4mm);
-    \ifnum#1>#2
-    \filldraw[gray!30,draw=black] (#1,0) rectangle (4,0.75);
-    \filldraw[gray!30,draw=black] (0,0) rectangle (#2,0.75);
+    \draw[->] (#2,0.90) -- +(0,4mm);
+    \draw[<-] (#3,-0.10) -- +(0,-4mm);
+    \ifnum#2>#3
+    \filldraw[gray!30,draw=black] (#2,0) rectangle (4,0.75);
+    \filldraw[gray!30,draw=black] (0,0) rectangle (#3,0.75);
     \else
-    \filldraw[gray!30,draw=black] (#1,0) rectangle (#2,0.75);
+    \filldraw[gray!30,draw=black] (#2,0) rectangle (#3,0.75);
     \fi
   \end{scope}
 }
 
 \buf{0}{0}
-\node at (\chronowidth/2+2.5cm,\pBr-1mm) {tampon récepteur};
+\node at (\chronowidth/2+2.5cm,-1mm) {tampon récepteur};
 
 \Await
 \AB[snote=Appli écrit 1 k\\TCP envoie 1 k]{seq=0 (1024)}
@@ -476,8 +473,7 @@
 
 \BA{ack=~~~~~~~~~~ win= }
 \BA[snote=Appli lit 2 k]{ack=~~~~~~~~~ win=}
-\def\pBr{\pBs}
-\buf{2}{4}
+\buf[2.5cm]{2}{4}
 
 \AB[snote=TCP envoie 1 k]{seq=~~~~~~~~}
 \buf{2}{1}
