@@ -113,6 +113,24 @@
   \BAtimed{DATA3}{3cm}{tempo3}  
   \BA{DATA2}}
 
+\def\testlater{
+  \AB{DATA1}
+  \ABtimed{DATA2}{8cm}{temporisateur}
+   \ABtimedi{DATA3}{6cm}{temporisateur2}
+  \later{2cm}
+  \BAcancel{ACK}
+  \BAcanceli{ACK}
+}
+
+\def\testlateri{
+  \BA{DATA1}
+  \BAtimed{DATA2}{8cm}{temporisateur}
+  \BAtimedi{DATA3}{6cm}{temporisateur2}
+  \later{2cm}
+  \ABcancel{ACK}
+  \ABcanceli{ACK}
+}
+
 \def\testxii{
   \Astate{Closed}\Bstate{Closed}
   \Await         \Bwait
@@ -158,12 +176,10 @@
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{TimeWait}
-  \settimerA{\pAs}{5cm}{2xMSL}
-  \AB[lost]{ACK}
+  \ABtimed[lost]{ACK}{5cm}{2xMSL}
                       \Bwaittimer
                       \BAcancel{FIN}
-  \settimerAi{\pAs}{5cm}{2xMSL}
-  \AB{ACK}
+  \ABtimedi{ACK}{5cm}{2xMSL}
 
                       \Bstate{Closed}
   \Awaittimeri
@@ -318,6 +334,21 @@
 \end{hchrono}
 }
 \vfill
+
+\subsubsection*{Timers, later}
+
+\begin{chrono}
+  \testlater
+\end{chrono}
+\begin{chrono}[timerleftbelow]
+  \testlater
+\end{chrono}
+\begin{chrono}[timerleftbottomup]
+  \testlater
+\end{chrono}
+\begin{chrono}
+  \testlateri
+\end{chrono}
 
 %\hspace{-2cm}
 

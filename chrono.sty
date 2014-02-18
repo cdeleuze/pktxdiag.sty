@@ -156,11 +156,11 @@
 
 %%%%%% various definitions
 
-\pgfkeys{/chrono/entities/A/pos/.initial=-\chronowidth/2}
+\pgfkeys{/chrono/entities/A/pos/.initial=0cm}
 \pgfkeys{/chrono/entities/A/Tsend/.initial=0cm}
 \pgfkeys{/chrono/entities/A/Trecv/.initial=0cm}
 
-\pgfkeys{/chrono/entities/B/pos/.initial=\chronowidth/2}
+\pgfkeys{/chrono/entities/B/pos/.initial=0cm}
 \pgfkeys{/chrono/entities/B/Tsend/.initial=0cm}
 \pgfkeys{/chrono/entities/B/Trecv/.initial=0cm}
 
@@ -194,7 +194,7 @@
 
 \newlength{\chronospacesame}\setlength{\chronospacesame}{1cm}
 \newlength{\chronospaceother}\setlength{\chronospaceother}{5mm}
-\def\chronowidth{3cm}
+\def\chronowidth{2.75cm}
 \newlength{\chronoactiontimeoffset}\setlength{\chronoactiontimeoffset}{1mm}
 \newlength{\chronoactionoffset}\setlength{\chronoactionoffset}{1mm}
 \newlength{\chronoactionlength}\setlength{\chronoactionlength}{5mm}
@@ -747,18 +747,22 @@
 
   % vertical lines
   \ifchronoh\else
-  \draw[graphicbackground,dashed](-\chronowidth/2,\tpos) -- ++(0,\y\chronolaterdashedlen);
-  \draw[graphicbackground,dashed]( \chronowidth/2,\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed](\chronopos{A},\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed](\chronopos{B},\tpos) -- ++(0,\y\chronolaterdashedlen);
   \fi
 
   % timer lines
   \ifchronoh\else
-  \draw[graphicbackground,dashed](-\chronowidth/2-\timerAoffset,\tpos)  -- ++(0,\y\chronolaterdashedlen);
-  \draw[graphicbackground,dashed](-\chronowidth/2-\timerAioffset,\tpos) -- ++(0,\y\chronolaterdashedlen);
-  \draw[graphicbackground,dashed]( \chronowidth/2-\timerBoffset,\tpos)  -- ++(0,\y\chronolaterdashedlen);
-  \draw[graphicbackground,dashed]( \chronowidth/2-\timerBioffset,\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed] (\chronotimerhpos{\chronopos{A}}{l}{\timerAoffset},\tpos)  -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed](\chronotimerhpos{\chronopos{A}}{l}{\timerAioffset},\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed](\chronotimerhpos{\chronopos{B}}{r}{\timerBoffset},\tpos)  -- ++(0,\y\chronolaterdashedlen);
+  \draw[graphicbackground,dashed](\chronotimerhpos{\chronopos{B}}{r}{\timerBioffset},\tpos) -- ++(0,\y\chronolaterdashedlen);
   \fi
 }
+
+\newcommand{\chronosetpos}[2]{
+  \pgfmathsetlengthmacro{\toto}{#2}
+  \pgfkeyslet{/chrono/entities/#1/pos}{\toto}}
 
 \newenvironment{chrono}[1][]{
   \newcommand{\fullduplex}{\chronosyncfalse}
@@ -768,6 +772,8 @@
   \def\chronoarrow{\chronoarrowv}
   \def\y{-1}
   \begin{tikzpicture}[/chrono/.cd,#1]\sffamily
+  \chronosetpos{A}{-\chronowidth/2}
+  \chronosetpos{B}{\chronowidth/2}
   }
   {
     \ifchronosync\else
@@ -779,11 +785,10 @@
     \chronofinishtimers
 
     % bottom of vert lines is the minimum of A and B (negative values)
-    \def\chronopos{\pAs}
-%    \ifdim \chronopos>\pAs \def\chronopos{\pAs}\fi
-    \ifdim \chronopos>\pBs \def\chronopos{\pBs}\fi
-    \draw[thin](-\chronowidth/2,-\y\chronospacesame/2) node[above]{\pgfkeysvalueof{/chrono/A}}-- (-\chronowidth/2,\chronopos);
-    \draw[thin](\chronowidth/2,-\y\chronospacesame/2) node[above]{\pgfkeysvalueof{/chrono/B}}-- (\chronowidth/2,\chronopos);
+    \edef\pos{\pAs}
+    \ifdim \pos>\pBs \def\pos{\pBs}\fi
+    \draw[thin](\chronopos{A},-\y\chronospacesame/2) node[above]{\pgfkeysvalueof{/chrono/A}}-- (\chronopos{A},\pos);
+    \draw[thin](\chronopos{B},-\y\chronospacesame/2) node[above]{\pgfkeysvalueof{/chrono/B}}-- (\chronopos{B},\pos);
 
     % process later(s)
     \ifchronolater\chronodrawlater{\chronolaterpos}{\chronolaterlen}\fi
@@ -809,10 +814,12 @@
   \def\chronoarrow{\chronoarrowh}
   \def\y{1}
   \begin{tikzpicture}[/chrono/.cd,#1]\sffamily
+  \chronosetpos{A}{-\chronowidth/2}
+  \chronosetpos{B}{\chronowidth/2}
   }
   {
     % finish drawing all timers
     \chronofinishtimers
-    \draw (-\chronospacesame/2,\chronowidth/2) node [left]{\pgfkeysvalueof{/chrono/A}};
-    \draw (-\chronospacesame/2,-\chronowidth/2) node [left]{\pgfkeysvalueof{/chrono/B}};
+    \draw (-\chronospacesame/2,-\chronopos{A}) node [left]{\pgfkeysvalueof{/chrono/A}};
+    \draw (-\chronospacesame/2,-\chronopos{B}) node [left]{\pgfkeysvalueof{/chrono/B}};
   \end{tikzpicture}}  
