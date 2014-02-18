@@ -694,36 +694,14 @@
   \fi
 }
 
-%% position and length of \later is recorded three times
-\newif\ifchronolater
-\newlength{\chronolaterpos}
-\newlength{\chronolaterlen}
-\newif\ifchronolateri
-\newlength{\chronolaterposi}
-\newlength{\chronolaterleni}
-\newif\ifchronolaterii
-\newlength{\chronolaterposii}
-\newlength{\chronolaterlenii}
+%% laters -- unlimited number
+
 \newlength{\chronolaterdashedlen}
 \setlength{\chronolaterdashedlen}{1cm}
-
+\pgfkeys{/chrono/laters/.initial={0cm/0cm}}
 
 \newcommand{\later}[1]{
-  \ifchronolateri
-    \setlength{\chronolaterposii}{\pAs}
-    \setlength{\chronolaterlenii}{#1}
-    \chronolateriitrue
-  \else
-  \ifchronolater
-    \setlength{\chronolaterposi}{\pAs}
-    \setlength{\chronolaterleni}{#1}
-    \chronolateritrue
-  \else
-    \setlength{\chronolaterpos}{\pAs}
-    \setlength{\chronolaterlen}{#1}
-    \chronolatertrue
-  \fi
-  \fi
+  \pgfkeys{/chrono/laters/.append/.expanded={,\pAs/#1}}
   \chaddtosend{A}{#1}
   \chaddtorecv{A}{#1}
   \chaddtosend{B}{#1}
@@ -743,7 +721,7 @@
 
 % erase part of the vertical lines
 \newcommand{\chronodrawlater}[2]{
-  \def\tpos{#1+\y#2/2-\y\chronolaterdashedlen/2}
+  \def\tpos{#1+\y*#2/2-\y*\chronolaterdashedlen/2}
 
   % vertical lines
   \ifchronoh\else
@@ -791,15 +769,12 @@
     \draw[thin](\chronopos{B},-\y\chronospacesame/2) node[above]{\pgfkeysvalueof{/chrono/B}}-- (\chronopos{B},\pos);
 
     % process later(s)
-    \ifchronolater\chronodrawlater{\chronolaterpos}{\chronolaterlen}\fi
-    \ifchronolateri\chronodrawlater{\chronolaterposi}{\chronolaterleni}\fi
-    \ifchronolaterii\chronodrawlater{\chronolaterposii}{\chronolaterlenii}\fi
-    % \pgfkeys{/chrono/later/.show value}
-    % \pgfkeys{/chrono/later/.get=\laters}
-    % \foreach \p / \l in \laters {
-    %   \show\p \show\l
-    %  \chronodrawlater{\p}{\l}
-    % }
+    \pgfkeys{/chrono/laters/.get=\laters}
+    %\typeout{laters \laters}
+    \foreach \t/\l in \laters {
+      %\typeout{time \t~ len \l}
+      \ifdim\t=0cm\else\chronodrawlater{\t}{\l}\fi
+    }
   \end{tikzpicture}
 }
 
