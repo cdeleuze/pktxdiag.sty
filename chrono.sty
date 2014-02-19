@@ -509,23 +509,13 @@
 
 %%%%%% high-level commands
 
-%% sendtime  (pAs)
-%% recvtime  (pBr)
-%% rcvsendtime (pBs) for halfduplex
-
-%% l/r s/rnote       r/l s/rnote
-%% sendpos
-%% recvpos
-
-%% A                 B   for chrononame
-
-
-\newcommand{\chronoframe}[5][]{ % [#1 keys], #2 label, #3 sender #4
-                                % receiver #5 l/r for snote
-
+\newcommand{\chronoframe}[4][]{ % [#1 keys], #2 label,
+                                %  #3 sender #4 receiver
   \edef\sendpos{\pgfkeysvalueof{/chrono/entities/#3/pos}}
   \edef\recvpos{\pgfkeysvalueof{/chrono/entities/#4/pos}}
   \edef\Tsend{\pgfkeysvalueof{/chrono/entities/#3/Tsend}}
+
+  \ifdim\sendpos<\recvpos\def\align{l}\else\def\align{r}\fi
 
   \setlength{\savedtrans}{\trans}
   \setlength{\savedprop}{\prop}
@@ -533,7 +523,7 @@
   \pgfkeysfiltered{/chrono/.cd,#1}
   \chronosettrans{#2}
 
-  \chrononote{\Tsend}{\sendpos}{#5}{\chronosnoteoffset}{\chronosnote}
+  \chrononote{\Tsend}{\sendpos}{\align}{\chronosnoteoffset}{\chronosnote}
 
   \pgfkeysgetvalue{/chrono/id}{\chronoid}
   \pgfkeysifdefined{/chrono/flows/\chronoid/style}{
@@ -545,7 +535,7 @@
   \pgfmathsetlengthmacro\Trecv{\Tsend+\y*\prop+\y*\trans}
   \pgfmathsetlengthmacro\Tsend{\Tsend+\y*\trans+\y*\chronospacesame}
 
-  \chrononote{\Trecv-\chronodelay}{\recvpos}{\if#5rl\else r\fi}{\chronornoteoffset}{\chronornote}
+  \chrononote{\Trecv-\chronodelay}{\recvpos}{\if\align rl\else r\fi}{\chronornoteoffset}{\chronornote}
   \gdef\chronosnote{\relax}
   \gdef\chronornote{\relax}
 
@@ -574,10 +564,10 @@
 %%: A sends to B, B sends to A
 
 \newcommand{\AB}[2][]{
-  \chronoframe[#1]{#2}{A}{B}{l}}
+  \chronoframe[#1]{#2}{A}{B}}
 
 \newcommand{\BA}[2][]{
-  \chronoframe[#1]{#2}{B}{A}{r}}
+  \chronoframe[#1]{#2}{B}{A}}
 
 \newcommand{\chaddtosend}[2]{
   \pgfmathsetlengthmacro\temp{\chronoTsend{#1}+\y*#2}
