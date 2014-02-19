@@ -381,14 +381,20 @@
   \if\pgfkeysvalueof{/chrono/entities/#1/timers/#2/#3/active}t
   \chronoendtimer{#1}{#2}{#3}\fi}
 
-%% timer h position: base on hpos, l/r alignment and offset
+%% timer h position: based on hpos, l/r alignment and offset
 %% in horizontal, hpos is negated (left/- is up/+)
 %% in vertical, remove 3mm to l timers if neither timerleftbelow nor
 %% timerleftbottomup is set
-\newcommand{\chronotimerhpos}[3]{ % hpos, l/r, offset
-  \ifchronoh-#1+\if #2r-#3\else#3\fi
+
+\newcommand{\setchronotimerhpos}[4]{ % entity/lr/id macro
+  \debug{timerhpos #1/#2/#3}
+  \def\pos{\chronopos{#1}}
+  \def\offset{\chronogetconftimer{#1}{#2}{#3}{offset}}
+  \def#4{%
+  \ifchronoh-\pos+\if #2r-\offset\else\offset\fi
   \else
-  #1+\if #2r#3\else\iftimerleftbelow-#3\else\iftimerleftbottomup-#3\else-#3-3mm\fi\fi\fi\fi}
+  \pos+\if #2r\offset\else\iftimerleftbelow-\offset\else\iftimerleftbottomup-\offset
+  \else-\offset-3mm\fi\fi\fi\fi}}
 
 \newcommand{\settimer}[7]{ % entity, l/r, id, starttime, len, label,
                            % above/below
@@ -404,8 +410,7 @@
   \def\timerend{\chronogettimerend{#1}{#2}{#3}}
 
   \chronodebugtimer{settimer}{#1}{#2}{#3}
-
-  \def\hpos{\chronotimerhpos{\chronopos{#1}}{#2}{\timeroffset}}
+  \setchronotimerhpos{#1}{#2}{#3}{\hpos}
   \ifchronoh
       \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset) -- (\timerend,\hpos-\timerhoffset)
                          node[midway,sloped,#7]{#6};
@@ -446,7 +451,8 @@
   \def\timerend{\chronogettimerend{#1}{#2}{#3}}
   \def\timeroffset{\chronogetconftimer{#1}{#2}{#3}{offset}}
   \def\timerhoffset{\chronogetconftimer{#1}{#2}{#3}{haddoffset}}
-  \def\hpos{\chronotimerhpos{\chronopos{#1}}{#2}{\timeroffset}}
+
+  \setchronotimerhpos{#1}{#2}{#3}{\hpos}
   \ifchronoh
     \ifdim#4>\timerend\typeout{Expired timer!}
     \node at (#4,\hpos)[draw,red,fill=yellow]{Expired timer!};\else
@@ -472,7 +478,7 @@
   \def\timerend{\chronogettimerend{#1}{#2}{#3}}
   \def\timeroffset{\chronogetconftimer{#1}{#2}{#3}{offset}}
   \def\timerhoffset{\chronogetconftimer{#1}{#2}{#3}{haddoffset}}
-  \def\hpos{\chronotimerhpos{\chronopos{#1}}{#2}{\timeroffset}}
+  \setchronotimerhpos{#1}{#2}{#3}{\hpos}
   \ifchronoh
     \draw[thin,<->](\timerstart,\hpos-\timerhoffset)
                 -- (\timerend,\hpos-\timerhoffset);
@@ -763,12 +769,26 @@
   \debug{updated pos#1 = \chronoTsend{#1}}
   \fi\fi}
 
+\newcommand{\chronoalltimers}[1]{
+  \foreach \e/\o in {A/l,B/r} {
+    \foreach \n in {1,2} {
+      #1{\e}{\o}{\n}
+      }
+    }
+  }
+
 \newcommand{\chronofinishtimers}{
+% can't use that because of \foreach local scope for body
+%  \chronoalltimers{\chronoflushtimer}
   \chronoflushtimer{A}{l}{1}
   \chronoflushtimer{A}{l}{2}
   \chronoflushtimer{B}{r}{1}
   \chronoflushtimer{B}{r}{2}
 }
+
+\newcommand{\chronodrawlateronetimer}[3]{
+    \setchronotimerhpos{#1}{#2}{#3}{\hpos}
+    \draw[graphicbackground,dashed] (\hpos,\tpos) -- ++(0,\y\chronolaterdashedlen);}
 
 % erase part of the vertical lines
 \newcommand{\chronodrawlater}[2]{
@@ -782,10 +802,7 @@
 
   % timer lines
   \ifchronoh\else
-  \draw[graphicbackground,dashed] (\chronotimerhpos{\chronopos{A}}{l}{\timerAoffset},\tpos)  -- ++(0,\y\chronolaterdashedlen);
-  \draw[graphicbackground,dashed](\chronotimerhpos{\chronopos{A}}{l}{\timerAioffset},\tpos) -- ++(0,\y\chronolaterdashedlen);
-  \draw[graphicbackground,dashed](\chronotimerhpos{\chronopos{B}}{r}{\timerBoffset},\tpos)  -- ++(0,\y\chronolaterdashedlen);
-  \draw[graphicbackground,dashed](\chronotimerhpos{\chronopos{B}}{r}{\timerBioffset},\tpos) -- ++(0,\y\chronolaterdashedlen);
+  \chronoalltimers{\chronodrawlateronetimer}
   \fi
 }
 
