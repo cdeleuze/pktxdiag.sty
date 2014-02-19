@@ -21,14 +21,7 @@
   \AB[prop=2cm]{prop=2cm}
   \AB{DATA8}
 }
-\def\testi{\AB{DATA1}
-  \AB{DATA2}
-  \BA{ACK3}
-  \pgfkeys{/chrono/space same=5mm}
-  \AB{DATA1}
-  \AB{DATA2}
-  \BA{ACK3}}
-\def\testii{
+\def\testi{
   \AB{DATA1}
   \AB{DATA2}
   \AB{DATA3}
@@ -48,6 +41,14 @@
   \BwaitA
   \BA{ACK}
 }
+\def\testii{
+  \AB{DATA1}
+  \AB{DATA2}
+  \BA{ACK3}
+  \pgfkeys{/chrono/space same=5mm}
+  \AB{DATA1}
+  \AB{DATA2}
+  \BA{ACK3}}
 \def\testiii{
   \AB[bad]{DATA1}
   \BA[bad]{DATA1}
@@ -65,14 +66,26 @@
 %  \Awaittimer
   \AB{DATA2}}
 
-\def\testv{
+\def\testacktimer{
  \AB{DATA1}
+ \BAdelayed{5mm}{ack}{ACK}
+ \fullduplex
+ \AB{DATA1}
+ \BAdelayed{5mm}{ack}{ACK}
+ \AB{DATA1}
+ \BAdelayed{5mm}{ack}{ACK}
  \BA{DATA1}
- \ABdelayed{1cm}{ack}{ACK}}
+ \ABdelayed{5mm}{ack}{ACK}}
 
-\def\testvi{
+\def\testacktimeri{
  \BA{DATA}
- \ABstop{1cm}{ack}{5mm}{DATA}}
+ \ABstop{1cm}{ack}{5mm}{DATA}
+ \BA{ok}
+ \ABstop{1cm}{ack}{5mm}{DATA}
+ \AB{DATA}
+ \BAstop{1cm}{ack}{5mm}{DATA}
+ \AB{yo}
+ \BAstop{1cm}{ack}{5mm}{DATA}}
 
 \def\testvii{
   \AB{DATA1}
@@ -96,19 +109,19 @@
   \ABcancel{feu}}
 
 \def\testx{
-  \AB{DATA1}
-  \ABtimed{DATA2}{3cm}{temporisateur}
+  \AB{DATA0}
+  \ABtimed{DATA1}{3cm}{temporisateur1}
   \BAcancel{ACK}
-  \ABtimedi{DATA3}{3cm}{temporisateur2}
+  \ABtimedi{DATA2}{3cm}{temporisateur2}
   \BAcanceli{ACK}
   \ABtimed{DATA3}{3cm}{tempo3}  
   \AB{DATA2}}
 
 \def\testxi{
   \BA{DATA1}
-  \BAtimed{DATA2}{3cm}{temporisateur}
+  \BAtimed{DATA1}{3cm}{temporisateur1}
   \ABcancel{ACK}
-  \BAtimedi{DATA3}{3cm}{temporisateur2}
+  \BAtimedi{DATA2}{3cm}{temporisateur2}
   \ABcanceli{ACK}
   \BAtimed{DATA3}{3cm}{tempo3}  
   \BA{DATA2}}
@@ -200,7 +213,7 @@
 \end{chrono}
 \hfill
 \begin{hchrono}[width=1cm]
-\testi
+\rotate\testi
 \end{hchrono}
 \vfill
 \begin{chrono}
@@ -230,19 +243,19 @@
 \subsubsection*{ACK timers}
 
 \begin{chrono}[A,B]
-  \testv
+  \testacktimer
 \end{chrono}
 \hfill
 \begin{hchrono}[A,B]
-  \testv
+  \testacktimer
 \end{hchrono}
 \vfill
 \begin{chrono}
- \testvi
+ \testacktimeri
 \end{chrono}
 \hfill
 \begin{hchrono}
- \testvi
+ \testacktimeri
 \end{hchrono}
 \vfill
 \begin{chrono}[A=client,B=serveur]
@@ -379,7 +392,7 @@
 \testxiv
 \end{hchrono}
 
-\subsubsection*{laters}
+\subsubsection*{Laters}
 
 \begin{chrono}
   \AB{DATA1}
@@ -398,7 +411,7 @@
   \later{1cm}  
 \end{chrono}
 
-\subsubsection*{named position}
+\subsubsection*{Named position}
 
 \begin{chrono}
   \AB{DATA1}
@@ -410,7 +423,7 @@
   \BA[snote=waited for n2]{ACK4}
 \end{chrono}
 
-\subsubsection*{filtering}
+\subsubsection*{Filtering}
 
 \def\testfilter{
   \AB[id=1]{DATA 1 (1)}
@@ -434,7 +447,7 @@
   \testfilter
 \end{chrono}
 
-\subsubsection*{filtering, styles, label styles}
+\subsubsection*{Filtering, styles, label styles}
 
 {\derivestyle{id1}{default}{green}
 \derivestyle{id1l}{labeldefault}{green!60}
@@ -460,7 +473,7 @@
 \end{chrono}
 }
 
-\subsubsection*{labels}
+\subsubsection*{Labels}
 
 \def\testlabelii{
   \AB[label2=Yoooo !]{DATA 1}
@@ -481,7 +494,7 @@
   \testlabelii
 \end{chrono}
 
-\subsubsection*{per frame label style}
+\subsubsection*{Per frame label style}
 
 \def\testframelabelstyle{
   \AB{toto}

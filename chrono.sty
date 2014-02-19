@@ -12,6 +12,12 @@
 
 \pgfkeys{/chrono/.search also={/tikz}}
 
+
+\newif\ifdebug
+%\debugtrue
+\newcommand{\debug}[1]{
+  \ifdebug\typeout{#1}\fi}
+
 %%%%%% option keys
 
 % arrow cmd keys
@@ -66,11 +72,11 @@
 \def\chronornoteoffset{3mm}
 \def\chrononame{delayed}
 
-\pgfkeys{/chrono/timerAoffset/.code=\setlength{\timerAoffset}{#1}}
-\pgfkeys{/chrono/timerAioffset/.code=\setlength{\timerAioffset}{#1}}
+\pgfkeys{/chrono/timerAoffset/.style={/chrono/default/timers/l/1/offset=#1}}
+\pgfkeys{/chrono/timerAioffset/.style={/chrono/default/timers/l/2/offset=#1}}
 
-\pgfkeys{/chrono/timerBoffset/.code=\setlength{\timerBoffset}{#1}}
-\pgfkeys{/chrono/timerBioffset/.code=\setlength{\timerBioffset}{#1}}
+\pgfkeys{/chrono/timerBoffset/.style={/chrono/default/timers/r/1/offset=#1}}
+\pgfkeys{/chrono/timerBioffset/.style={/chrono/default/timers/r/2/offset=#1}}
 
 \pgfkeys{/chrono/timer offset/.style={/chrono/timerAoffset=#1,/chrono/timerBoffset=#1}}
 \pgfkeys{/chrono/timeri offset/.style={/chrono/timerAioffset=#1,/chrono/timerBioffset=#1}}
@@ -156,13 +162,37 @@
 
 %%%%%% various definitions
 
-\pgfkeys{/chrono/entities/A/pos/.initial=0cm}
-\pgfkeys{/chrono/entities/A/Tsend/.initial=0cm}
-\pgfkeys{/chrono/entities/A/Trecv/.initial=0cm}
+% this will be usefull for creating entities in a \foreach...
+\def\pgfglobalkeys#1{\begingroup \ifnum\the\globaldefs>0\relax \else \globaldefs=1\fi \pgfkeys{#1}\endgroup}
 
-\pgfkeys{/chrono/entities/B/pos/.initial=0cm}
-\pgfkeys{/chrono/entities/B/Tsend/.initial=0cm}
-\pgfkeys{/chrono/entities/B/Trecv/.initial=0cm}
+\newcommand{\chronocreateentity}[1]{
+  \pgfglobalkeys{/chrono/entities/#1/pos/.initial=0cm}
+  \pgfglobalkeys{/chrono/entities/#1/Tsend/.initial=0cm}
+  \pgfglobalkeys{/chrono/entities/#1/Trecv/.initial=0cm}
+  \chronocreatetimer{A}{l}{1}
+  \chronocreatetimer{A}{l}{2}
+  \chronocreatetimer{B}{r}{1}
+  \chronocreatetimer{B}{r}{2}
+}
+
+\newcommand{\chronocreatetimer}[3]{ % entity l/r id
+  \pgfglobalkeys{/chrono/entities/#1/timer/#2/#3/active/.initial=0}
+  \pgfglobalkeys{/chrono/entities/#1/timer/#2/#3/cancel/.initial=0}
+  \pgfglobalkeys{/chrono/entities/#1/timer/#2/#3/start/.initial=0}
+  \pgfglobalkeys{/chrono/entities/#1/timer/#2/#3/end/.initial=0pt}}
+
+\chronocreateentity{A}
+\chronocreateentity{B}
+
+\pgfkeys{/chrono/default/timers/l/1/offset/.initial=4mm}
+\pgfkeys{/chrono/default/timers/l/2/offset/.initial=9mm}
+\pgfkeys{/chrono/default/timers/r/1/offset/.initial=4mm}
+\pgfkeys{/chrono/default/timers/r/2/offset/.initial=9mm}
+%% additional offset in horizontal mode
+\pgfkeys{/chrono/default/timers/l/1/haddoffset/.initial=-3mm}
+\pgfkeys{/chrono/default/timers/l/2/haddoffset/.initial=-3mm}
+\pgfkeys{/chrono/default/timers/r/1/haddoffset/.initial=7mm}
+\pgfkeys{/chrono/default/timers/r/2/haddoffset/.initial=7mm}
 
 \newcommand{\chronopos}[1]{\pgfkeysvalueof{/chrono/entities/#1/pos}}
 \newcommand{\chronoTsend}[1]{\pgfkeysvalueof{/chrono/entities/#1/Tsend}}
@@ -172,12 +202,23 @@
 %% (note how we use pgfkeyslet in \chronoframe)
 \newcommand{\chronosetTsend}[2]{\pgfkeyssetvalue{/chrono/entities/#1/Tsend}{#2}}
 \newcommand{\chronosetTrecv}[2]{\pgfkeyssetvalue{/chrono/entities/#1/Trecv}{#2}}
+\newcommand{\chronoletTsend}[2]{\pgfkeyslet{/chrono/entities/#1/Tsend}{#2}}
 
 %% shortcuts
 \def\pAs{\chronoTsend{A}}
 \def\pBs{\chronoTsend{B}}
 \def\pAr{\chronoTrecv{A}}
 \def\pBr{\chronoTrecv{B}}
+
+\newcommand{\chronogetconftimer}[4]{
+  \pgfkeysifdefined{/chrono/entities/#1/timers/#2/#3/#4}
+  {\pgfkeysvalueof{/chrono/entities/#1/timers/#2/#3/#4}}
+  {\pgfkeysvalueof{/chrono/default/timers/#2/#3/#4}}}
+
+\newcommand{\chronogettimerstart}[3]{
+  \pgfkeysvalueof{/chrono/entities/#1/timers/#2/#3/start}}
+\newcommand{\chronogettimerend}[3]{
+  \pgfkeysvalueof{/chrono/entities/#1/timers/#2/#3/end}}
 
 
 \newif\iftimerleftbottomup
@@ -315,24 +356,16 @@
 %%%%%% handling of timers
 
 
-\newlength{\timerAstart}
-\newlength{\timerAend}
-\newlength{\timerAoffset}
-\newlength{\timerAistart}
-\newlength{\timerAiend}
-\newlength{\timerAioffset}
-\newlength{\timerBstart}
-\newlength{\timerBend}
-\newlength{\timerBoffset}
-\newlength{\timerBistart}
-\newlength{\timerBiend}
-\newlength{\timerBioffset}
+\def\timerAend{\chronogettimerend{A}{l}{1}}
+\def\timerAiend{\chronogettimerend{A}{l}{2}}
+\def\timerBend{\chronogettimerend{B}{r}{1}}
+\def\timerBiend{\chronogettimerend{B}{r}{2}}
 
 
-\setlength{\timerAoffset}{4mm}
-\setlength{\timerBoffset}{4mm}
-\setlength{\timerAioffset}{9mm}
-\setlength{\timerBioffset}{9mm}
+\def\timerAoffset{\pgfkeysvalueof{/chrono/default/timers/l/1/offset}}
+\def\timerBoffset{\pgfkeysvalueof{/chrono/default/timers/r/1/offset}}
+\def\timerAioffset{\pgfkeysvalueof{/chrono/default/timers/l/2/offset}}
+\def\timerBioffset{\pgfkeysvalueof{/chrono/default/timers/r/2/offset}}
 
 %% so that arrows of consecutive timers are spaced a very little bit
 \newlength{\timertimeoffset}\setlength{\timertimeoffset}{0.2mm}
@@ -344,19 +377,9 @@
 \newlength{\chronoBhaddoffset}\setlength{\chronoBhaddoffset}{7mm}
 \newlength{\chronoBihaddoffset}\setlength{\chronoBihaddoffset}{7mm}
 
-\newif\iftimerAactive
-\newif\iftimerAcancel
-\newif\iftimerAiactive
-\newif\iftimerAicancel
-\newif\iftimerBactive
-\newif\iftimerBcancel
-\newif\iftimerBiactive
-\newif\iftimerBicancel
-
-\newcommand{\chronoendtimerifactive}[1]{
-  \csname iftimer#1active\endcsname
-  \csname chronoendtimer#1\endcsname\fi
-}
+\newcommand{\chronoendtimerifactive}[3]{
+  \if\pgfkeysvalueof{/chrono/entities/#1/timers/#2/#3/active}t
+  \chronoendtimer{#1}{#2}{#3}\fi}
 
 %% timer h position: base on hpos, l/r alignment and offset
 %% in horizontal, hpos is negated (left/- is up/+)
@@ -367,81 +390,102 @@
   \else
   #1+\if #2r#3\else\iftimerleftbelow-#3\else\iftimerleftbottomup-#3\else-#3-3mm\fi\fi\fi\fi}
 
-\newcommand{\settimer}[7]{ % start, len, label, A/B, hpos, l/r, above/below
-  \chronoendtimerifactive{#4}
-  \csname timer#4activetrue\endcsname
-  \csname timer#4cancelfalse\endcsname
-  \def\timerstart{\csname timer#4start\endcsname}
-  \def\timerend{\csname timer#4end\endcsname}
-  \def\timeroffset{\csname timer#4offset\endcsname}
-  \def\timerhoffset{\csname chrono#4haddoffset\endcsname}
-  \setlength{\timerstart}{#1}
-  \setlength{\timerend}{#1}\chronoaddto{\timerend}{#2}
-  \def\hpos{\chronotimerhpos{#5}{#6}{\timeroffset}}
+\newcommand{\settimer}[7]{ % entity, l/r, id, starttime, len, label,
+                           % above/below
+  \chronoendtimerifactive{#1}{#2}{#3}
+  \pgfkeyssetvalue{/chrono/entities/#1/timers/#2/#3/active}{t}
+  \pgfkeyssetvalue{/chrono/entities/#1/timers/#2/#3/cancel}{0}
+  \def\timeroffset{\chronogetconftimer{#1}{#2}{#3}{offset}}
+  \def\timerhoffset{\chronogetconftimer{#1}{#2}{#3}{haddoffset}}
+  \pgfkeyslet{/chrono/entities/#1/timers/#2/#3/start}{#4}
+  \pgfmathsetlengthmacro\temp{#4+\y*#5}
+  \pgfkeyslet{/chrono/entities/#1/timers/#2/#3/end}{\temp}
+  \def\timerstart{\chronogettimerstart{#1}{#2}{#3}}
+  \def\timerend{\chronogettimerend{#1}{#2}{#3}}
+
+  \chronodebugtimer{settimer}{#1}{#2}{#3}
+
+  \def\hpos{\chronotimerhpos{\chronopos{#1}}{#2}{\timeroffset}}
   \ifchronoh
-      \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset)
-                         -- (\timerend,\hpos-\timerhoffset) node[midway,sloped,#7]{#3};
+      \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset) -- (\timerend,\hpos-\timerhoffset)
+                         node[midway,sloped,#7]{#6};
   \else
       \draw[thin,dotted,<->](\hpos,\timerstart-\timertimeoffset)
-                         -- (\hpos,\timerend+\timertimeoffset) node[midway,sloped,#7]{#3};
+                         -- (\hpos,\timerend+\timertimeoffset) node[midway,sloped,#7]{#6};
   \fi
 }
 
-\newcommand{\settimerA}[3]{\settimer{#1}{#2}{#3}{A}{-\chronowidth/2}{l}{%
+\newcommand{\settimerA}[3]{ % time, len, label
+  \settimer{A}{l}{1}{#1}{#2}{#3}{%
     \ifchronoh above\else\iftimerleftbelow below\else
     \iftimerleftbottomup/chrono/reverse\else above\fi\fi\fi}}
-\newcommand{\settimerAi}[3]{\settimer{#1}{#2}{#3}{Ai}{-\chronowidth/2}{l}{%
+
+\newcommand{\settimerAi}[3]{
+  \settimer{A}{l}{2}{#1}{#2}{#3}{%
     \ifchronoh above\else\iftimerleftbelow below\else
     \iftimerleftbottomup/chrono/reverse\else above\fi\fi\fi}}
 
-\newcommand{\settimerB}[3]{\settimer{#1}{#2}{#3}{B}{\chronowidth/2}{r}{above}}
-\newcommand{\settimerBi}[3]{\settimer{#1}{#2}{#3}{Bi}{\chronowidth/2}{r}{above}}
+\newcommand{\settimerB}[3]{
+  \settimer{B}{r}{1}{#1}{#2}{#3}{above}}
+
+\newcommand{\settimerBi}[3]{
+  \settimer{B}{r}{2}{#1}{#2}{#3}{above}}
 
 
-\newcommand{\canceltimer}[4]{ % pos, A/B, hpos, l/r
-  \csname timer#2activefalse\endcsname
-  \csname timer#2canceltrue\endcsname
-  \def\hpos{\chronotimerhpos{#3}{#4}{\csname timer#2offset\endcsname}}
-  \def\timerhoffset{\csname chrono#2haddoffset\endcsname}
-  \def\timerend{\csname timer#2end\endcsname}
+\newcommand{\chronodebugtimer}[4]{
+  \debug{#1 timer #2/#3/#4}
+  \debug{start \chronogettimerstart{#2}{#3}{#4}}
+  \debug{end   \chronogettimerend{#2}{#3}{#4}}
+}
+
+\newcommand{\canceltimer}[4]{ % entity, l/r, id, time
+  \chronodebugtimer{canceltimer}{#1}{#2}{#3}
+  \pgfkeyssetvalue{/chrono/entities/#1/timers/#2/#3/active}{0}
+  \pgfkeyssetvalue{/chrono/entities/#1/timers/#2/#3/cancel}{t}
+  \def\timerstart{\chronogettimerstart{#1}{#2}{#3}}
+  \def\timerend{\chronogettimerend{#1}{#2}{#3}}
+  \def\timeroffset{\chronogetconftimer{#1}{#2}{#3}{offset}}
+  \def\timerhoffset{\chronogetconftimer{#1}{#2}{#3}{haddoffset}}
+  \def\hpos{\chronotimerhpos{\chronopos{#1}}{#2}{\timeroffset}}
   \ifchronoh
-    \ifdim#1>\timerend\typeout{Expired timer!}
-    \node at (#1,\hpos)[draw,red,fill=yellow]{Expired timer!};\else
-    \draw[thin,<-](\csname timer#2start\endcsname,\hpos-\timerhoffset) --(#1,\hpos-\timerhoffset);
+    \ifdim#4>\timerend\typeout{Expired timer!}
+    \node at (#4,\hpos)[draw,red,fill=yellow]{Expired timer!};\else
+    \draw[thin,<-](\timerstart,\hpos-\timerhoffset) --(#4,\hpos-\timerhoffset);
     \fi
   \else
-    \ifdim#1<\timerend\typeout{Expired timer!}
-    \node at (\hpos,#1)[draw,red,fill=yellow]{Expired timer!};\else
-    \draw[thin,<-](\hpos,\csname
-    timer#2start\endcsname-\timertimeoffset) --(\hpos,#1);
+    \ifdim#4<\timerend\typeout{Expired timer!}
+    \node at (\hpos,#4)[draw,red,fill=yellow]{Expired timer!};\else
+    \draw[thin,<-](\hpos,\timerstart-\timertimeoffset) --(\hpos,#4);
     \fi
   \fi
 }
 
-\newcommand{\canceltimerA}[1]{\canceltimer{#1}{A}{-\chronowidth/2}{l}}
-\newcommand{\canceltimerAi}[1]{\canceltimer{#1}{Ai}{-\chronowidth/2}{l}}
-\newcommand{\canceltimerB}[1]{\canceltimer{#1}{B}{\chronowidth/2}{r}}
-\newcommand{\canceltimerBi}[1]{\canceltimer{#1}{Bi}{\chronowidth/2}{r}}
+\newcommand{\canceltimerA}[1]{\canceltimer{A}{l}{1}{#1}}
+\newcommand{\canceltimerAi}[1]{\canceltimer{A}{l}{2}{#1}}
+\newcommand{\canceltimerB}[1]{\canceltimer{B}{r}{1}{#1}}
+\newcommand{\canceltimerBi}[1]{\canceltimer{B}{r}{2}{#1}}
 
-\newcommand{\chronoendtimer}[3]{ % A/B, hpos, l/r
-  \csname timer#1activefalse\endcsname
-  \csname timer#1cancelfalse\endcsname
-  \def\timerhoffset{\csname chrono#1haddoffset\endcsname}
-  \def\timeroffset{\csname timer#1offset\endcsname}
-  \def\hpos{\chronotimerhpos{#2}{#3}{\timeroffset}}
+\newcommand{\chronoendtimer}[3]{
+  \pgfkeyssetvalue{/chrono/entities/#1/timers/#2/#3/active}{0}
+  \pgfkeyssetvalue{/chrono/entities/#1/timers/#2/#3/cancel}{0}
+  \def\timerstart{\chronogettimerstart{#1}{#2}{#3}}
+  \def\timerend{\chronogettimerend{#1}{#2}{#3}}
+  \def\timeroffset{\chronogetconftimer{#1}{#2}{#3}{offset}}
+  \def\timerhoffset{\chronogetconftimer{#1}{#2}{#3}{haddoffset}}
+  \def\hpos{\chronotimerhpos{\chronopos{#1}}{#2}{\timeroffset}}
   \ifchronoh
-    \draw[thin,<->](\csname timer#1start\endcsname,\hpos-\timerhoffset)
-                -- (\csname timer#1end\endcsname,\hpos-\timerhoffset);
+    \draw[thin,<->](\timerstart,\hpos-\timerhoffset)
+                -- (\timerend,\hpos-\timerhoffset);
   \else
-    \draw[thin,<->](\hpos,\csname timer#1start\endcsname-\timertimeoffset)
-                -- (\hpos,\csname timer#1end\endcsname+\timertimeoffset);
+    \draw[thin,<->](\hpos,\timerstart-\timertimeoffset)
+                -- (\hpos,\timerend+\timertimeoffset);
   \fi
 }
 
-\newcommand{\chronoendtimerA} {\chronoendtimer{A}{-\chronowidth/2}{l}}
-\newcommand{\chronoendtimerAi}{\chronoendtimer{Ai}{-\chronowidth/2}{l}}
-\newcommand{\chronoendtimerB} {\chronoendtimer{B}{\chronowidth/2}{r}}
-\newcommand{\chronoendtimerBi}{\chronoendtimer{Bi}{\chronowidth/2}{r}}
+\newcommand{\chronoendtimerA} {\chronoendtimer{A}{l}{1}}
+\newcommand{\chronoendtimerAi}{\chronoendtimer{A}{l}{2}}
+\newcommand{\chronoendtimerB} {\chronoendtimer{B}{r}{1}}
+\newcommand{\chronoendtimerBi}{\chronoendtimer{B}{r}{2}}
 
 
 \newcommand{\chronogetconf}[2]{
@@ -545,7 +589,9 @@
 %%: A waits for B, B waits for A (usefull only in fullduplex mode)
 
 \newcommand{\XwaitY}[2]{
-  \chronosetTsend{#1}{\chronoTrecv{#1}}
+  \edef\temp{\chronoTrecv{#1}}
+  \chronoletTsend{#1}{\temp}
+  \debug{Xwait temp=\temp Tsend=\chronoTsend{#1}}
   \chaddtosend{#1}{\chronospaceother}}
 
 \newcommand{\AwaitB}{\XwaitY{A}{B}}
@@ -553,58 +599,55 @@
 
 %%: arg is name set in the delayed frame (key name, defaults to delayed)
 \newcommand{\Awaitdelayed}[1][delayed]{
-  \chronosetTrecv{A}{\pgfkeysvalueof{/chrono/values/A/#1}pt}
+  \chronosetTrecv{A}{\pgfkeysvalueof{/chrono/values/A/#1}}
   \AwaitB}
 
 \newcommand{\Bwaitdelayed}[1][delayed]{
-  \chronosetTrecv{B}{\pgfkeysvalueof{/chrono/values/B/#1}pt}
+  \chronosetTrecv{B}{\pgfkeysvalueof{/chrono/values/B/#1}}
   \BwaitA}
   
 
 %%: A,B waits for its current timer to expire
 
-\newcommand{\Awaittimer}{
-  \ifchronoh \ifdim \pAs<\timerAend\chronosetTsend{A}{\timerAend}\fi
-  \else      \ifdim \pAs>\timerAend\chronosetTsend{A}{\timerAend}\fi   \fi}
+\newcommand{\chronowaittimer}[3]{
+  \edef\timerend{\chronogettimerend{#1}{#2}{#3}}
+  \edef\Tsend{\chronoTsend{#1}}
+  \ifchronoh \ifdim \Tsend<\timerend\chronoletTsend{#1}{\timerend}\fi
+  \else      \ifdim \Tsend>\timerend\chronoletTsend{#1}{\timerend}\fi
+  \fi}
 
-\newcommand{\Awaittimeri}{
-  \ifchronoh \ifdim \pAs<\timerAiend\chronosetTsend{A}{\timerAiend}\fi
-  \else      \ifdim \pAs>\timerAiend\chronosetTsend{A}{\timerAiend}\fi \fi}
-
-\newcommand{\Bwaittimer}{
-  \ifchronoh \ifdim \pBs<\timerBend\chronosetTsend{B}{\timerBend}\fi
-  \else      \ifdim \pBs>\timerBend\chronosetTsend{B}{\timerBend}\fi   \fi}
-
-\newcommand{\Bwaittimeri}{
-  \ifchronoh \ifdim \pBs<\timerBiend\chronosetTsend{B}{\timerBend}\fi
-  \else      \ifdim \pBs>\timerBiend\chronosetTsend{B}{\timerBend}\fi \fi}
-
+\newcommand{\Awaittimer}{\chronowaittimer{A}{l}{1}}
+\newcommand{\Awaittimeri}{\chronowaittimer{A}{l}{2}}
+\newcommand{\Bwaittimer}{\chronowaittimer{B}{r}{1}}
+\newcommand{\Bwaittimeri}{\chronowaittimer{B}{r}{2}}
 
 %%: A sends a timed frame to B
 
 \newcommand{\ABtimed}[4][]{  % [keys], flabel, len, tlabel
-  \setlength{\chronoxx}{\pAs}
+  \edef\chronoxx{\pAs}
   \AB[#1]{#2}
-  \addtolength{\chronoxx}{\ltrans}
-  \settimerA{\chronoxx}{#3}{#4}}
+  \debug{AB timed: chronoxx \chronoxx}
+  \pgfmathsetlengthmacro\temp{\chronoxx+\y*\ltrans}
+  \debug{AB timed: chronoxx+ltrans \temp}
+  \settimerA{\temp}{#3}{#4}}
 
 \newcommand{\ABtimedi}[4][]{  % [keys], flabel, len, tlabel
-  \setlength{\chronoxx}{\pAs}
+  \edef\chronoxx{\pAs}
   \AB[#1]{#2}
-  \addtolength{\chronoxx}{\ltrans}
-  \settimerAi{\chronoxx}{#3}{#4}}
+  \pgfmathsetlengthmacro\temp{\chronoxx+\y*\ltrans}
+  \settimerAi{\temp}{#3}{#4}}
 
 \newcommand{\BAtimed}[4][]{  % [keys], flabel, len, tlabel
-  \setlength{\chronoxx}{\pBs}
+  \edef\chronoxx{\pBs}
   \BA[#1]{#2}
-  \addtolength{\chronoxx}{\ltrans}
-  \settimerB{\chronoxx}{#3}{#4}}
+  \pgfmathsetlengthmacro\temp{\chronoxx+\y*\ltrans}
+  \settimerB{\temp}{#3}{#4}}
 
 \newcommand{\BAtimedi}[4][]{  % [keys], flabel, len, tlabel
-  \setlength{\chronoxx}{\pBs}
+  \edef\chronoxx{\pBs}
   \BA[#1]{#2}
-  \addtolength{\chronoxx}{\ltrans}
-  \settimerBi{\chronoxx}{#3}{#4}}
+  \pgfmathsetlengthmacro\temp{\chronoxx+\y*\ltrans}
+  \settimerBi{\temp}{#3}{#4}}
 
 %%: A sends a frame that cancels B's timer
 
@@ -643,16 +686,16 @@
 
 \newcommand{\ABstop}[4]{ % len, tlabel, delay, flabel
   \settimerA{\pAr}{#1}{#2}
-  \setlength{\chronoxx}{\pAr}\chronoaddto{\chronoxx}{#3}
-  \canceltimerA{\chronoxx}
-  \chronosetTsend{A}{\chronoxx}
+  \pgfmathsetlengthmacro\temp{\pAr+\y*#3}
+  \canceltimerA{\temp}
+  \chronosetTsend{A}{\temp}
   \AB{#4}}
 
 \newcommand{\BAstop}[4]{ % len, tlabel, delay, flabel
   \settimerB{\pBr}{#1}{#2}
-  \setlength{\chronoxx}{\pBr}\chronoaddto{\chronoxx}{#3}
-  \canceltimerB{\chronoxx}
-  \chronosetTsend{B}{\chronoxx}
+  \pgfmathsetlengthmacro\temp{\pBr+\y*#3}
+  \canceltimerB{\temp}
+  \chronosetTsend{B}{\temp}
   \BA{#4}}
 
 
@@ -708,15 +751,23 @@
   \chaddtorecv{B}{#1}
 }
 
+\newcommand{\chronoflushtimer}[3]{
+  \if\pgfkeysvalueof{/chrono/entities/#1/timers/#2/#3/active}t
+  \chronoendtimer{#1}{#2}{#3}
+  \chronowaittimer{#1}{#2}{#3}
+  \else
+  \if\pgfkeysvalueof{/chrono/entities/#1/timers/#2/#3/cancel}t
+  \chronodebugtimer{flush/cancel}{#1}{#2}{#3}
+  \debug{pos#1 = \chronoTsend{#1}}
+  \chronowaittimer{#1}{#2}{#3}
+  \debug{updated pos#1 = \chronoTsend{#1}}
+  \fi\fi}
+
 \newcommand{\chronofinishtimers}{
-  \iftimerAactive\chronoendtimerA\Awaittimer\fi
-  \iftimerBactive\chronoendtimerB\Bwaittimer\fi
-  \iftimerAiactive\chronoendtimerAi\Awaittimeri\fi
-  \iftimerBiactive\chronoendtimerBi\Bwaittimeri\fi
-  \iftimerAcancel\Awaittimer\fi
-  \iftimerBcancel\Bwaittimer\fi
-  \iftimerAicancel\Awaittimeri\fi
-  \iftimerBicancel\Bwaittimeri\fi
+  \chronoflushtimer{A}{l}{1}
+  \chronoflushtimer{A}{l}{2}
+  \chronoflushtimer{B}{r}{1}
+  \chronoflushtimer{B}{r}{2}
 }
 
 % erase part of the vertical lines
@@ -770,9 +821,9 @@
 
     % process later(s)
     \pgfkeys{/chrono/laters/.get=\laters}
-    %\typeout{laters \laters}
+    %\debug{laters \laters}
     \foreach \t/\l in \laters {
-      %\typeout{time \t~ len \l}
+      %\debug{time \t~ len \l}
       \ifdim\t=0cm\else\chronodrawlater{\t}{\l}\fi
     }
   \end{tikzpicture}
