@@ -27,6 +27,14 @@
   /chrono/sh/.belongs to family=/chrono/global,
   /chrono/prop/.belongs to family=/chrono/global,
   /chrono/late/.belongs to family=/chrono/global,
+  /chrono/timed/.belongs to family=/chrono/global,
+  /chrono/timed2/.belongs to family=/chrono/global,
+  /chrono/delayed/.belongs to family=/chrono/global,
+  /chrono/delayed2/.belongs to family=/chrono/global,
+  /chrono/stop/.belongs to family=/chrono/global,
+  /chrono/stop2/.belongs to family=/chrono/global,
+  /chrono/cancel/.belongs to family=/chrono/global,
+  /chrono/cancel2/.belongs to family=/chrono/global,
   /chrono/snote/.belongs to family=/chrono/global,
   /chrono/rnote/.belongs to family=/chrono/global,
   /chrono/snoteoffset/.belongs to family=/chrono/global,
@@ -39,22 +47,47 @@
 %% ZZZ do we need that? yes for prop and trans...
 \pgfkeys{/pgf/key filters/active families/.install key filter}
 
-\pgfkeys{/chrono/prop/.default=1cm,/chrono/prop/.code=\setlength{\prop}{#1}}
-\pgfkeys{/chrono/trans/.default=10mm,/chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi}
-\pgfkeyssetvalue{/chrono/short trans}{7mm}
-\pgfkeys{/chrono/sh/.style=trans=5mm}
-\pgfkeys{/chrono/late/.default=4cm,/chrono/late/.code=\chronolatetrue\setlength{\chronolatev}{#1}}
+\pgfkeys{
+  /chrono/prop/.default=1cm,
+  /chrono/prop/.code=\setlength{\prop}{#1},
+  % 
+  /chrono/trans/.default=10mm,
+  /chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi,
+  % 
+  /chrono/sh/.style=trans=5mm,
+  % 
+  /chrono/lost/.is if=chronolost,
+  /chrono/bad/.is if=chronobad,
+  %
+  /chrono/late/.default=4cm,
+  /chrono/late/.code=\chronolatetrue\setlength{\chronolatev}{#1},
+  /chrono/timed/.value required,
+  /chrono/timed/.code 2 args={\chronotimedtrue\edef\chronotimedid{1}\edef\chronotimedlen{#1}\edef\chronotimedlabel{#2}},
+  /chrono/timed2/.value required,
+  /chrono/timed2/.code 2 args={\chronotimedtrue\edef\chronotimedid{2}\edef\chronotimedlen{#1}\edef\chronotimedlabel{#2}},
+  % 
+  /chrono/cancel/.code={\chronocanceltrue\edef\chronocancelid{1}},
+  /chrono/cancel2/.code={\chronocanceltrue\edef\chronocancelid{2}},
+  /chrono/delayed/.value required,
+  /chrono/delayed/.code 2 args={\chronodelayedtrue\edef\chronodelayedid{1}\edef\chronodelayedlen{#1}\edef\chronodelayedlabel{#2}},
+  /chrono/delayed2/.value required,
+  /chrono/delayed2/.code 2 args={\chronodelayedtrue\edef\chronodelayedid{2}\edef\chronodelayedlen{#1}\edef\chronodelayedlabel{#2}},
+  /chrono/stop/.value required,
+  /chrono/stop/.code n args={3}{\chronostoptrue\edef\chronostopid{1}
+    \edef\chronostoplen{#1}\edef\chronostoplabel{#2}\edef\chronostopdelay{#3}},
+  /chrono/stop2/.value required,
+  /chrono/stop2/.code n args={3}{\chronostoptrue\edef\chronostopid{2}\edef\chronostoplen{#1}\edef\chronostoplabel{#2}\edef\chronostopdelay{#3}}}
 
-\pgfkeys{/chrono/lost/.is if=chronolost}
-\pgfkeys{/chrono/cross for lost/.is if=chronocrosslost}
-\pgfkeys{/chrono/bad/.is if=chronobad}
-\pgfkeys{/chrono/snote/.code=\gdef\chronosnote{#1}}
-\pgfkeys{/chrono/rnote/.code=\gdef\chronornote{#1}}
-\pgfkeys{/chrono/snoteoffset/.code=\def\chronosnoteoffset{#1}}
-\pgfkeys{/chrono/snoteoffset/.default=0}
-\pgfkeys{/chrono/rnoteoffset/.code=\def\chronornoteoffset{#1}}
-\pgfkeys{/chrono/rnoteoffset/.default=0}
-\pgfkeys{/chrono/noteoffset/.style={snoteoffset=#1,rnoteoffset=#1}}
+\pgfkeys{
+  /chrono/cross for lost/.is if=chronocrosslost,
+  /chrono/snote/.code=\gdef\chronosnote{#1},
+  /chrono/rnote/.code=\gdef\chronornote{#1},
+  /chrono/snoteoffset/.code=\def\chronosnoteoffset{#1},
+  /chrono/snoteoffset/.default=0,
+  /chrono/rnoteoffset/.code=\def\chronornoteoffset{#1},
+  /chrono/rnoteoffset/.default=0,
+  /chrono/noteoffset/.style={snoteoffset=#1,rnoteoffset=#1}}
+
 \pgfkeys{/chrono/name/.code=\def\chrononame{#1}}
 \pgfkeys{/chrono/opacity/.style={/tikz/opacity=#1,/tikz/text opacity=#1}}
 
@@ -63,6 +96,7 @@
 \pgfkeyssetvalue{/chrono/ghost}{0}
 \pgfkeys{/chrono/hide/.code=\chronosethides{#1}}
 
+\pgfkeyssetvalue{/chrono/short trans}{7mm}
 \pgfkeyssetvalue{/chrono/label2}{}
 
 
@@ -72,35 +106,40 @@
 \def\chronornoteoffset{3mm}
 \def\chrononame{late}
 
-\pgfkeys{/chrono/timerAoffset/.style={/chrono/default/timers/l/1/offset=#1}}
-\pgfkeys{/chrono/timerAioffset/.style={/chrono/default/timers/l/2/offset=#1}}
+\pgfkeys{
+  /chrono/timerAoffset/.style={/chrono/default/timers/l/1/offset=#1},
+  /chrono/timerAioffset/.style={/chrono/default/timers/l/2/offset=#1},
+  /chrono/timerBoffset/.style={/chrono/default/timers/r/1/offset=#1},
+  /chrono/timerBioffset/.style={/chrono/default/timers/r/2/offset=#1},
+  % 
+  /chrono/timer offset/.style={/chrono/timerAoffset=#1,/chrono/timerBoffset=#1},
+  /chrono/timeri offset/.style={/chrono/timerAioffset=#1,/chrono/timerBioffset=#1}}
 
-\pgfkeys{/chrono/timerBoffset/.style={/chrono/default/timers/r/1/offset=#1}}
-\pgfkeys{/chrono/timerBioffset/.style={/chrono/default/timers/r/2/offset=#1}}
-
-\pgfkeys{/chrono/timer offset/.style={/chrono/timerAoffset=#1,/chrono/timerBoffset=#1}}
-\pgfkeys{/chrono/timeri offset/.style={/chrono/timerAioffset=#1,/chrono/timerBioffset=#1}}
-
-\pgfkeys{/chrono/timerleftbottomup/.is if=timerleftbottomup}
-\pgfkeys{/chrono/timerleftbelow/.is if=timerleftbelow}
 
 % since we fail to define several keys in a \if
 \pgfkeys{/chrono/reverse/.style={/tikz/rotate=180,/tikz/above}}
 
-\pgfkeys{/chrono/action time offset/.code=\setlength{\chronoactiontimeoffset}{#1}}
-\pgfkeys{/chrono/action offset/.code=\setlength{\chronoactionoffset}{#1}}
-\pgfkeys{/chrono/action length/.code=\setlength{\chronoactionlength}{#1}}
-\pgfkeys{/chrono/state offset/.code=\setlength{\chronostateoffset}{#1}}
+\pgfkeys{
+  /chrono/action time offset/.code=\setlength{\chronoactiontimeoffset}{#1},
+  /chrono/action offset/.code=\setlength{\chronoactionoffset}{#1},
+  /chrono/action length/.code=\setlength{\chronoactionlength}{#1},
+  /chrono/state offset/.code=\setlength{\chronostateoffset}{#1}}
 
-\pgfkeys{/chrono/space same/.code=\setlength{\chronospacesame}{#1}}
-\pgfkeys{/chrono/space other/.code=\setlength{\chronospaceother}{#1}}
+\pgfkeys{
+  /chrono/space same/.code=\setlength{\chronospacesame}{#1},
+  /chrono/space other/.code=\setlength{\chronospaceother}{#1}}
 
 % chrono env keys
 \pgfkeys{/chrono/width/.code=\def\chronowidth{#1}}
-\pgfkeyssetvalue{/chrono/A}{}
-\pgfkeys{/chrono/A/.default=A}
-\pgfkeyssetvalue{/chrono/B}{}
-\pgfkeys{/chrono/B/.default=B}
+\pgfkeys{
+  /chrono/A/.initial={},
+  /chrono/A/.default=A,
+  /chrono/B/.initial={},
+  /chrono/B/.default=B,
+  %
+  /chrono/timerleftbottomup/.is if=timerleftbottomup,
+  /chrono/timerleftbelow/.is if=timerleftbelow}
+
 
 % by default frames whose label starts with ACK are short
 % key no shorts remove this rule
@@ -179,7 +218,7 @@
   \pgfglobalkeys{/chrono/entities/#1/timer/#2/#3/active/.initial=0}
   \pgfglobalkeys{/chrono/entities/#1/timer/#2/#3/cancel/.initial=0}
   \pgfglobalkeys{/chrono/entities/#1/timer/#2/#3/start/.initial=0}
-  \pgfglobalkeys{/chrono/entities/#1/timer/#2/#3/end/.initial=0pt}}
+  \pgfglobalkeys{/chrono/entities/#1/timer/#2/#3/end/.initial=0}}
 
 \chronocreateentity{A}
 \chronocreateentity{B}
@@ -229,8 +268,6 @@
 
 \newif\ifchronoh
 
-\newlength{\chronoxx}
-
 %\pgfkeys{/pgf/key filter handlers/log/.install key filter handler}
 
 \newlength{\chronospacesame}\setlength{\chronospacesame}{1cm}
@@ -245,13 +282,16 @@
 \newif\ifchronolost\chronolostfalse
 \newif\ifchronocrosslost\chronocrosslostfalse
 \newif\ifchronolate\chronolatefalse
+\newif\ifchronotimed\chronotimedfalse
+\newif\ifchronocancel\chronocancelfalse
+\newif\ifchronodelayed\chronodelayedfalse
+\newif\ifchronostop\chronostopfalse
 \newif\ifchronosync\chronosynctrue
 
 \newlength{\prop}\setlength{\prop}{0.5cm}
 \newlength{\savedprop}
 \newlength{\trans}\setlength{\trans}{2cm}
 \newlength{\savedtrans}  %% to keep default value accross frames
-\newlength{\ltrans}      %% last used trans value (for timer functions)
 \newlength{\chronolatev} %% amount of lateness if chronolatetrue
 
 \newcommand{\chronoaddto}[2]{
@@ -530,6 +570,36 @@
   \pgfkeysfiltered{/chrono/.cd,#1}
   \chronosettrans{#2}
 
+  \ifchronodelayed
+    \debug{delayed: len \chronodelayedlen ~ label \chronodelayedlabel ~ id \chronodelayedid}
+    \edef\Trecv{\pgfkeysvalueof{/chrono/entities/#3/Trecv}}
+
+    \settimer{#3}{\align}{\chronodelayedid}{\Trecv}{\chronodelayedlen}{\chronodelayedlabel}
+    \chronosetTsend{#3}{\Trecv}%%%
+    \chaddtosend{#3}{\chronodelayedlen}
+    \edef\Tsend{\pgfkeysvalueof{/chrono/entities/#3/Tsend}}
+    \chronoendtimer{#3}{\align}{\chronodelayedid}
+    \chronodelayedfalse
+  \fi
+
+  \ifchronostop
+    \debug{stop: len \chronostoplen ~ label \chronostoplabel ~delay \chronostopdelay ~ id \chronostopid}
+    \edef\Trecv{\pgfkeysvalueof{/chrono/entities/#3/Trecv}}
+    \settimer{#3}{\align}{\chronostopid}{\Trecv}{\chronostoplen}{\chronostoplabel}
+    \chronosetTsend{#3}{\chronoTrecv{#3}}
+    \chaddtosend{#3}{\chronostopdelay}
+    \edef\Tsend{\pgfkeysvalueof{/chrono/entities/#3/Tsend}}
+    \canceltimer{#3}{\align}{\chronostopid}{\Tsend}
+    \chronostopfalse
+  \fi
+
+  \ifchronotimed
+    \debug{timed: len \chronotimedlen ~ label \chronotimedlabel ~ id \chronotimedid}
+    \pgfmathsetlengthmacro\temp{\Tsend+\y*\trans}
+    \settimer{#3}{\align}{\chronotimedid}{\temp}{\chronotimedlen}{\chronotimedlabel}
+    \chronotimedfalse
+  \fi
+
   \chrononote{\Tsend}{\sendpos}{\align}{\chronosnoteoffset}{\chronosnote}
 
   \pgfkeysgetvalue{/chrono/id}{\chronoid}
@@ -546,16 +616,16 @@
   \gdef\chronosnote{\relax}
   \gdef\chronornote{\relax}
 
+  \edef\Tcancel{\Trecv}
   \ifchronolate
     % no simpler way to _copy_ the length value?
-    \pgfmathqparse{\Trecv-\chronolatev}
-    \pgfkeyslet{/chrono/values/#4/\chrononame}{\pgfmathresult}
+    \pgfmathsetlengthmacro\Tcancel{\Trecv-\chronolatev}
+    \pgfkeyslet{/chrono/values/#4/\chrononame}{\Tcancel}
     \chronolatefalse
     \setlength\chronolatev{0mm}
   \fi
 
   \pgfkeyssetvalue{/chrono/id}{main}
-  \setlength{\ltrans}{\trans}
   \setlength{\trans}{\savedtrans}
   \setlength{\prop}{\savedprop}
 
@@ -565,6 +635,12 @@
   \ifchronosync
     \pgfmathsetlengthmacro\Tsndr{\Trecv+\y*\chronospaceother}
     \pgfkeyslet{/chrono/entities/#4/Tsend}{\Tsndr}
+  \fi
+
+  \ifchronocancel
+    \debug{cancel}
+    \canceltimer{#4}{\if l\align r\else l\fi}{\chronocancelid}{\Tcancel}
+    \chronocancelfalse
   \fi
 }
 
@@ -625,81 +701,30 @@
 \newcommand{\Bwaittimeri}{\chronowaittimer{B}{r}{2}}
 
 %%: A sends a timed frame to B
+% [keys], flabel, len, tlabel
 
-\newcommand{\ABtimed}[4][]{  % [keys], flabel, len, tlabel
-  \edef\chronoxx{\pAs}
-  \AB[#1]{#2}
-  \debug{AB timed: chronoxx \chronoxx}
-  \pgfmathsetlengthmacro\temp{\chronoxx+\y*\ltrans}
-  \debug{AB timed: chronoxx+ltrans \temp}
-  \settimerA{\temp}{#3}{#4}}
-
-\newcommand{\ABtimedi}[4][]{  % [keys], flabel, len, tlabel
-  \edef\chronoxx{\pAs}
-  \AB[#1]{#2}
-  \pgfmathsetlengthmacro\temp{\chronoxx+\y*\ltrans}
-  \settimerAi{\temp}{#3}{#4}}
-
-\newcommand{\BAtimed}[4][]{  % [keys], flabel, len, tlabel
-  \edef\chronoxx{\pBs}
-  \BA[#1]{#2}
-  \pgfmathsetlengthmacro\temp{\chronoxx+\y*\ltrans}
-  \settimerB{\temp}{#3}{#4}}
-
-\newcommand{\BAtimedi}[4][]{  % [keys], flabel, len, tlabel
-  \edef\chronoxx{\pBs}
-  \BA[#1]{#2}
-  \pgfmathsetlengthmacro\temp{\chronoxx+\y*\ltrans}
-  \settimerBi{\temp}{#3}{#4}}
+\newcommand{\ABtimed} [4][]{\AB[#1,timed={#3}{#4}]{#2}}
+\newcommand{\ABtimedi}[4][]{\AB[#1,timed2={#3}{#4}]{#2}}
+\newcommand{\BAtimed} [4][]{\BA[#1,timed={#3}{#4}]{#2}}
+\newcommand{\BAtimedi}[4][]{\BA[#1,timed2={#3}{#4}]{#2}}
 
 %%: A sends a frame that cancels B's timer
 
-\newcommand{\ABcancel}[2][]{
-  \AB[#1]{#2}
-  \canceltimerB{\pBr}}
-
-\newcommand{\ABcanceli}[2][]{
-  \AB[#1]{#2}
-  \canceltimerBi{\pBr}}
-
-\newcommand{\BAcancel}[2][]{
-  \BA[#1]{#2}
-  \canceltimerA{\pAr}}
-
-\newcommand{\BAcanceli}[2][]{
-  \BA[#1]{#2}
-  \canceltimerAi{\pAr}}
+\newcommand{\ABcancel} [2][]{\AB[cancel,#1]{#2}}
+\newcommand{\ABcanceli}[2][]{\AB[cancel2,#1]{#2}}
+\newcommand{\BAcancel} [2][]{\BA[cancel,#1]{#2}}
+\newcommand{\BAcanceli}[2][]{\BA[cancel2,#1]{#2}}
 
 %%: A sets a timer and sends a frame when it expires
-
-\newcommand{\ABdelayed}[4][]{ % keys, len, tlabel, flabel
-  \settimerA{\pAr}{#2}{#3}
-  \chronosetTsend{A}{\pAr}\chaddtosend{A}{#2}
-  \AB[#1]{#4}
-  \chronoendtimerA}
-
-\newcommand{\BAdelayed}[4][]{ % keys, len, tlabel, flabel
-  \settimerB{\pBr}{#2}{#3}
-  \chronosetTsend{B}{\pBr}\chaddtosend{B}{#2}
-  \BA[#1]{#4}
-  \chronoendtimerB}
+%%  [keys], len, tlabel, flabel
+\newcommand{\ABdelayed}[4][]{\AB[#1,delayed={#2}{#3}]{#4}}
+\newcommand{\BAdelayed}[4][]{\BA[#1,delayed={#2}{#3}]{#4}}
 
 %%: A sets a timer and after a delay sends a frame that cancels it
 %%: typical use: ACK timer cancelled by sending of DATA
-
-\newcommand{\ABstop}[4]{ % len, tlabel, delay, flabel
-  \settimerA{\pAr}{#1}{#2}
-  \pgfmathsetlengthmacro\temp{\pAr+\y*#3}
-  \canceltimerA{\temp}
-  \chronosetTsend{A}{\temp}
-  \AB{#4}}
-
-\newcommand{\BAstop}[4]{ % len, tlabel, delay, flabel
-  \settimerB{\pBr}{#1}{#2}
-  \pgfmathsetlengthmacro\temp{\pBr+\y*#3}
-  \canceltimerB{\temp}
-  \chronosetTsend{B}{\temp}
-  \BA{#4}}
+%%  [keys], len, tlabel, delay, flabel
+\newcommand{\ABstop}[5][]{\AB[#1,stop={#2}{#3}{#4}]{#5}}
+\newcommand{\BAstop}[5][]{\BA[#1,stop={#2}{#3}{#4}]{#5}}
 
 
 %%%%%% side decorations (eg for TCP)

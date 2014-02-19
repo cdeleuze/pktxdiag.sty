@@ -29,7 +29,7 @@
   \BA{ACK2}
   \BA{ACK3}
   \AB{DATA4}
-  \AB[prop=2cm]{delayed}
+  \AB[prop=2cm]{prop=2cm}
   \BA{ACK}
   \fullduplex
 
@@ -37,7 +37,7 @@
   \AB{DATA5}
   \BA{ACK5}
 %  \halfduplex
-  \AB[prop=2cm]{delayed}
+  \AB[prop=2cm]{prop=2cm}
   \BwaitA
   \BA{ACK}
 }
@@ -303,7 +303,7 @@
 \end{hchrono}
 \vfill
 
-\subsubsection*{Timers, timerleftbelow}
+\subsubsection*{Timers: timerleftbelow}
 
 {\pgfkeys{/chrono/timerleftbelow}
 \begin{chrono}[]
@@ -325,7 +325,7 @@
 \end{hchrono}
 }
 
-\subsubsection*{Timers, timerleftbottomup}
+\subsubsection*{Timers: timerleftbottomup}
 
 {\pgfkeys{/chrono/timerleftbottomup}
 \begin{chrono}[]
@@ -348,7 +348,7 @@
 }
 \vfill
 
-\subsubsection*{Timers, later}
+\subsubsection*{Timers: later}
 
 \begin{chrono}
   \testlater
@@ -364,6 +364,57 @@
 \end{chrono}
 
 %\hspace{-2cm}
+
+\subsubsection*{Timers: timed, delayed, stop, late, cancel}
+
+\def\testtimers{
+  \AB[timed={3cm}{toto}]{timed}
+  \BA[timed={3cm}{titi},cancel]{timed,cancel}
+  \AB[timed2={3cm}{toto},late]{timed,late}
+  \BA[late=1cm,cancel2]{late,cancel}
+  \BA[prop=12mm]{prop=12mm}
+  }
+\def\testtimersr{
+  \BA[timed={3cm}{toto}]{timed}
+  \AB[timed={3cm}{titi},cancel]{timed,cancel}
+  \BA[timed2={3cm}{toto},late]{timed,late}
+  \AB[late=1cm,cancel2]{late,cancel}
+  \AB[prop=12mm]{prop=12mm}
+  }
+\def\testtimersi{
+  \AB[delayed={1cm}{yup}]{delayed}
+  \BA[delayed={1cm}{yop},timed={4cm}{yopyop}]{timed \& delayed}
+  \AB[timed2={3cm}{timer2},delayed={1.5cm}{gah!},cancel]{d \& c \& t}
+
+  \BA[stop2={1cm}{zz}{5mm},cancel2]{stop \& cancel}
+  \BA{rien}
+  \Await[2cm]
+  \AB[stop={2cm}{stop}{1cm},late=2cm,timed2={3cm}{timed}]{s \& l \& t!}
+}
+\def\testtimersir{
+  \BA[delayed={1cm}{yup}]{delayed}
+  \AB[delayed={1cm}{yop},timed={4cm}{yopyop}]{timed \& delayed}
+  \BA[timed2={3cm}{timer2},delayed={1.5cm}{gah!},cancel]{d \& c \& t}
+
+  \AB[stop2={1cm}{zz}{5mm},cancel2]{stop \& cancel}
+  \AB{rien}
+  \Bwait[2cm]
+  \BA[stop={2cm}{stop}{1cm},late=2cm,timed2={3cm}{timed}]{s \& l \& t!}
+}
+\begin{chrono}
+ \testtimers 
+\end{chrono}
+\begin{chrono}
+ \testtimersr 
+\end{chrono}
+
+\begin{chrono}
+ \testtimersi 
+\end{chrono}
+\begin{chrono}
+ \testtimersir
+\end{chrono}
+
 
 \subsubsection*{Send and receive notes}
 
@@ -414,7 +465,7 @@
   \later{2cm}
   \AB{DATA1}
   \later{2cm}
-  \AB{DATA1}
+  \BA{DATA1}
   \later{1cm}  
 \end{chrono}
 
