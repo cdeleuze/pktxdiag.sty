@@ -386,7 +386,7 @@
 %% in vertical, remove 3mm to l timers if neither timerleftbelow nor
 %% timerleftbottomup is set
 
-\newcommand{\setchronotimerhpos}[4]{ % entity/lr/id macro
+\newcommand{\chronosettimerhpos}[4]{ % entity/lr/id macro
   \debug{timerhpos #1/#2/#3}
   \def\pos{\chronopos{#1}}
   \def\offset{\chronogetconftimer{#1}{#2}{#3}{offset}}
@@ -421,7 +421,7 @@
   \fi\fi
 
   \chronodebugtimer{settimer}{#1}{#2}{#3}
-  \setchronotimerhpos{#1}{#2}{#3}{\hpos}
+  \chronosettimerhpos{#1}{#2}{#3}{\hpos}
   \ifchronoh
       \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset) -- (\timerend,\hpos-\timerhoffset)
                          node[midway,sloped,above]{#6};
@@ -459,7 +459,7 @@
   \def\timeroffset{\chronogetconftimer{#1}{#2}{#3}{offset}}
   \def\timerhoffset{\chronogetconftimer{#1}{#2}{#3}{haddoffset}}
 
-  \setchronotimerhpos{#1}{#2}{#3}{\hpos}
+  \chronosettimerhpos{#1}{#2}{#3}{\hpos}
   \ifchronoh
     \ifdim#4>\timerend\typeout{Expired timer!}
     \node at (#4,\hpos)[draw,red,fill=yellow]{Expired timer!};\else
@@ -485,7 +485,7 @@
   \def\timerend{\chronogettimerend{#1}{#2}{#3}}
   \def\timeroffset{\chronogetconftimer{#1}{#2}{#3}{offset}}
   \def\timerhoffset{\chronogetconftimer{#1}{#2}{#3}{haddoffset}}
-  \setchronotimerhpos{#1}{#2}{#3}{\hpos}
+  \chronosettimerhpos{#1}{#2}{#3}{\hpos}
   \ifchronoh
     \draw[thin,<->](\timerstart,\hpos-\timerhoffset)
                 -- (\timerend,\hpos-\timerhoffset);
@@ -784,7 +784,7 @@
 }
 
 \newcommand{\chronodrawlateronetimer}[3]{
-    \setchronotimerhpos{#1}{#2}{#3}{\hpos}
+    \chronosettimerhpos{#1}{#2}{#3}{\hpos}
     \draw[graphicbackground,dashed] (\hpos,\tpos) -- ++(0,\y\chronolaterdashedlen);}
 
 % erase part of the vertical lines
