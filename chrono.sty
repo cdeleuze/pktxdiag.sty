@@ -26,7 +26,7 @@
   /chrono/trans/.belongs to family=/chrono/global,
   /chrono/sh/.belongs to family=/chrono/global,
   /chrono/prop/.belongs to family=/chrono/global,
-  /chrono/delayed/.belongs to family=/chrono/global,
+  /chrono/late/.belongs to family=/chrono/global,
   /chrono/snote/.belongs to family=/chrono/global,
   /chrono/rnote/.belongs to family=/chrono/global,
   /chrono/snoteoffset/.belongs to family=/chrono/global,
@@ -43,7 +43,7 @@
 \pgfkeys{/chrono/trans/.default=10mm,/chrono/trans/.code=\ifchronoh\setlength{\trans}{#1}\fi}
 \pgfkeyssetvalue{/chrono/short trans}{7mm}
 \pgfkeys{/chrono/sh/.style=trans=5mm}
-\pgfkeys{/chrono/delayed/.default=4cm,/chrono/delayed/.code=\chronodelayedtrue\setlength{\chronodelay}{#1}}
+\pgfkeys{/chrono/late/.default=4cm,/chrono/late/.code=\chronolatetrue\setlength{\chronolatev}{#1}}
 
 \pgfkeys{/chrono/lost/.is if=chronolost}
 \pgfkeys{/chrono/cross for lost/.is if=chronocrosslost}
@@ -70,7 +70,7 @@
 \def\chronornote{\relax}
 \def\chronosnoteoffset{3mm}
 \def\chronornoteoffset{3mm}
-\def\chrononame{delayed}
+\def\chrononame{late}
 
 \pgfkeys{/chrono/timerAoffset/.style={/chrono/default/timers/l/1/offset=#1}}
 \pgfkeys{/chrono/timerAioffset/.style={/chrono/default/timers/l/2/offset=#1}}
@@ -244,7 +244,7 @@
 \newif\ifchronobad\chronobadfalse
 \newif\ifchronolost\chronolostfalse
 \newif\ifchronocrosslost\chronocrosslostfalse
-\newif\ifchronodelayed\chronodelayedfalse
+\newif\ifchronolate\chronolatefalse
 \newif\ifchronosync\chronosynctrue
 
 \newlength{\prop}\setlength{\prop}{0.5cm}
@@ -252,7 +252,7 @@
 \newlength{\trans}\setlength{\trans}{2cm}
 \newlength{\savedtrans}  %% to keep default value accross frames
 \newlength{\ltrans}      %% last used trans value (for timer functions)
-\newlength{\chronodelay}
+\newlength{\chronolatev} %% amount of lateness if chronolatetrue
 
 \newcommand{\chronoaddto}[2]{
   \ifnum \y=1\addtolength{#1}{#2}\else\addtolength{#1}{-#2}\fi
@@ -307,10 +307,10 @@
                    \ifchronolost\ifchronocrosslost \draw[-]
                    (\sign*2mm,#4-\prop/2)node{\Large $\times$}\fi\fi;
     \else
-    \ifchronodelayed
+    \ifchronolate
        \draw (#2,#4) 
-       .. controls (0,#4-\prop/2) and (0,#4-\chronodelay)
-       .. (#3, #4-\chronodelay-\prop)
+       .. controls (0,#4-\prop/2) and (0,#4-\chronolatev)
+       .. (#3, #4-\chronolatev-\prop)
                    node[\labelstyle,\thisls,pos=0.1]{\chrononodelabel{#5}};
 
     \else
@@ -535,16 +535,16 @@
   \pgfmathsetlengthmacro\Trecv{\Tsend+\y*\prop+\y*\trans}
   \pgfmathsetlengthmacro\Tsend{\Tsend+\y*\trans+\y*\chronospacesame}
 
-  \chrononote{\Trecv-\chronodelay}{\recvpos}{\if\align rl\else r\fi}{\chronornoteoffset}{\chronornote}
+  \chrononote{\Trecv-\chronolatev}{\recvpos}{\if\align rl\else r\fi}{\chronornoteoffset}{\chronornote}
   \gdef\chronosnote{\relax}
   \gdef\chronornote{\relax}
 
-  \ifchronodelayed
+  \ifchronolate
     % no simpler way to _copy_ the length value?
-    \pgfmathqparse{\Trecv-\chronodelay}
+    \pgfmathqparse{\Trecv-\chronolatev}
     \pgfkeyslet{/chrono/values/#4/\chrononame}{\pgfmathresult}
-    \chronodelayedfalse
-    \setlength\chronodelay{0mm}
+    \chronolatefalse
+    \setlength\chronolatev{0mm}
   \fi
 
   \pgfkeyssetvalue{/chrono/id}{main}
@@ -593,12 +593,12 @@
 \newcommand{\AwaitB}{\XwaitY{A}{B}}
 \newcommand{\BwaitA}{\XwaitY{B}{A}}
 
-%%: arg is name set in the delayed frame (key name, defaults to delayed)
-\newcommand{\Awaitdelayed}[1][delayed]{
+%%: arg is name set in the late frame ('name' key, defaults to late)
+\newcommand{\Awaitlate}[1][late]{
   \chronosetTrecv{A}{\pgfkeysvalueof{/chrono/values/A/#1}}
   \AwaitB}
 
-\newcommand{\Bwaitdelayed}[1][delayed]{
+\newcommand{\Bwaitlate}[1][late]{
   \chronosetTrecv{B}{\pgfkeysvalueof{/chrono/values/B/#1}}
   \BwaitA}
   

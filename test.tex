@@ -61,7 +61,7 @@
 
 \def\testiv{
   \AB{DATA1}
-  \ABtimed[delayed=3cm]{DATA2}{3cm}{temporisateur}
+  \ABtimed[late=3cm]{DATA2}{3cm}{temporisateur}
   \AB{DATA3}
 %  \Awaittimer
   \AB{DATA2}}
@@ -418,16 +418,34 @@
   \later{1cm}  
 \end{chrono}
 
-\subsubsection*{Named position}
+\subsubsection*{Late frames, named positions}
 
 \begin{chrono}
   \AB{DATA1}
-  \AB[delayed=2cm]{DATA2}
-  \AB[delayed,name=n2,rnote=named n2]{DATA3}
-  \Bwaitdelayed
+  \AB[late=2cm]{DATA2}
+  \AB[late,name=n2,rnote=named n2]{DATA3}
+  \Bwaitlate
   \BA{ACK3}
-  \Bwaitdelayed[n2]
+  \Bwaitlate[n2]
   \BA[snote=waited for n2]{ACK4}
+\end{chrono}
+\begin{chrono}
+  \BA{DATA1}
+  \BA[late=2cm]{DATA2}
+  \BA[late,name=n2,rnote=named n2]{DATA3}
+  \Awaitlate
+  \AB{ACK3}
+  \Awaitlate[n2]
+  \AB[snote=waited for n2]{ACK4}
+\end{chrono}
+\begin{chrono}
+  \AB{DATA1}
+  \AB[late=2cm]{DATA2}
+  \Bwaitlate
+  \BA{ACK3}
+  \BA[late=2cm]{DATA2}
+  \Awaitlate
+  \AB{ACK3}
 \end{chrono}
 
 \subsubsection*{Filtering}

@@ -370,9 +370,9 @@
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{Closed}
-  \AB[delayed=3cm]{ACK}
+  \AB[late=3cm]{ACK}
                       \Bwaittimer
-                      \BA[delayed=6cm]{FIN}
+                      \BA[late=6cm]{FIN}
                       \Bstate{Closed}
 
 \later{2cm}
@@ -386,7 +386,7 @@
   \Astate{Established}
   \AB{ACK}
                       \Bstate{Established}
-  \Awaitdelayed
+  \Awaitlate
   \Astate{CloseWait}
   \AB{ACK}
 \end{chrono}}
@@ -395,8 +395,8 @@
 \begin{chrono}[width=2cm]
   \Astate{Established}\Bstate{Established}
   \ABtimed{DATA}{2cm}{retrans}
-                     \BA[delayed=1cm]{ACK}
-  \AB[delayed=11cm,dotted,rnoteoffset=1mm,rnote=oups !]{DATA} 
+                     \BA[late=1cm]{ACK}
+  \AB[late=11cm,dotted,rnoteoffset=1mm,rnote=oups !]{DATA} 
                      \Bactionstate{close}{FinWait1}
                      \BA{FIN}
   \Astate{CloseWait}
