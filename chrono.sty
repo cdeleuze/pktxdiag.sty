@@ -396,8 +396,7 @@
   \pos+\if #2r\offset\else\iftimerleftbelow-\offset\else\iftimerleftbottomup-\offset
   \else-\offset-3mm\fi\fi\fi\fi}}
 
-\newcommand{\settimer}[7]{ % entity, l/r, id, starttime, len, label,
-                           % above/below
+\newcommand{\settimer}[6]{ % entity, l/r, id, starttime, len, label
   \chronoendtimerifactive{#1}{#2}{#3}
   \pgfkeyssetvalue{/chrono/entities/#1/timers/#2/#3/active}{t}
   \pgfkeyssetvalue{/chrono/entities/#1/timers/#2/#3/cancel}{0}
@@ -409,32 +408,40 @@
   \def\timerstart{\chronogettimerstart{#1}{#2}{#3}}
   \def\timerend{\chronogettimerend{#1}{#2}{#3}}
 
+  %% the timer label is placed above except if:
+  %% - it's a left timer and timerleftbelow is set (placed below)
+  %% - it's a left timer and timerleftbottomup is set (placed above +
+  %% rotate).  We use /chrono/reverse in this case cause we don't know
+  %% how to pass two keys in a single macro...
+  
+  \if#2r\def\above{above}\else
+  \iftimerleftbelow\def\above{below}\else
+  \iftimerleftbottomup\def\above{/chrono/reverse}\else
+  \def\above{above}\fi
+  \fi\fi
+
   \chronodebugtimer{settimer}{#1}{#2}{#3}
   \setchronotimerhpos{#1}{#2}{#3}{\hpos}
   \ifchronoh
       \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset) -- (\timerend,\hpos-\timerhoffset)
-                         node[midway,sloped,#7]{#6};
+                         node[midway,sloped,above]{#6};
   \else
       \draw[thin,dotted,<->](\hpos,\timerstart-\timertimeoffset)
-                         -- (\hpos,\timerend+\timertimeoffset) node[midway,sloped,#7]{#6};
+                         -- (\hpos,\timerend+\timertimeoffset) node[midway,sloped,\above]{#6};
   \fi
 }
 
 \newcommand{\settimerA}[3]{ % time, len, label
-  \settimer{A}{l}{1}{#1}{#2}{#3}{%
-    \ifchronoh above\else\iftimerleftbelow below\else
-    \iftimerleftbottomup/chrono/reverse\else above\fi\fi\fi}}
+  \settimer{A}{l}{1}{#1}{#2}{#3}}
 
 \newcommand{\settimerAi}[3]{
-  \settimer{A}{l}{2}{#1}{#2}{#3}{%
-    \ifchronoh above\else\iftimerleftbelow below\else
-    \iftimerleftbottomup/chrono/reverse\else above\fi\fi\fi}}
+  \settimer{A}{l}{2}{#1}{#2}{#3}}
 
 \newcommand{\settimerB}[3]{
-  \settimer{B}{r}{1}{#1}{#2}{#3}{above}}
+  \settimer{B}{r}{1}{#1}{#2}{#3}}
 
 \newcommand{\settimerBi}[3]{
-  \settimer{B}{r}{2}{#1}{#2}{#3}{above}}
+  \settimer{B}{r}{2}{#1}{#2}{#3}}
 
 
 \newcommand{\chronodebugtimer}[4]{
