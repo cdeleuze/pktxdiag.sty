@@ -1,0 +1,918 @@
+
+\RequirePackage{xstring}
+\RequirePackage{tikz}
+\RequirePackage{pgfkeys}
+\usetikzlibrary{decorations.pathmorphing}
+
+
+\pgfkeys{/pktxd/.search also={/tikz}}
+
+
+\newif\ifpktxd@debug
+%\pktxd@debugtrue
+
+\newcommand{\pktxd@debug}[1]{
+  \ifpktxd@debug\typeout{#1}\fi}
+
+\ifpktxd@debug\colorlet{graphicbackground}{orange}
+\else\colorlet{graphicbackground}{white}\fi
+
+\newif\ifpktxd@h  % is current env horizontal?
+
+%%%%%% option keys
+
+% arrow cmd keys
+\pgfkeys{
+  /pktxd/global/.is family,
+  /pktxd/trans/.belongs to family=/pktxd/global,
+  /pktxd/sh/.belongs to family=/pktxd/global,
+  /pktxd/prop/.belongs to family=/pktxd/global,
+  /pktxd/late/.belongs to family=/pktxd/global,
+  /pktxd/timed/.belongs to family=/pktxd/global,
+  /pktxd/timed2/.belongs to family=/pktxd/global,
+  /pktxd/delayed/.belongs to family=/pktxd/global,
+  /pktxd/delayed2/.belongs to family=/pktxd/global,
+  /pktxd/stop/.belongs to family=/pktxd/global,
+  /pktxd/stop2/.belongs to family=/pktxd/global,
+  /pktxd/cancel/.belongs to family=/pktxd/global,
+  /pktxd/cancel2/.belongs to family=/pktxd/global,
+  /pktxd/snote/.belongs to family=/pktxd/global,
+  /pktxd/rnote/.belongs to family=/pktxd/global,
+  /pktxd/snoteoffset/.belongs to family=/pktxd/global,
+  /pktxd/rnoteoffset/.belongs to family=/pktxd/global,
+  %
+  /pktxd/name/.belongs to family=/pktxd/global,
+  /pktxd/id/.belongs to family=/pktxd/global,
+  /pktxd/.belongs to family=/pktxd/global,
+}
+
+%% ZZZ do we need that? yes for prop and trans...
+\pgfkeys{/pgf/key filters/active families/.install key filter}
+
+%% keys controlling frame characteristics
+
+\pgfkeys{
+  /pktxd/prop/.default=1cm,
+  /pktxd/prop/.code=\setlength{\pktxd@prop}{#1},
+  % 
+  /pktxd/trans/.default=10mm,
+  /pktxd/trans/.code=\ifpktxd@h\setlength{\pktxd@trans}{#1}\fi,
+  % 
+  /pktxd/sh/.style=trans=5mm,
+  % 
+  /pktxd/lost/.is if=pktxd@lost,
+  /pktxd/bad/.is if=pktxd@bad,
+  %
+  /pktxd/late/.default=4cm,
+  /pktxd/late/.code=\pktxd@latetrue\setlength{\pktxd@latev}{#1},
+  /pktxd/timed/.value required,
+  /pktxd/timed/.code 2 args={\pktxd@timedtrue\edef\pktxd@timedid{1}\edef\pktxd@timedlen{#1}\edef\pktxd@timedlabel{#2}},
+  /pktxd/timed2/.value required,
+  /pktxd/timed2/.code 2 args={\pktxd@timedtrue\edef\pktxd@timedid{2}\edef\pktxd@timedlen{#1}\edef\pktxd@timedlabel{#2}},
+  % 
+  /pktxd/cancel/.code={\pktxd@canceltrue\edef\pktxd@cancelid{1}},
+  /pktxd/cancel2/.code={\pktxd@canceltrue\edef\pktxd@cancelid{2}},
+  /pktxd/delayed/.value required,
+  /pktxd/delayed/.code 2 args={\pktxd@delayedtrue\edef\pktxd@delayedid{1}\edef\pktxd@delayedlen{#1}\edef\pktxd@delayedlabel{#2}},
+  /pktxd/delayed2/.value required,
+  /pktxd/delayed2/.code 2 args={\pktxd@delayedtrue\edef\pktxd@delayedid{2}\edef\pktxd@delayedlen{#1}\edef\pktxd@delayedlabel{#2}},
+  /pktxd/stop/.value required,
+  /pktxd/stop/.code n args={3}{\pktxd@stoptrue\edef\pktxd@stopid{1}
+    \edef\pktxd@stoplen{#1}\edef\pktxd@stoplabel{#2}\edef\pktxd@stopdelay{#3}},
+  /pktxd/stop2/.value required,
+  /pktxd/stop2/.code n args={3}{\pktxd@stoptrue\edef\pktxd@stopid{2}\edef\pktxd@stoplen{#1}\edef\pktxd@stoplabel{#2}\edef\pktxd@stopdelay{#3}}}
+
+\newif\ifpktxd@bad\pktxd@badfalse
+\newif\ifpktxd@lost\pktxd@lostfalse
+\newif\ifpktxd@late\pktxd@latefalse
+\newif\ifpktxd@timed\pktxd@timedfalse
+\newif\ifpktxd@cancel\pktxd@cancelfalse
+\newif\ifpktxd@delayed\pktxd@delayedfalse
+\newif\ifpktxd@stop\pktxd@stopfalse
+\newif\ifpktxd@sync\pktxd@synctrue
+
+
+\pgfkeys{
+  /pktxd/cross for lost/.is if=pktxd@crosslost,
+  /pktxd/snote/.code=\gdef\pktxd@snote{#1},
+  /pktxd/rnote/.code=\gdef\pktxd@rnote{#1},
+  /pktxd/snoteoffset/.code=\def\pktxd@snoteoffset{#1},
+  /pktxd/snoteoffset/.default=0,
+  /pktxd/rnoteoffset/.code=\def\pktxd@rnoteoffset{#1},
+  /pktxd/rnoteoffset/.default=0,
+  /pktxd/noteoffset/.style={snoteoffset=#1,rnoteoffset=#1}}
+
+\newif\ifpktxd@crosslost\pktxd@crosslostfalse
+\def\pktxd@snote{\relax}
+\def\pktxd@rnote{\relax}
+\def\pktxd@snoteoffset{3mm}
+\def\pktxd@rnoteoffset{3mm}
+
+
+\pgfkeys{/pktxd/name/.code=\def\pktxd@latename{#1}}
+\pgfkeys{/pktxd/opacity/.style={/tikz/opacity=#1,/tikz/text opacity=#1}}
+
+\pgfkeys{/pktxd/show label2/.is if=pktxd@showlabelii}
+\pgfkeys{/pktxd/hide label/.is if=pktxd@hidelabel}
+\pgfkeyssetvalue{/pktxd/ghost}{0}
+\pgfkeys{/pktxd/hide/.code=\pktxd@sethides{#1}}
+
+\def\pktxd@latename{lateframe}
+\newif\ifpktxd@showlabelii
+\newif\ifpktxd@hidelabel
+\pgfkeyssetvalue{/pktxd/label2}{}
+
+\pgfkeys{
+  /pktxd/timerAoffset/.style={/pktxd/default/timers/l/1/offset=#1},
+  /pktxd/timerAioffset/.style={/pktxd/default/timers/l/2/offset=#1},
+  /pktxd/timerBoffset/.style={/pktxd/default/timers/r/1/offset=#1},
+  /pktxd/timerBioffset/.style={/pktxd/default/timers/r/2/offset=#1},
+  % 
+  /pktxd/timer offset/.style={/pktxd/timerAoffset=#1,/pktxd/timerBoffset=#1},
+  /pktxd/timeri offset/.style={/pktxd/timerAioffset=#1,/pktxd/timerBioffset=#1}}
+
+
+% since we fail to define several keys in a \if
+% used for left timers when pktxd@bottomuptrue
+\pgfkeys{/pktxd/reverse/.style={/tikz/rotate=180,/tikz/above}}
+
+%% states and actions
+\pgfkeys{
+  /pktxd/action time offset/.code=\setlength{\pktxd@actiontimeoffset}{#1},
+  /pktxd/action offset/.code=\setlength{\pktxd@actionoffset}{#1},
+  /pktxd/action length/.code=\setlength{\pktxd@actionlength}{#1},
+  /pktxd/state offset/.code=\setlength{\pktxd@stateoffset}{#1}}
+
+\newlength{\pktxd@actiontimeoffset}\setlength{\pktxd@actiontimeoffset}{1mm}
+\newlength{\pktxd@actionoffset}\setlength{\pktxd@actionoffset}{1mm}
+\newlength{\pktxd@actionlength}\setlength{\pktxd@actionlength}{5mm}
+\newlength{\pktxd@stateoffset}\setlength{\pktxd@stateoffset}{12mm}
+
+%% environment keys
+
+\pgfkeys{
+  /pktxd/space same/.code=\setlength{\pktxd@spacesame}{#1},
+  /pktxd/space other/.code=\setlength{\pktxd@spaceother}{#1},
+  /pktxd/width/.code=\def\pktxd@width{#1}}
+
+\newlength{\pktxd@spacesame}\setlength{\pktxd@spacesame}{1cm}
+\newlength{\pktxd@spaceother}\setlength{\pktxd@spaceother}{5mm}
+\def\pktxd@width{2.75cm}
+
+\pgfkeys{
+  /pktxd/A/.initial={},
+  /pktxd/A/.default=A,
+  /pktxd/B/.initial={},
+  /pktxd/B/.default=B,
+  %
+  /pktxd/timerleftbottomup/.is if=pktxd@timerleftbottomup,
+  /pktxd/timerleftbelow/.is if=pktxd@timerleftbelow}
+
+\newif\ifpktxd@timerleftbottomup
+\newif\ifpktxd@timerleftbelow
+
+
+% by default frames whose label starts with ACK are short
+% key no shorts remove this rule
+% key hdlc sets names for HDLC
+% key shorts=list sets the names of short frames
+
+\pgfkeys{/pktxd/hdlc/.code=\edef\pktxd@shorts{\pktxd@shortshdlc}}
+\pgfkeys{/pktxd/shorts/.code=\def\pktxd@shorts{#1}}
+\pgfkeys{/pktxd/no shorts/.code=\def\pktxd@shorts{}}
+
+\def\pktxd@shorts{ACK}
+\def\pktxd@shortshdlc{RR,RNR,REJ,SREJ,SABM,DISC,UA}
+
+\pgfkeyssetvalue{/pktxd/short trans}{7mm}
+
+% sets value of \pktxd@trans based on label #1
+\newcommand{\pktxd@settrans}[1]{
+  \ifpktxd@h
+  \gdef\pktxd@thistrans{\pktxd@trans}
+  \foreach \x in \pktxd@shorts {
+    \IfBeginWith{#1}{\x}{\gdef\pktxd@thistrans{\pgfkeysvalueof{/pktxd/short trans}}}{}
+  }
+  \setlength{\pktxd@trans}{\pktxd@thistrans}
+  \fi
+}
+
+
+%%%%%% flows
+
+%% the 'main' flowid
+\pgfkeyssetvalue{/pktxd/id}{main}
+\pgfkeyssetvalue{/pktxd/flows/main}{}
+
+%% default parameters for ids
+\pgfkeyssetvalue{/pktxd/default}{}
+\pgfkeyssetvalue{/pktxd/default/opacity}{1}
+
+%% can not use \foreach since it creates a local scope! :-(
+\newcommand{\pktxd@sethides}[1]{
+  \pgfkeyssetvalue{/pktxd/flows/#1/opacity}{\pgfkeysvalueof{/pktxd/ghost}}
+%  \foreach \x in { #1 } {
+%    \pgfkeyssetvalue{/pktxd/ids/\x/opacity}{\pgfkeysvalueof{/pktxd/ghost}}
+%  }
+}
+
+
+%%%%%% styles
+
+%% define a style: name to set of options
+\newcommand{\definestyle}[2]{
+  \pgfkeys{/pktxd/styles/#1/.style={#2}}}
+
+%% make #1 (dynamically) inherit #2, adding #3 options
+\newcommand{\derivestyle}[3]{
+  \definestyle{#1}{/pktxd/styles/#2,#3}}
+
+%% give a style to a flow
+\newcommand{\setflowstyle}[2]{
+  \pgfkeys{/pktxd/flows/#1/style/.initial=#2}}
+
+\newcommand{\setflowlabelstyle}[2]{
+  \pgfkeys{/pktxd/flows/#1/labelstyle/.initial=#2}}
+
+%% the default style
+%% removed the >=latex, since it does not obey opacity=...
+\definestyle{default}{very thick, ->}
+
+\definestyle{labeldefault}{above,sloped}
+
+\pgfkeys{/pktxd/styles/thislabel/.style={}}
+\pgfkeys{/pktxd/label style/.code=\pgfkeys{/pktxd/styles/thislabel/.style={{#1}}}}
+
+%%%%%% various definitions
+
+% this will be usefull for creating entities in a \foreach...
+\def\pgfglobalkeys#1{
+  \begingroup \ifnum
+    \the\globaldefs>0\relax 
+  \else
+    \globaldefs=1\fi
+  \pgfkeys{#1}\endgroup}
+
+\newcommand{\pktxd@createentity}[1]{
+  \pgfglobalkeys{/pktxd/entities/#1/pos/.initial=0cm}
+  \pgfglobalkeys{/pktxd/entities/#1/Tsend/.initial=0cm}
+  \pgfglobalkeys{/pktxd/entities/#1/Trecv/.initial=0cm}
+  \pktxd@createtimer{#1}{l}{1}
+  \pktxd@createtimer{#1}{l}{2}
+  \pktxd@createtimer{#1}{r}{1}
+  \pktxd@createtimer{#1}{r}{2}
+}
+
+\newcommand{\pktxd@createtimer}[3]{ % entity l/r id
+  \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/active/.initial=0}
+  \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/cancel/.initial=0}
+  \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/start/.initial=0}
+  \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/end/.initial=0}}
+
+\pgfkeys{/pktxd/default/timers/l/1/offset/.initial=4mm}
+\pgfkeys{/pktxd/default/timers/l/2/offset/.initial=9mm}
+\pgfkeys{/pktxd/default/timers/r/1/offset/.initial=4mm}
+\pgfkeys{/pktxd/default/timers/r/2/offset/.initial=9mm}
+%% horizontal mode requires additional offset for timers
+\pgfkeys{/pktxd/default/timers/l/1/haddoffset/.initial=-3mm}
+\pgfkeys{/pktxd/default/timers/l/2/haddoffset/.initial=-3mm}
+\pgfkeys{/pktxd/default/timers/r/1/haddoffset/.initial=7mm}
+\pgfkeys{/pktxd/default/timers/r/2/haddoffset/.initial=7mm}
+
+\newcommand{\pktxd@pos}[1]{\pgfkeysvalueof{/pktxd/entities/#1/pos}}
+\newcommand{\pktxd@Tsend}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Tsend}}
+\newcommand{\pktxd@Trecv}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Trecv}}
+
+%% beware of 'macro sharing': we use setvalue here!
+%% (note how we use pgfkeyslet in \pktxd@frame)
+\newcommand{\pktxd@setTsend}[2]{\pgfkeyssetvalue{/pktxd/entities/#1/Tsend}{#2}}
+\newcommand{\pktxd@setTrecv}[2]{\pgfkeyssetvalue{/pktxd/entities/#1/Trecv}{#2}}
+\newcommand{\pktxd@letTsend}[2]{\pgfkeyslet{/pktxd/entities/#1/Tsend}{#2}}
+
+%% if the pgfkey is defined in entity dir, use it
+%% otherwise use value in default dir
+
+\newcommand{\pktxd@getconftimer}[4]{
+  \pgfkeysifdefined{/pktxd/entities/#1/timers/#2/#3/#4}
+  {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/#4}}
+  {\pgfkeysvalueof{/pktxd/default/timers/#2/#3/#4}}}
+
+\newcommand{\pktxd@gettimerstart}[3]{
+  \pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/start}}
+\newcommand{\pktxd@gettimerend}[3]{
+  \pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/end}}
+
+
+%\pgfkeys{/pgf/key filter handlers/log/.install key filter handler}
+
+\newlength{\pktxd@prop}\setlength{\pktxd@prop}{0.5cm}
+\newlength{\pktxd@savedprop}
+\newlength{\pktxd@trans}\setlength{\pktxd@trans}{2cm}
+\newlength{\pktxd@savedtrans}  %% to keep default value accross frames
+\newlength{\pktxd@latev}       %% amount of lateness if pktxd@latetrue
+
+
+%% Draw a frame label: it can be made of:
+%%  - l1 label (passed as arg to commands)
+%%  - the l2 label (passed as label2 option key)
+%%  - both
+
+\newcommand{\pktxd@nodelabel}[2][1]{ % 1/-1, l1 label
+  \ifpktxd@showlabelii\ifpktxd@hidelabel\itshape \pgfkeysvalueof{/pktxd/label2}\else
+  \ifnum #1=1
+  \begin{tabular}{c}
+    \itshape \pgfkeysvalueof{/pktxd/label2}\\%[-3pt]
+    #2
+%    #2 \\[-3pt]
+%    \if#2\empty\else#2 \\[-3pt]\fi
+  \end{tabular}\else
+  \begin{tabular}{c} % for A in hpktxd@, we want label2 to be below
+    #2 \\
+    \itshape \pgfkeysvalueof{/pktxd/label2}
+  \end{tabular}\fi
+  \fi\else\ifpktxd@hidelabel{}\else#2\fi\fi}
+
+\newlength{\pktxd@len}
+
+%% the draw arrow function for vertical packet exchange diagram
+
+% #1 are keys, #2 is sender pos, #3 is receiver pos
+% #4 is send time, #5 is label
+
+\newcommand{\pktxd@arrowv}[5][]{
+  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/labelstyle}
+  {\def\labelstyle{/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/labelstyle}}}
+  {\def\labelstyle{/pktxd/styles/labeldefault}}
+  \def\thisls{/pktxd/styles/thislabel}
+
+  % tex does not honor arithmetic priorities... pgfmath does.
+  \pgfmathsetlength{\pktxd@len}{#3-#2}
+  \pgfmathsetmacro{\sign}{#2<#3?1:-1}
+
+  \begin{scope}[/pktxd/.cd,#1]
+    % iflost, draw only half way
+    \ifpktxd@lost\def\lost{2}\else\def\lost{1}\fi
+    % ifbad, draw a zigzag
+    \ifpktxd@bad
+
+       \draw (#2,#4) --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
+
+                 \ifpktxd@sync\else node[near end,\labelstyle,\thisls]{\pktxd@nodelabel{#5}}\fi
+    
+                 decorate[decoration=zigzag,segment length=2mm]
+                 {--++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
+                   \ifpktxd@sync node[midway,\labelstyle,\thisls]{\pktxd@nodelabel{#5}}\fi}
+
+                 --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3);
+                   \ifpktxd@lost\ifpktxd@crosslost \draw[-]
+                   (\sign*2mm,#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
+    \else
+    % iflate, use control points (ignores lost)
+    \ifpktxd@late
+       \draw (#2,#4) 
+       .. controls (0,#4-\pktxd@prop/2) and (0,#4-\pktxd@latev)
+       .. (#3, #4-\pktxd@latev-\pktxd@prop)
+                   node[\labelstyle,\thisls,pos=0.1]{\pktxd@nodelabel{#5}};
+
+    \else
+    % not bad, not late
+       \draw (#2,#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
+                   node[\ifpktxd@sync midway\else near
+                   start\fi,\labelstyle,\thisls]{\pktxd@nodelabel{#5}};
+                   \ifpktxd@lost\ifpktxd@crosslost \draw[-]
+                   (\sign*2mm,#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
+    \fi
+    \fi
+  \end{scope}
+}
+
+%% the draw arrow function for horizontal packet exchange diagram
+
+\newcommand{\pktxd@arrowh}[5][]{
+  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/labelstyle}
+  {\def\labelstyle{/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/labelstyle}}}
+  {\def\labelstyle{/pktxd/styles/labeldefault}}
+  \def\thisls{/pktxd/styles/thislabel}
+
+  \pgfmathsetlength{\pktxd@len}{#2-#3}
+  \pgfmathtruncatemacro{\sign}{#2<#3?1:-1}
+
+  \begin{scope}[/pktxd/.cd,#1,|-|]
+  \ifnum \sign>0\def\toto{above}\else\def\toto{below}\fi
+  \ifpktxd@lost\def\lost{2}\else\def\lost{1}\fi
+  % first draw 'transmission time' line
+  \ifpktxd@bad
+
+       \draw (#4,#3) --++(\pktxd@trans/3,0)
+                 decorate[decoration=zigzag,segment length=2mm]
+                 {--++(\pktxd@trans/3,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}}}
+                 --++(\pktxd@trans/3,0);
+  \else
+       \draw (#4,#3) -- ++(\pktxd@trans,0)
+           node[\labelstyle,\thisls,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}};
+  \fi
+  % then draw 'propagation time' arrow
+  \draw[thin,->] (#4+\pktxd@trans,#3) -- ++ (\pktxd@prop/\lost,\pktxd@len/\lost);
+  \ifpktxd@lost\ifpktxd@crosslost \draw[-]
+        (#4+\pktxd@trans+\pktxd@prop/2,\sign*-2mm) node{\Large $\times$}\fi\fi;
+  \end{scope}
+}
+
+
+\newcommand{\pktxd@addtosend}[2]{
+  \pgfmathsetlengthmacro\temp{\pktxd@Tsend{#1}+\y*#2}
+  \pgfkeyslet{/pktxd/entities/#1/Tsend}{\temp}}
+
+\newcommand{\pktxd@addtorecv}[2]{
+  \pgfmathsetlengthmacro\temp{\pktxd@Trecv{#1}+\y*#2}
+  \pgfkeyslet{/pktxd/entities/#1/Trecv}{\temp}}
+
+
+%% the main macro for drawing a frame:
+%% - handle all frame keys (prop, trans, delayed, late...)
+%% - draw frame
+%% - draw timers
+%% - draw notes
+%% - udpate time positions
+
+\newcommand{\pktxd@frame}[4][]{ % [#1 keys], #2 sender, #3 receiver #4 label
+  \edef\sendpos{\pgfkeysvalueof{/pktxd/entities/#2/pos}}
+  \edef\recvpos{\pgfkeysvalueof{/pktxd/entities/#3/pos}}
+  \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
+
+  \ifdim\sendpos<\recvpos\def\align{l}\else\def\align{r}\fi
+
+  \setlength{\pktxd@savedtrans}{\pktxd@trans}
+  \setlength{\pktxd@savedprop}{\pktxd@prop}
+  \pgfkeys{/pktxd/global/.activate family}
+  \pgfkeysfiltered{/pktxd/.cd,#1}
+  \pktxd@settrans{#4}
+
+  \ifpktxd@delayed
+    \pktxd@debug{delayed: len \pktxd@delayedlen ~ label \pktxd@delayedlabel ~ id \pktxd@delayedid}
+    \edef\Trecv{\pgfkeysvalueof{/pktxd/entities/#2/Trecv}}
+
+    \pktxd@settimer{#2}{\align}{\pktxd@delayedid}{\Trecv}{\pktxd@delayedlen}{\pktxd@delayedlabel}
+    \pktxd@setTsend{#2}{\Trecv}%%%
+    \pktxd@addtosend{#2}{\pktxd@delayedlen}
+    \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
+    \pktxd@endtimer{#2}{\align}{\pktxd@delayedid}
+    \pktxd@delayedfalse
+  \fi
+
+  \ifpktxd@stop
+    \pktxd@debug{stop: len \pktxd@stoplen ~ label \pktxd@stoplabel ~delay \pktxd@stopdelay ~ id \pktxd@stopid}
+    \edef\Trecv{\pgfkeysvalueof{/pktxd/entities/#2/Trecv}}
+    \pktxd@settimer{#2}{\align}{\pktxd@stopid}{\Trecv}{\pktxd@stoplen}{\pktxd@stoplabel}
+    \pktxd@setTsend{#2}{\pktxd@Trecv{#2}}
+    \pktxd@addtosend{#2}{\pktxd@stopdelay}
+    \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
+    \pktxd@canceltimer{#2}{\align}{\pktxd@stopid}{\Tsend}
+    \pktxd@stopfalse
+  \fi
+
+  \ifpktxd@timed
+    \pktxd@debug{timed: len \pktxd@timedlen ~ label \pktxd@timedlabel ~ id \pktxd@timedid}
+    \pgfmathsetlengthmacro\temp{\Tsend+\y*\pktxd@trans}
+    \pktxd@settimer{#2}{\align}{\pktxd@timedid}{\temp}{\pktxd@timedlen}{\pktxd@timedlabel}
+    \pktxd@timedfalse
+  \fi
+
+  % send note
+  \pktxd@note{\Tsend}{\sendpos}{\align}{\pktxd@snoteoffset}{\pktxd@snote}
+
+  % set styles, draw frame
+  \pgfkeysgetvalue{/pktxd/id}{\pktxd@id}
+  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/style}{
+    \def\thisstyle{\pgfkeysvalueof{/pktxd/flows/\pktxd@id/style}}}{
+    \def\thisstyle{default}}
+  \pktxd@arrow[/pktxd/styles/\thisstyle,#1,opacity=\pktxd@getconf{\pktxd@id}{opacity}]
+              {\sendpos}{\recvpos}{\Tsend}{#4}
+
+  % update times
+  \pgfmathsetlengthmacro\Trecv{\Tsend+\y*\pktxd@prop+\y*\pktxd@trans}
+  \pgfmathsetlengthmacro\Tsend{\Tsend+\y*\pktxd@trans+\y*\pktxd@spacesame}
+
+  % receive note
+  \pktxd@note{\Trecv-\pktxd@latev}{\recvpos}{\if\align rl\else r\fi}{\pktxd@rnoteoffset}{\pktxd@rnote}
+  \gdef\pktxd@snote{\relax}
+  \gdef\pktxd@rnote{\relax}
+
+  \edef\Tcancel{\Trecv}
+  \ifpktxd@late
+    % no simpler way to _copy_ the length value?
+    \pgfmathsetlengthmacro\Tcancel{\Trecv-\pktxd@latev}
+    \pgfkeyslet{/pktxd/values/#3/\pktxd@latename}{\Tcancel}
+    \pktxd@latefalse
+    \setlength\pktxd@latev{0mm}
+  \fi
+
+  % restore values
+  \pgfkeyssetvalue{/pktxd/id}{main}
+  \setlength{\pktxd@trans}{\pktxd@savedtrans}
+  \setlength{\pktxd@prop}{\pktxd@savedprop}
+
+  % commit time updates
+  \pgfkeyslet{/pktxd/entities/#2/Tsend}{\Tsend}
+  \pgfkeyslet{/pktxd/entities/#3/Trecv}{\Trecv}
+
+  \ifpktxd@sync
+    \pgfmathsetlengthmacro\Tsndr{\Trecv+\y*\pktxd@spaceother}
+    \pgfkeyslet{/pktxd/entities/#3/Tsend}{\Tsndr}
+  \fi
+
+  \ifpktxd@cancel
+    \pktxd@debug{cancel}
+    \pktxd@canceltimer{#3}{\if l\align r\else l\fi}{\pktxd@cancelid}{\Tcancel}
+    \pktxd@cancelfalse
+  \fi
+}
+
+
+%%%%%% handling of timers
+
+%% so that arrows of consecutive timers are spaced a very little bit
+\newlength{\pktxd@timertoffset}\setlength{\pktxd@timertoffset}{0.2mm}
+\pgfkeys{/pktxd/timer time offset/.code=\setlength{\pktxd@timertoffset}{#1}}
+
+\newcommand{\pktxd@endtimerifactive}[3]{
+  \if\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/active}t
+  \pktxd@endtimer{#1}{#2}{#3}\fi}
+
+%% timer h position: based on hpos, l/r alignment and offset
+%% in horizontal, hpos is negated (left/- is up/+)
+%% in vertical, remove 3mm to l timers if neither @timerleftbelow nor
+%% @timerleftbottomup is set
+
+\newcommand{\pktxd@settimerhpos}[4]{ % entity/lr/id macro
+  \pktxd@debug{timerhpos #1/#2/#3}
+  \def\pos{\pktxd@pos{#1}}
+  \def\offset{\pktxd@getconftimer{#1}{#2}{#3}{offset}}
+  \def#4{%
+  \ifpktxd@h-\pos+\if #2r-\offset\else\offset\fi
+  \else
+  \pos+\if #2r\offset\else\ifpktxd@timerleftbelow-\offset\else\ifpktxd@timerleftbottomup-\offset
+  \else-\offset-3mm\fi\fi\fi\fi}}
+
+\newcommand{\pktxd@settimer}[6]{ % entity, l/r, id, starttime, len, label
+  \pktxd@endtimerifactive{#1}{#2}{#3}
+  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/active}{t}
+  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
+  \def\timeroffset{\pktxd@getconftimer{#1}{#2}{#3}{offset}}
+  \def\timerhoffset{\pktxd@getconftimer{#1}{#2}{#3}{haddoffset}}
+  \pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/start}{#4}
+  \pgfmathsetlengthmacro\temp{#4+\y*#5}
+  \pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/end}{\temp}
+  \def\timerstart{\pktxd@gettimerstart{#1}{#2}{#3}}
+  \def\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
+
+  %% the timer label is placed above except if:
+  %% - it's a left timer and @timerleftbelow is set (placed below)
+  %% - it's a left timer and @timerleftbottomup is set (placed above +
+  %% rotate).  We use /pktxd/reverse in this case cause we don't know
+  %% how to pass two keys in a single macro...
+  
+  \if#2r\def\above{above}\else
+  \ifpktxd@timerleftbelow\def\above{below}\else
+  \ifpktxd@timerleftbottomup\def\above{/pktxd/reverse}\else
+  \def\above{above}\fi
+  \fi\fi
+
+  \pktxd@debugtimer{settimer}{#1}{#2}{#3}
+  \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
+  \ifpktxd@h
+      \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset) -- (\timerend,\hpos-\timerhoffset)
+                         node[midway,sloped,above]{#6};
+  \else
+      \draw[thin,dotted,<->](\hpos,\timerstart-\pktxd@timertoffset)
+                         -- (\hpos,\timerend+\pktxd@timertoffset) node[midway,sloped,\above]{#6};
+  \fi
+}
+
+\newcommand{\pktxd@debugtimer}[4]{
+  \pktxd@debug{#1 timer #2/#3/#4}
+  \pktxd@debug{start \pktxd@gettimerstart{#2}{#3}{#4}}
+  \pktxd@debug{end   \pktxd@gettimerend{#2}{#3}{#4}}
+}
+
+\newcommand{\pktxd@canceltimer}[4]{ % entity, l/r, id, time
+  \pktxd@debugtimer{canceltimer}{#1}{#2}{#3}
+  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/active}{0}
+  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{t}
+  \def\timerstart{\pktxd@gettimerstart{#1}{#2}{#3}}
+  \def\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
+  \def\timeroffset{\pktxd@getconftimer{#1}{#2}{#3}{offset}}
+  \def\timerhoffset{\pktxd@getconftimer{#1}{#2}{#3}{haddoffset}}
+
+  \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
+  \ifpktxd@h
+    \ifdim#4>\timerend\typeout{Expired timer!}
+    \node at (#4,\hpos)[draw,red,fill=yellow]{Expired timer!};\else
+    \draw[thin,<-](\timerstart,\hpos-\timerhoffset) --(#4,\hpos-\timerhoffset);
+    \fi
+  \else
+    \ifdim#4<\timerend\typeout{Expired timer!}
+    \node at (\hpos,#4)[draw,red,fill=yellow]{Expired timer!};\else
+    \draw[thin,<-](\hpos,\timerstart-\pktxd@timertoffset) --(\hpos,#4);
+    \fi
+  \fi
+}
+
+\newcommand{\pktxd@endtimer}[3]{
+  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/active}{0}
+  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
+  \def\timerstart{\pktxd@gettimerstart{#1}{#2}{#3}}
+  \def\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
+  \def\timeroffset{\pktxd@getconftimer{#1}{#2}{#3}{offset}}
+  \def\timerhoffset{\pktxd@getconftimer{#1}{#2}{#3}{haddoffset}}
+  \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
+  \ifpktxd@h
+    \draw[thin,<->](\timerstart,\hpos-\timerhoffset)
+                -- (\timerend,\hpos-\timerhoffset);
+  \else
+    \draw[thin,<->](\hpos,\timerstart-\pktxd@timertoffset)
+                -- (\hpos,\timerend+\pktxd@timertoffset);
+  \fi
+}
+
+\newcommand{\pktxd@getconf}[2]{
+  \pgfkeysifdefined{/pktxd/flows/#1/#2}
+  {\pgfkeysvalueof{/pktxd/flows/#1/#2}}
+  {\pgfkeysvalueof{/pktxd/default/#2}}}
+
+\newcommand{\pktxd@note}[5]{ % timepos, hpos, l/r, offset, note
+  \ifpktxd@h\else\if#5\relax\else
+  \if#3l
+    \node[align=left,left] at (#2-#4, #1) { #5 };
+  \else
+    \node[align=right,right] at (#2+#4, #1) { #5 };
+  \fi\fi\fi}
+
+
+%%%%%% side decorations (eg for TCP)
+
+\newcommand{\pktxd@action}[4]{ % timepos, hpos, l/r, text
+  \ifpktxd@h\else
+  \if#3l\def\align{left}\else\def\align{right}\fi
+  \draw[<-](#2+\if#3l-\pktxd@actionoffset\else\pktxd@actionoffset\fi,#1-\y\pktxd@actiontimeoffset)
+           -- ++(\if#3l180\else0\fi:\pktxd@actionlength) node[\align]{#4};
+  \fi}
+
+\newcommand{\pktxd@state}[4]{ % timepos, hpos, l/r, text
+  \ifpktxd@h\else
+  \if#3l\def\align{left}\else\def\align{right}\fi
+  \draw(#2+\if#3l-\pktxd@stateoffset\else\pktxd@stateoffset\fi,#1)
+       node[draw,\align]{\textsc{#4}};
+  \fi}
+
+\newcommand{\Astate}[1]{\pktxd@state{\pAs}{\pktxd@pos{A}}{l}{#1}}
+\newcommand{\Bstate}[1]{\pktxd@state{\pBs}{\pktxd@pos{B}}{r}{#1}}
+
+\newcommand{\Aactionstate}[2]{
+  \pktxd@action{\pAs}{\pktxd@pos{A}}{l}{#1}
+  \pktxd@state{\pAs-5mm}{\pktxd@pos{A}}{l}{#2}}
+
+\newcommand{\Bactionstate}[2]{
+  \pktxd@action{\pBs}{\pktxd@pos{B}}{r}{#1}
+  \pktxd@state{\pBs-5mm}{\pktxd@pos{B}}{r}{#2}}
+
+
+%% laters -- unlimited number
+
+\newlength{\pktxd@laterdashedlen}
+\setlength{\pktxd@laterdashedlen}{1cm}
+\pgfkeys{/pktxd/laters/.initial={0cm/0cm}}
+
+\newcommand{\later}[1]{
+  \pgfkeys{/pktxd/laters/.append/.expanded={,\pAs/#1}}
+  \pktxd@addtosend{A}{#1}
+  \pktxd@addtorecv{A}{#1}
+  \pktxd@addtosend{B}{#1}
+  \pktxd@addtorecv{B}{#1}
+}
+
+\newcommand{\pktxd@flushtimer}[3]{
+  \if\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/active}t
+    \pktxd@endtimer{#1}{#2}{#3}
+    \pktxd@waittimer{#1}{#2}{#3}
+  \else
+    \if\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/cancel}t
+      \pktxd@debugtimer{flush/cancel}{#1}{#2}{#3}
+      \pktxd@debug{pos#1 = \pktxd@Tsend{#1}}
+      \pktxd@waittimer{#1}{#2}{#3}
+      \pktxd@debug{updated pos#1 = \pktxd@Tsend{#1}}
+  \fi\fi}
+
+\newcommand{\pktxd@alltimers}[1]{
+  \foreach \e/\o in {A/l,B/r} {
+    \foreach \n in {1,2} {
+      #1{\e}{\o}{\n}
+      }
+    }
+  }
+
+\newcommand{\pktxd@finishtimers}{
+% can't use that because of \foreach local scope for body
+%  \pktxd@alltimers{\pktxd@flushtimer}
+  \pktxd@flushtimer{A}{l}{1}
+  \pktxd@flushtimer{A}{l}{2}
+  \pktxd@flushtimer{B}{r}{1}
+  \pktxd@flushtimer{B}{r}{2}
+}
+
+\newcommand{\pktxd@drawlateronetimer}[3]{
+  \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
+  \draw[graphicbackground,dashed] (\hpos,\tpos) -- ++(0,\y\pktxd@laterdashedlen);}
+
+% draw one later: erase part of the vertical lines
+\newcommand{\pktxd@drawlater}[2]{
+  \def\tpos{#1+\y*#2/2-\y*\pktxd@laterdashedlen/2}
+
+  % vertical lines
+  \ifpktxd@h\else
+  \draw[graphicbackground,dashed](\pktxd@pos{A},\tpos) -- ++(0,\y\pktxd@laterdashedlen);
+  \draw[graphicbackground,dashed](\pktxd@pos{B},\tpos) -- ++(0,\y\pktxd@laterdashedlen);
+  \fi
+
+  % timer lines
+  \ifpktxd@h\else
+  \pktxd@alltimers{\pktxd@drawlateronetimer}
+  \fi
+}
+
+\newcommand{\pktxd@setpos}[2]{
+  \pgfmathsetlengthmacro{\toto}{#2}
+  \pgfkeyslet{/pktxd/entities/#1/pos}{\toto}}
+
+
+\newcommand{\wait}[2][1cm]{\pktxd@addtosend{#2}{#1}}
+
+%%: X waits for Y, Y waits for X (usefull only in fullduplex mode)
+
+\newcommand{\XwaitY}[2]{
+  \edef\temp{\pktxd@Trecv{#1}}
+  \pktxd@letTsend{#1}{\temp}
+  \pktxd@debug{Xwait temp=\temp Tsend=\pktxd@Tsend{#1}}
+  \pktxd@addtosend{#1}{\pktxd@spaceother}}
+
+\newcommand{\pktxd@waittimer}[3]{
+  \edef\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
+  \edef\Tsend{\pktxd@Tsend{#1}}
+  \ifpktxd@h \ifdim \Tsend<\timerend\pktxd@letTsend{#1}{\timerend}\fi
+  \else      \ifdim \Tsend>\timerend\pktxd@letTsend{#1}{\timerend}\fi
+  \fi}
+
+
+%%% specialized code for two entities diagrams
+
+\def\timerAend {\pktxd@gettimerend{A}{l}{1}}
+\def\timerAiend{\pktxd@gettimerend{A}{l}{2}}
+\def\timerBend {\pktxd@gettimerend{B}{r}{1}}
+\def\timerBiend{\pktxd@gettimerend{B}{r}{2}}
+
+\def\timerAoffset {\pgfkeysvalueof{/pktxd/default/timers/l/1/offset}}
+\def\timerAioffset{\pgfkeysvalueof{/pktxd/default/timers/l/2/offset}}
+\def\timerBoffset {\pgfkeysvalueof{/pktxd/default/timers/r/1/offset}}
+\def\timerBioffset{\pgfkeysvalueof{/pktxd/default/timers/r/2/offset}}
+
+% time, len, label
+\newcommand{\settimerA} [3]{\pktxd@settimer{A}{l}{1}{#1}{#2}{#3}}
+\newcommand{\settimerAi}[3]{\pktxd@settimer{A}{l}{2}{#1}{#2}{#3}}
+\newcommand{\settimerB} [3]{\pktxd@settimer{B}{r}{1}{#1}{#2}{#3}}
+\newcommand{\settimerBi}[3]{\pktxd@settimer{B}{r}{2}{#1}{#2}{#3}}
+
+\newcommand{\pktxd@endtimerA} {\pktxd@endtimer{A}{l}{1}}
+\newcommand{\pktxd@endtimerAi}{\pktxd@endtimer{A}{l}{2}}
+\newcommand{\pktxd@endtimerB} {\pktxd@endtimer{B}{r}{1}}
+\newcommand{\pktxd@endtimerBi}{\pktxd@endtimer{B}{r}{2}}
+
+\newcommand{\canceltimerA}[1] {\pktxd@canceltimer{A}{l}{1}{#1}}
+\newcommand{\canceltimerAi}[1]{\pktxd@canceltimer{A}{l}{2}{#1}}
+\newcommand{\canceltimerB}[1] {\pktxd@canceltimer{B}{r}{1}{#1}}
+\newcommand{\canceltimerBi}[1]{\pktxd@canceltimer{B}{r}{2}{#1}}
+
+%%: A sends to B, B sends to A
+
+\newcommand{\AB}[2][]{\pktxd@frame[#1]{A}{B}{#2}}
+\newcommand{\BA}[2][]{\pktxd@frame[#1]{B}{A}{#2}}
+
+\newcommand{\Await}[1][1cm]{\wait[#1]{A}}
+\newcommand{\Bwait}[1][1cm]{\wait[#1]{B}}
+
+\newcommand{\AwaitB}{\XwaitY{A}{B}}
+\newcommand{\BwaitA}{\XwaitY{B}{A}}
+
+%%: arg is name set in the late frame ('name' key, defaults to lateframe)
+\newcommand{\Awaitlate}[1][lateframe]{
+  \pktxd@setTrecv{A}{\pgfkeysvalueof{/pktxd/values/A/#1}}
+  \AwaitB}
+
+\newcommand{\Bwaitlate}[1][lateframe]{
+  \pktxd@setTrecv{B}{\pgfkeysvalueof{/pktxd/values/B/#1}}
+  \BwaitA}
+  
+
+%%: A,B waits for its current timer to expire
+
+\newcommand{\Awaittimer} {\pktxd@waittimer{A}{l}{1}}
+\newcommand{\Awaittimeri}{\pktxd@waittimer{A}{l}{2}}
+\newcommand{\Bwaittimer} {\pktxd@waittimer{B}{r}{1}}
+\newcommand{\Bwaittimeri}{\pktxd@waittimer{B}{r}{2}}
+
+%%: A sends a timed frame to B
+% [keys], flabel, len, tlabel
+
+\newcommand{\ABtimed} [4][]{\AB[#1,timed={#3}{#4}]{#2}}
+\newcommand{\ABtimedi}[4][]{\AB[#1,timed2={#3}{#4}]{#2}}
+\newcommand{\BAtimed} [4][]{\BA[#1,timed={#3}{#4}]{#2}}
+\newcommand{\BAtimedi}[4][]{\BA[#1,timed2={#3}{#4}]{#2}}
+
+%%: A sends a frame that cancels B's timer
+
+\newcommand{\ABcancel} [2][]{\AB[cancel,#1]{#2}}
+\newcommand{\ABcanceli}[2][]{\AB[cancel2,#1]{#2}}
+\newcommand{\BAcancel} [2][]{\BA[cancel,#1]{#2}}
+\newcommand{\BAcanceli}[2][]{\BA[cancel2,#1]{#2}}
+
+%%: A sets a timer and sends a frame when it expires
+%%  [keys], len, tlabel, flabel
+\newcommand{\ABdelayed}[4][]{\AB[#1,delayed={#2}{#3}]{#4}}
+\newcommand{\BAdelayed}[4][]{\BA[#1,delayed={#2}{#3}]{#4}}
+
+%%: A sets a timer and after a delay sends a frame that cancels it
+%%: typical use: ACK timer cancelled by sending of DATA
+%%  [keys], len, tlabel, delay, flabel
+\newcommand{\ABstop}[5][]{\AB[#1,stop={#2}{#3}{#4}]{#5}}
+\newcommand{\BAstop}[5][]{\BA[#1,stop={#2}{#3}{#4}]{#5}}
+
+
+
+%%%% our two entities
+\pktxd@createentity{A}
+\pktxd@createentity{B}
+
+%% shortcuts
+\def\pAs{\pktxd@Tsend{A}}
+\def\pBs{\pktxd@Tsend{B}}
+\def\pAr{\pktxd@Trecv{A}}
+\def\pBr{\pktxd@Trecv{B}}
+
+%%%% user environments
+
+\newenvironment{pktxdiag}[1][]{
+  \newcommand{\fullduplex}{\pktxd@syncfalse}
+  \newcommand{\halfduplex}{\pktxd@synctrue}
+  \def\frame{\pktxd@frame}
+  \pktxd@hfalse
+  \setlength{\pktxd@trans}{0cm}
+  \def\pktxd@arrow{\pktxd@arrowv}
+  \def\y{-1}
+  \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
+  \pktxd@setpos{A}{-\pktxd@width/2}
+  \pktxd@setpos{B}{\pktxd@width/2}
+  }
+  {
+    \ifpktxd@sync\else
+    \pgfmathsetlengthmacro\pBs{\pBr+\y*\pktxd@spaceother}
+    \pgfmathsetlengthmacro\pAs{\pAr+\y*\pktxd@spaceother}
+    \fi
+
+    % finish drawing all timers
+    \pktxd@finishtimers
+
+    % bottom of vert lines is the minimum of A and B (negative values)
+    \edef\pos{\pAs}
+    \ifdim \pos>\pBs \def\pos{\pBs}\fi
+    \draw[thin](\pktxd@pos{A},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/A}}-- (\pktxd@pos{A},\pos);
+    \draw[thin](\pktxd@pos{B},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/B}}-- (\pktxd@pos{B},\pos);
+
+    % process later(s)
+    \pgfkeys{/pktxd/laters/.get=\laters}
+    %\pktxd@debug{laters \laters}
+    \foreach \t/\l in \laters {
+      %\pktxd@debug{time \t~ len \l}
+      \ifdim\t=0cm\else\pktxd@drawlater{\t}{\l}\fi
+    }
+  \end{tikzpicture}
+}
+
+\newenvironment{hpktxdiag}[1][]{
+  \newcommand{\fullduplex}{\pktxd@syncfalse}
+  \newcommand{\halfduplex}{\pktxd@synctrue}
+  \pktxd@htrue
+  \setlength{\pktxd@spacesame}{0cm}
+  \setlength{\pktxd@spaceother}{0cm}
+  \def\pktxd@width{1cm}
+  \setlength{\pktxd@prop}{3mm}
+  \def\pktxd@arrow{\pktxd@arrowh}
+  \def\y{1}
+  \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
+  \pktxd@setpos{A}{-\pktxd@width/2}
+  \pktxd@setpos{B}{\pktxd@width/2}
+  }
+  {
+    % finish drawing all timers
+    \pktxd@finishtimers
+    \draw (-\pktxd@spacesame/2,-\pktxd@pos{A}) node [left]{\pgfkeysvalueof{/pktxd/A}};
+    \draw (-\pktxd@spacesame/2,-\pktxd@pos{B}) node [left]{\pgfkeysvalueof{/pktxd/B}};
+  \end{tikzpicture}}  

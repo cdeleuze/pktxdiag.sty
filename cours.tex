@@ -1,5 +1,5 @@
 \documentclass{article}
-\usepackage{chrono}
+\usepackage{pktxdiag}
 \usepackage[francais]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{a4wide}
@@ -7,45 +7,45 @@
 \usepackage{float}
 \usepackage{subfig}
 
-\newenvironment{fchrono}[2][]{\begin{figure}[H]\centering\begin{chrono}[#1]\gdef\mycap{#2}}
-{\end{chrono}\caption{\mycap}\end{figure}}
+\newenvironment{fpktxdiag}[2][]{\begin{figure}[H]\centering\begin{pktxdiag}[#1]\gdef\mycap{#2}}
+{\end{pktxdiag}\caption{\mycap}\end{figure}}
 
-\newenvironment{fhchrono}[2][]{\begin{figure}[H]\centering\begin{hchrono}[#1]\gdef\mycap{#2}}
-{\end{hchrono}\caption{\mycap}\end{figure}}
+\newenvironment{fhpktxdiag}[2][]{\begin{figure}[H]\centering\begin{hpktxdiag}[#1]\gdef\mycap{#2}}
+{\end{hpktxdiag}\caption{\mycap}\end{figure}}
 
 \begin{document}
 
 
-\pgfkeys{/chrono/timerleftbottomup}
+\pgfkeys{/pktxd/timerleftbottomup}
 
 \section{NE321}
 
 \subsection{Stop and wait}
 
 \begin{figure}[H]
-\begin{chrono}
+\begin{pktxdiag}
   \ABtimed{DATA}{3cm}{temporisateur}
   \BAcancel{ACK}
-\end{chrono}
+\end{pktxdiag}
 \hfill
-\begin{chrono}
+\begin{pktxdiag}
   \ABtimed{DATA}{3cm}{temporisateur}
   \BA[lost]{ACK}
   \Awaittimer
   \ABtimed{DATA}{3cm}{temporisateur}
   \BAcancel{ACK}
-\end{chrono}
+\end{pktxdiag}
 
 \bigskip
 
-\begin{chrono}
+\begin{pktxdiag}
   \ABtimed[lost]{DATA}{3cm}{temporisateur}
   \Awaittimer
   \ABtimed{DATA}{3cm}{temporisateur}
   \BAcancel{ACK}
-\end{chrono}
+\end{pktxdiag}
 \hfill
-\begin{chrono}[prop]
+\begin{pktxdiag}[prop]
   \fullduplex
   \ABtimed{DATA}{2cm}{temporisateur}
   \BwaitA
@@ -54,24 +54,24 @@
   \BAcancel{ACK}
   \BwaitA
   \BA{ACK}
-\end{chrono}
+\end{pktxdiag}
 \caption{Stop \& Wait}
 \end{figure}
 
 \begin{figure}[H]\centering
-\begin{chrono}
+\begin{pktxdiag}
   \AB{D0}
   \BA{ACK1}
   \AB{D1}
   \BA{ACK0}
   \AB{D0}
-\end{chrono}
+\end{pktxdiag}
 \caption{Stop \& Wait avec numéros de séquence sur 1 bit}
 \end{figure}
 
 \subsection{HDLC}
 
-\begin{chrono}
+\begin{pktxdiag}
      \ABtimed[lost]{SABME}{2cm}{T1}
      \Awaittimer
      \AB{SABME}
@@ -79,9 +79,9 @@
 \later{2cm}
      \AB{DISC}
               \BA{UA}
-\end{chrono}
+\end{pktxdiag}
 \hfill
-\begin{chrono}
+\begin{pktxdiag}
   \AB{I 0,0}
            \BA{I 0,1}
   \AB{I 1,1}
@@ -91,9 +91,9 @@
            \BA{I 2,4}
            \BA{I 3,4}
   \AB{RR4}
-\end{chrono}
+\end{pktxdiag}
 \hfill
-\begin{chrono}
+\begin{pktxdiag}
   \BA{I 3,0}
   \AB{RNR 4}
   \Bwait[1.5cm]
@@ -103,9 +103,9 @@
   \BA{RR 0,P}
   \AB{RR 4,F}
   \BA{I 4,0}
-\end{chrono}
+\end{pktxdiag}
 
-\begin{chrono}
+\begin{pktxdiag}
   \AB{I 3,0}
   \AB[lost]{I 4,0}
   \AB[rnote=$\times$]{I 5,0}
@@ -113,9 +113,9 @@
   \AB{I 4,0}
   \AB{I 5,0}
   \AB{I 6,0}
-\end{chrono}
+\end{pktxdiag}
 \hfill
-\begin{chrono}[noteoffset=1mm]
+\begin{pktxdiag}[noteoffset=1mm]
   \fullduplex
   \AB{I 3,0}
   \BwaitA
@@ -127,9 +127,9 @@
   \BwaitA \BA{RR6}
   \AB{I 6,0}
   \AB{I 7,0}
-\end{chrono}
+\end{pktxdiag}
 \hfill
-\begin{chrono}
+\begin{pktxdiag}
   \AB{I 2,0}
   \fullduplex
              \BA{RR3}
@@ -141,7 +141,7 @@
              \BA{RR 3,F}
   \AB{I 3,0}
              \BA{RR 4}
-\end{chrono}
+\end{pktxdiag}
 
 \clearpage
 
@@ -163,39 +163,39 @@
 
 \begin{figure}[H]
 \hfill
-\subfloat[HDLC]{\begin{chrono}[space other=8mm, space same=12mm]
+\subfloat[HDLC]{\begin{pktxdiag}[space other=8mm, space same=12mm]
 \figxix
-\end{chrono}}
+\end{pktxdiag}}
 \hfill
-\subfloat[X25]{\begin{chrono}[space other=8mm, space same=12mm, hide=main,show
+\subfloat[X25]{\begin{pktxdiag}[space other=8mm, space same=12mm, hide=main,show
   label2, hide label]
 \figxix
-\end{chrono}}
+\end{pktxdiag}}
 \hfill
-\subfloat[HDLC/X25]{\begin{chrono}[space other=8mm, space same=12mm, show label2]
+\subfloat[HDLC/X25]{\begin{pktxdiag}[space other=8mm, space same=12mm, show label2]
 \figxix
-\end{chrono}}
+\end{pktxdiag}}
 \hfill~
 \caption{Décodage de la figure 19}
 \end{figure}
 
 \begin{figure}[H]
-\begin{hchrono}[hdlc]
+\begin{hpktxdiag}[hdlc]
 \figxix
-\end{hchrono}
+\end{hpktxdiag}
 
-\begin{hchrono}[hdlc,hide=main,show label2,hide label]
+\begin{hpktxdiag}[hdlc,hide=main,show label2,hide label]
 \figxix
-\end{hchrono}
+\end{hpktxdiag}
 
-\begin{hchrono}[hdlc, show label2]
+\begin{hpktxdiag}[hdlc, show label2]
 \figxix
-\end{hchrono}
+\end{hpktxdiag}
 \caption{Décodage de la figure 19}
 \end{figure}
 }
 
-\begin{fhchrono}[hdlc,short trans=3mm,A,B,prop=4mm]{Exercice 25}
+\begin{fhpktxdiag}[hdlc,short trans=3mm,A,B,prop=4mm]{Exercice 25}
   \AB{SABM}
            \BA{UA}
   \fullduplex
@@ -215,18 +215,18 @@
   \Await
   \AB{DISC}
   \BwaitA   \BA{UA}
-\end{fhchrono}
+\end{fhpktxdiag}
 
 \subsection{PPP}
 
-\begin{fchrono}[A,B]{Négociation LCP}
+\begin{fpktxdiag}[A,B]{Négociation LCP}
 \ABtimed{ConfReq}{3.5cm}{Négo pour A}
 \BA{ConfNak}
 \AB{ConfReq}
 \BA{ConfAck}
 \BAtimed{ConfReq}{1.5cm}{Négo pour B}
 \AB{ConfAck}  
-\end{fchrono}
+\end{fpktxdiag}
 
 \section{NE210}
 
@@ -234,7 +234,7 @@
 
 \begin{figure}[H]
   \centering
-  \begin{chrono}[A=André,B=Bertrand]
+  \begin{pktxdiag}[A=André,B=Bertrand]
     \AB{Bonjour}
                 \BA{Bonjour}
     \AB{Comment ça va ?}
@@ -247,22 +247,22 @@
 
     \AB{Au revoir}
                 \BA{Au revoir}
-  \end{chrono}%% ZZZ indication du temps
+  \end{pktxdiag}%% ZZZ indication du temps
   \caption{Protocole de conversation}
 \end{figure}
 
 \subsection{TFTP}
 
 \begin{figure}[H]
-\pgfkeys{/chrono/A=C,/chrono/B=S,/chrono/width=2.7cm}
+\pgfkeys{/pktxd/A=C,/pktxd/B=S,/pktxd/width=2.7cm}
 \subfloat[Tentative de chargement d'un fichier inexistant]{
-\begin{chrono}[]
+\begin{pktxdiag}[]
   \AB{RRQ(fichier)}
   \BA{ERROR (01)}
-\end{chrono}}
+\end{pktxdiag}}
 \hfill
 \subfloat[Transfert réussi d'un fichier de 1084 octets]{
-\begin{chrono}[A=C,B=S]
+\begin{pktxdiag}[A=C,B=S]
   \AB{RRQ(fichier)}
                      \BA{DATA1 (512)}
   \AB{ACK1}
@@ -270,10 +270,10 @@
   \AB{ACK2}
                      \BA[snote={< 512 octets}]{DATA3 (60)}
   \AB{ACK3}
-\end{chrono}}
+\end{pktxdiag}}
 \hfill
 \subfloat[Perte d'un message pendant le transfert]{
-\begin{chrono}[A=C,B=S]
+\begin{pktxdiag}[A=C,B=S]
   \AB{RRQ(fichier)}
                      \BA{DATA1}
   \AB{ACK1}
@@ -283,14 +283,14 @@
   \AB{ACK2}
                      \BA{DATA3}
   \AB{ACK3}
-\end{chrono}}
+\end{pktxdiag}}
   \caption{TFTP}
 \end{figure}
 
 \subsection{TCP}
 
 \begin{figure}[H]\centering
-\begin{chrono}
+\begin{pktxdiag}
   \Astate{Closed}\Bstate{Closed}
   \Await         \Bwait
   \Await         \Bactionstate{passive open}{listen}
@@ -302,12 +302,12 @@
   \AB[trans]{ACK}
                  \Bstate{Established}
   \Await
-\end{chrono}
+\end{pktxdiag}
 \caption{Ouverture de connexion}
 \end{figure}
 
 \begin{figure}[H]\centering
-\begin{chrono}  
+\begin{pktxdiag}  
   \Astate{Established}\Bstate{Established}
   \Await
   \Aactionstate{close}{FinWait1}
@@ -326,13 +326,13 @@
 \later{2cm}
   \Awaittimer
   \Astate{Closed}
-\end{chrono}
+\end{pktxdiag}
 \caption{Fermeture de connexion}
 \end{figure}
 
 \begin{figure}[H]
 \hspace{-1cm}\subfloat[avec]{
-\begin{chrono}[state offset=7mm,timeri offset=3mm]
+\begin{pktxdiag}[state offset=7mm,timeri offset=3mm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{TimeWait}
@@ -344,9 +344,9 @@
                       \Bstate{Closed}
   \Awaittimeri
   \Astate{Closed}
-\end{chrono}}\hfill
+\end{pktxdiag}}\hfill
 \subfloat[sans]{
-\begin{chrono}[state offset=7mm,timeri offset=3mm]
+\begin{pktxdiag}[state offset=7mm,timeri offset=3mm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{Closed}
@@ -356,17 +356,17 @@
   \AB{RST}
 
                       \Bstate{Error}
-\end{chrono}}
+\end{pktxdiag}}
   \caption{État TIME-WAIT : retransmission du FIN}
 \end{figure}
 
 \clearpage
 
 \begin{figure}[H]
-\pgfkeys{/chrono/state offset=5mm,/chrono/timer offset=2mm}
+\pgfkeys{/pktxd/state offset=5mm,/pktxd/timer offset=2mm}
 \hspace{-2cm}
 \subfloat[un vieux FIN]{
-\begin{chrono}[timeri offset=3mm,width=2cm]
+\begin{pktxdiag}[timeri offset=3mm,width=2cm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{Closed}
@@ -389,10 +389,10 @@
   \Awaitlate
   \Astate{CloseWait}
   \AB{ACK}
-\end{chrono}}
+\end{pktxdiag}}
 \hfill
 \subfloat[un vieux DATA]{
-\begin{chrono}[width=2cm]
+\begin{pktxdiag}[width=2cm]
   \Astate{Established}\Bstate{Established}
   \ABtimed{DATA}{2cm}{retrans}
                      \BA[late=1cm]{ACK}
@@ -419,11 +419,11 @@
   \AB{ACK}
                  \Bstate{Established}
   \Await
-\end{chrono}}
+\end{pktxdiag}}
   \caption{Sans le TIME-WAIT : insertion de paquets retardés dans une nouvelle connexion}
 \end{figure}
 
-\begin{fchrono}[width=6cm,A=Navigateur,B=Serveur]{Conversation TCP}
+\begin{fpktxdiag}[width=6cm,A=Navigateur,B=Serveur]{Conversation TCP}
 \NoAutoSpaceBeforeFDP
 
 \AB[snote=segment 1]{SYN 143256:143256(0)}
@@ -441,11 +441,12 @@
 \BA[snote=segment 7]{FIN ?:?(?) ACK ?}
 
 \AB[snote=segment 8]{ACK ?}
-\end{fchrono}
+\end{fpktxdiag}
 
-\begin{fchrono}[prop=1cm,width=6cm,A=émetteur,B=récepteur]{Contrôle de flot TCP}
+\def\width{6cm}
+\begin{fpktxdiag}[prop=1cm,width=\width,A=émetteur,B=récepteur]{Contrôle de flot TCP}
   \newcommand{\buf}[3][0cm]{
-    \begin{scope}[shift={(\chronowidth/2+1cm,\chronoTrecv{B}-3.75mm-#1)},x=7.5mm]
+    \begin{scope}[shift={(\width/2+1cm,\pBr-3.75mm-#1)},x=7.5mm]
       %% xscale so that we reason on a 4k buffer (of length 3cm)
     \draw (0,0) rectangle +(4,0.75);
     \draw[->] (#2,0.90) -- +(0,4mm);
@@ -460,7 +461,7 @@
 }
 
 \buf{0}{0}
-\node at (\chronowidth/2+2.5cm,-1mm) {tampon récepteur};
+\node at (\width/2+2.5cm,-1mm) {tampon récepteur};
 
 \Await
 \AB[snote=Appli écrit 1 k\\TCP envoie 1 k]{seq=0 (1024)}
@@ -478,7 +479,7 @@
 \AB[snote=TCP envoie 1 k]{seq=~~~~~~~~}
 \buf{2}{1}
 \BA{ack=~~~~~~~~~~ win= }
-\end{fchrono}
+\end{fpktxdiag}
 
 
 \def\ftp{
@@ -524,16 +525,16 @@
 \setflowlabelstyle{tcp}{tcplabel}
 \setflowstyle{tcp}{tcp}
 
-\begin{chrono}[width=5cm,prop=2mm]
+\begin{pktxdiag}[width=5cm,prop=2mm]
   \ftp
-\end{chrono}
-\begin{chrono}[width=5cm,prop=2mm,hide=data,hide=tcp]
+\end{pktxdiag}
+\begin{pktxdiag}[width=5cm,prop=2mm,hide=data,hide=tcp]
   \ftp
-\end{chrono}
-\begin{chrono}[prop=2mm,hide=main,hide=tcp]
+\end{pktxdiag}
+\begin{pktxdiag}[prop=2mm,hide=main,hide=tcp]
 \derivestyle{data}{default}{orange,line width=1pt}
   \ftp
-\end{chrono}
+\end{pktxdiag}
 }
 \section{NE520}
 
