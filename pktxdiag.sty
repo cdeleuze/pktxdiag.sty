@@ -110,14 +110,14 @@
 
 
 \pgfkeys{/pktxd/name/.code=\def\pktxd@latename{#1}}
-\pgfkeys{/pktxd/opacity/.style={/tikz/opacity=#1,/tikz/text opacity=#1}}
+
+\def\pktxd@latename{lateframe}
 
 \pgfkeys{/pktxd/show label2/.is if=pktxd@showlabelii}
 \pgfkeys{/pktxd/hide label/.is if=pktxd@hidelabel}
 \pgfkeyssetvalue{/pktxd/ghost}{0}
 \pgfkeys{/pktxd/hide/.code=\pktxd@sethides{#1}}
 
-\def\pktxd@latename{lateframe}
 \newif\ifpktxd@showlabelii
 \newif\ifpktxd@hidelabel
 \pgfkeyssetvalue{/pktxd/label2}{}
@@ -478,23 +478,23 @@
     \pktxd@timedfalse
   \fi
 
-  % send note
-  \pktxd@note{\Tsend}{\sendpos}{\align}{\pktxd@snoteoffset}{\pktxd@snote}
-
-  % set styles, draw frame
+  % set styles
   \pgfkeysgetvalue{/pktxd/id}{\pktxd@id}
   \pgfkeysifdefined{/pktxd/flows/\pktxd@id/style}{
-    \def\thisstyle{\pgfkeysvalueof{/pktxd/flows/\pktxd@id/style}}}{
-    \def\thisstyle{default}}
-  \pktxd@arrow[/pktxd/styles/\thisstyle,#1,opacity=\pktxd@getconf{\pktxd@id}{opacity}]
-              {\sendpos}{\recvpos}{\Tsend}{#4}
-
+    \def\thestyle{/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/style}}}{
+    \def\thestyle{/pktxd/styles/default}}
+  \def\opa{\pktxd@getconf{\pktxd@id}{opacity}}
+  
+  % draw send note
+  \pktxd@note[\thestyle,opacity=\opa]{\Tsend}{\sendpos}{\align}{\pktxd@snoteoffset}{\pktxd@snote}
+  % draw frame
+  \pktxd@arrow[#1,\thestyle,opacity=\opa]{\sendpos}{\recvpos}{\Tsend}{#4}
   % update times
   \pgfmathsetlengthmacro\Trecv{\Tsend+\y*\pktxd@prop+\y*\pktxd@trans}
   \pgfmathsetlengthmacro\Tsend{\Tsend+\y*\pktxd@trans+\y*\pktxd@spacesame}
-
-  % receive note
-  \pktxd@note{\Trecv-\pktxd@latev}{\recvpos}{\if\align rl\else r\fi}{\pktxd@rnoteoffset}{\pktxd@rnote}
+  % draw receive note
+  \pktxd@note[\thestyle,opacity=\opa]{\Trecv-\pktxd@latev}{\recvpos}
+             {\if\align rl\else r\fi}{\pktxd@rnoteoffset}{\pktxd@rnote}
   \gdef\pktxd@snote{\relax}
   \gdef\pktxd@rnote{\relax}
 
@@ -640,12 +640,12 @@
   {\pgfkeysvalueof{/pktxd/flows/#1/#2}}
   {\pgfkeysvalueof{/pktxd/default/#2}}}
 
-\newcommand{\pktxd@note}[5]{ % timepos, hpos, l/r, offset, note
-  \ifpktxd@h\else\if#5\relax\else
-  \if#3l
-    \node[align=left,left] at (#2-#4, #1) { #5 };
+\newcommand{\pktxd@note}[6][]{ % [keys], timepos, hpos, l/r, offset, note
+  \ifpktxd@h\else\if#6\relax\else
+  \if#4l
+    \node[align=left,left,#1] at (#3-#5, #2) { #6 };
   \else
-    \node[align=right,right] at (#2+#4, #1) { #5 };
+    \node[align=right,right,#1] at (#3+#5, #2) { #6 };
   \fi\fi\fi}
 
 
