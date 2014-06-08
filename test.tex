@@ -528,18 +528,22 @@
                       \BA[id=1]{RR 3 (1)}
 }
 
+{\tikzset{/pktxd/width=2.15cm}
 \begin{pktxdiag}
-  \testfilter
-\end{pktxdiag}
-\begin{pktxdiag}[hide=1]
   \testfilter
 \end{pktxdiag}
 \begin{pktxdiag}[hide=2]
   \testfilter
 \end{pktxdiag}
-\begin{pktxdiag}[hide=1,hide=2]
+\begin{pktxdiag}[ignore=2]
   \testfilter
 \end{pktxdiag}
+\begin{pktxdiag}[hide=1]
+  \testfilter
+\end{pktxdiag}
+\begin{pktxdiag}[ignore=1]
+  \testfilter
+\end{pktxdiag}}
 
 \subsubsection*{Filtering, styles, label styles}
 

@@ -115,8 +115,11 @@
 
 \pgfkeys{/pktxd/show label2/.is if=pktxd@showlabelii}
 \pgfkeys{/pktxd/hide label/.is if=pktxd@hidelabel}
-\pgfkeyssetvalue{/pktxd/ghost}{0}
-\pgfkeys{/pktxd/hide/.code=\pktxd@sethides{#1}}
+\pgfkeyssetvalue{/pktxd/fade value}{0.25}
+\pgfkeys{
+  /pktxd/hide/.code=\pktxd@sethides{#1},
+  /pktxd/ignore/.code=\pktxd@setignore{#1},
+  /pktxd/fade/.code=\pktxd@setfade{#1}}
 
 \newif\ifpktxd@showlabelii
 \newif\ifpktxd@hidelabel
@@ -210,12 +213,17 @@
 
 %% can not use \foreach since it creates a local scope! :-(
 \newcommand{\pktxd@sethides}[1]{
-  \pgfkeyssetvalue{/pktxd/flows/#1/opacity}{\pgfkeysvalueof{/pktxd/ghost}}
+  \pgfkeyssetvalue{/pktxd/flows/#1/opacity}{0}
 %  \foreach \x in { #1 } {
-%    \pgfkeyssetvalue{/pktxd/ids/\x/opacity}{\pgfkeysvalueof{/pktxd/ghost}}
+%    \pgfkeyssetvalue{/pktxd/flows/\x/opacity}{0}
 %  }
 }
 
+\newcommand{\pktxd@setignore}[1]{\pgfkeyssetvalue{/pktxd/flows/#1/ignore}{1}}
+\newif\ifpktxd@ignore
+
+\newcommand{\pktxd@setfade}[1]{
+  \pgfkeyssetvalue{/pktxd/flows/#1/opacity}{\pgfkeysvalueof{/pktxd/fade value}}}
 
 %%%%%% styles
 
@@ -446,6 +454,12 @@
   \setlength{\pktxd@savedprop}{\pktxd@prop}
   \pgfkeys{/pktxd/global/.activate family}
   \pgfkeysfiltered{/pktxd/.cd,#1}
+  \pgfkeysgetvalue{/pktxd/id}{\pktxd@id}
+
+  % if flow has 'ignore' set, we're done
+  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/ignore}{\pktxd@ignoretrue}{\pktxd@ignorefalse}
+  \ifpktxd@ignore\else
+
   \pktxd@settrans{#4}
 
   \ifpktxd@delayed
@@ -479,7 +493,6 @@
   \fi
 
   % set styles
-  \pgfkeysgetvalue{/pktxd/id}{\pktxd@id}
   \pgfkeysifdefined{/pktxd/flows/\pktxd@id/style}{
     \def\thestyle{/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/style}}}{
     \def\thestyle{/pktxd/styles/default}}
@@ -526,6 +539,7 @@
     \pktxd@canceltimer{#3}{\if l\align r\else l\fi}{\pktxd@cancelid}{\Tcancel}
     \pktxd@cancelfalse
   \fi
+  \fi %pktxd@ignore
 }
 
 
@@ -915,4 +929,4 @@
     \pktxd@finishtimers
     \draw (-\pktxd@spacesame/2,-\pktxd@pos{A}) node [left]{\pgfkeysvalueof{/pktxd/A}};
     \draw (-\pktxd@spacesame/2,-\pktxd@pos{B}) node [left]{\pgfkeysvalueof{/pktxd/B}};
-  \end{tikzpicture}}  
+  \end{tikzpicture}}

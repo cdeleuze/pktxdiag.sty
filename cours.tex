@@ -230,8 +230,32 @@
 
 
 
+% \begin{figure}[H]
+% \pgfkeys{/pktxd/width=2.5cm}
+% \def\trace{
+%     \AB[id=a,snote={IP: 0.0.0.0\\DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{req id=1}
+%     \BA[id=b,snote={IP comp: VJ\\IP: 10.0.0.1}]{req id=1}
+%     \AB[id=b,snote=IP comp: VJ]{rej id=1}
+%     \BA[id=a,snote={DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{rej id=1}
+%     \BA[id=b,snote=IP: 10.0.0.1]{req id=2}
+%     \AB[id=a,snote=IP: 0.0.0.0]{req id=2}
+%     \AB[id=b,snote=IP: 10.0.0.1]{ack id=2}
+%     \BA[id=a,snote=IP: 10.67.15.36]{nak id=2}
+%     \AB[id=a,snote=IP: 10.67.15.36]{req id=3}
+%     \BA[id=a,snote=IP: 10.67.15.36]{ack id=3}}
+%   \centering\subfloat[whole traffic]{\begin{pktxdiag}[A,B]\trace\end{pktxdiag}}
+
+%   \derivestyle{hollow}{default}{color=gray!40}
+%   \subfloat[A parameters]{\begin{pktxdiag}[A,B]%,ignore=b]
+%       \setflowstyle{b}{hollow}\trace\end{pktxdiag}}
+%   \subfloat[B parameters]{\begin{pktxdiag}[A,B]%,ignore=a]
+%     \setflowstyle{a}{hollow}\trace\end{pktxdiag}}
+
+%   \caption{TP PPPoE -- négociation IPCP}
+% \end{figure}
+
 \begin{figure}[H]
-\pgfkeys{/pktxd/width=2.5cm}
+\pgfkeys{/pktxd/width=2.5cm, /pktxd/fade value=0.1}
 \def\trace{
     \AB[id=a,snote={IP: 0.0.0.0\\DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{req id=1}
     \BA[id=b,snote={IP comp: VJ\\IP: 10.0.0.1}]{req id=1}
@@ -245,11 +269,8 @@
     \BA[id=a,snote=IP: 10.67.15.36]{ack id=3}}
   \centering\subfloat[whole traffic]{\begin{pktxdiag}[A,B]\trace\end{pktxdiag}}
 
-  \derivestyle{hollow}{default}{color=gray!40}
-  \subfloat[A parameters]{\begin{pktxdiag}[A,B]%[hide=b]
-      \setflowstyle{b}{hollow}\trace\end{pktxdiag}}
-  \subfloat[B parameters]{\begin{pktxdiag}[A,B]%[hide=a]
-    \setflowstyle{a}{hollow}\trace\end{pktxdiag}}
+  \subfloat[A parameters]{\begin{pktxdiag}[A,B,fade=b]\trace\end{pktxdiag}}
+  \subfloat[B parameters]{\begin{pktxdiag}[A,B,fade=a]\trace\end{pktxdiag}}
 
   \caption{TP PPPoE -- négociation IPCP}
 \end{figure}
