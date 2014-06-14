@@ -262,9 +262,10 @@
   \pgfkeys{#1}\endgroup}
 
 \newcommand{\pktxd@createentity}[1]{
-  \pgfglobalkeys{/pktxd/entities/#1/pos/.initial=0cm}
-  \pgfglobalkeys{/pktxd/entities/#1/Tsend/.initial=0cm}
-  \pgfglobalkeys{/pktxd/entities/#1/Trecv/.initial=0cm}
+  \pgfglobalkeys{/pktxd/entities/#1/pos/.initial=0cm}   % space position
+  \pgfglobalkeys{/pktxd/entities/#1/Tsend/.initial=0cm} % send time
+  \pgfglobalkeys{/pktxd/entities/#1/Trecv/.initial=0cm} % recv time
+  \pgfglobalkeys{/pktxd/entities/#1/Tmax/.initial=0cm}  % max time
   \pktxd@createtimer{#1}{l}{1}
   \pktxd@createtimer{#1}{l}{2}
   \pktxd@createtimer{#1}{r}{1}
@@ -529,6 +530,11 @@
   \pgfkeyslet{/pktxd/entities/#2/Tsend}{\Tsend}
   \pgfkeyslet{/pktxd/entities/#3/Trecv}{\Trecv}
 
+  % update Tmax (Tcancel set above to Trecv + pktxd@latev)
+  \ifdim\Tcancel<\pgfkeysvalueof{/pktxd/entities/#3/Tmax}
+  \pgfkeyslet{/pktxd/entities/#3/Tmax}{\Tcancel}
+  \fi
+
   \ifpktxd@sync
     \pgfmathsetlengthmacro\Tsndr{\Trecv+\y*\pktxd@spaceother}
     \pgfkeyslet{/pktxd/entities/#3/Tsend}{\Tsndr}
@@ -632,6 +638,7 @@
   \fi
 }
 
+%% finish drawing a timer
 \newcommand{\pktxd@endtimer}[3]{
   \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/active}{0}
   \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
@@ -769,6 +776,7 @@
   \pktxd@debug{Xwait temp=\temp Tsend=\pktxd@Tsend{#1}}
   \pktxd@addtosend{#1}{\pktxd@spaceother}}
 
+%% set Tsend to end of the timer if it's later
 \newcommand{\pktxd@waittimer}[3]{
   \edef\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
   \edef\Tsend{\pktxd@Tsend{#1}}
@@ -886,17 +894,24 @@
   \pktxd@setpos{B}{\pktxd@width/2}
   }
   {
+    % if fullduplex, set \pXs (used for vert lines)
     \ifpktxd@sync\else
-    \pgfmathsetlengthmacro\pBs{\pBr+\y*\pktxd@spaceother}
-    \pgfmathsetlengthmacro\pAs{\pAr+\y*\pktxd@spaceother}
+    \pgfmathsetlengthmacro\pAs{\pAr-\pktxd@spaceother}
+    \pgfmathsetlengthmacro\pBs{\pBr-\pktxd@spaceother}
     \fi
 
     % finish drawing all timers
+    % this also moves Tsend to end of timer if needed
     \pktxd@finishtimers
 
     % bottom of vert lines is the minimum of A and B (negative values)
     \edef\pos{\pAs}
+    \pgfmathsetlengthmacro\atmax{\pgfkeysvalueof{/pktxd/entities/A/Tmax}-\pktxd@spaceother}
+    \pgfmathsetlengthmacro\btmax{\pgfkeysvalueof{/pktxd/entities/B/Tmax}-\pktxd@spaceother}
     \ifdim \pos>\pBs \def\pos{\pBs}\fi
+    \ifdim \pos>\atmax \def\pos{\atmax}\fi
+    \ifdim \pos>\btmax \def\pos{\btmax}\fi
+
     \draw[thin](\pktxd@pos{A},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/A}}-- (\pktxd@pos{A},\pos);
     \draw[thin](\pktxd@pos{B},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/B}}-- (\pktxd@pos{B},\pos);
 
