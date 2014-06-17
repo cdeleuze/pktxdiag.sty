@@ -12,7 +12,7 @@
 %\pktxd@debugtrue
 
 \newcommand{\pktxd@debug}[1]{
-  \ifpktxd@debug\typeout{#1}\fi}
+  \ifpktxd@debug\typeout{pktxd@debug: #1}\fi}
 
 \ifpktxd@debug\colorlet{graphicbackground}{orange}
 \else\colorlet{graphicbackground}{white}\fi
@@ -66,12 +66,12 @@
   /pktxd/late/.default=4cm,
   /pktxd/late/.code=\pktxd@latetrue\setlength{\pktxd@latev}{#1},
   /pktxd/timed/.value required,
-  /pktxd/timed/.code 2 args={\pktxd@timedtrue\edef\pktxd@timedid{1}\edef\pktxd@timedlen{#1}\edef\pktxd@timedlabel{#2}},
+  /pktxd/timed/.code 2 args=\pktxd@addtimed{1}{#1}{#2},
   /pktxd/timed2/.value required,
-  /pktxd/timed2/.code 2 args={\pktxd@timedtrue\edef\pktxd@timedid{2}\edef\pktxd@timedlen{#1}\edef\pktxd@timedlabel{#2}},
+  /pktxd/timed2/.code 2 args=\pktxd@addtimed{2}{#1}{#2},
   % 
-  /pktxd/cancel/.code={\pktxd@canceltrue\edef\pktxd@cancelid{1}},
-  /pktxd/cancel2/.code={\pktxd@canceltrue\edef\pktxd@cancelid{2}},
+  /pktxd/cancel/.code=\pktxd@addcancel{1},
+  /pktxd/cancel2/.code=\pktxd@addcancel{2},
   /pktxd/delayed/.value required,
   /pktxd/delayed/.code 2 args={\pktxd@delayedtrue\edef\pktxd@delayedid{1}\edef\pktxd@delayedlen{#1}\edef\pktxd@delayedlabel{#2}},
   /pktxd/delayed2/.value required,
@@ -85,12 +85,27 @@
 \newif\ifpktxd@bad\pktxd@badfalse
 \newif\ifpktxd@lost\pktxd@lostfalse
 \newif\ifpktxd@late\pktxd@latefalse
-\newif\ifpktxd@timed\pktxd@timedfalse
-\newif\ifpktxd@cancel\pktxd@cancelfalse
 \newif\ifpktxd@delayed\pktxd@delayedfalse
 \newif\ifpktxd@stop\pktxd@stopfalse
 \newif\ifpktxd@sync\pktxd@synctrue
 
+%% the list of timers started by the current frame
+%% it has a dumb last element to avoid the loop break on a final comma
+%% @processtimed is called in @frame
+\def\pktxd@timeds{0/0/0}
+\newcommand{\pktxd@addtimed}[3]{
+  \pktxd@debug{addtimed #1,#2,#3}
+  \edef\pktxd@timeds{#1/#2/{#3},\pktxd@timeds}}
+
+\def\pktxd@processtimed #1/#2/#3:#4{ % id/len/label:entity
+  \if 0#1\else
+  \pktxd@debug{timed: id #1 ~ len #2 ~ label #3}
+  \pgfmathsetlengthmacro\temp{\Tsend+\y*\pktxd@trans}
+  \pktxd@settimer{#4}{\align}{#1}{\temp}{#2}{#3}\fi}
+
+%% same idea for cancelled timers
+\def\pktxd@cancels{0}
+\newcommand{\pktxd@addcancel}[1]{\edef\pktxd@cancels{#1,\pktxd@cancels}}
 
 \pgfkeys{
   /pktxd/cross for lost/.is if=pktxd@crosslost,
@@ -486,12 +501,9 @@
     \pktxd@stopfalse
   \fi
 
-  \ifpktxd@timed
-    \pktxd@debug{timed: len \pktxd@timedlen ~ label \pktxd@timedlabel ~ id \pktxd@timedid}
-    \pgfmathsetlengthmacro\temp{\Tsend+\y*\pktxd@trans}
-    \pktxd@settimer{#2}{\align}{\pktxd@timedid}{\temp}{\pktxd@timedlen}{\pktxd@timedlabel}
-    \pktxd@timedfalse
-  \fi
+  % process timed/timed2 args
+  \@for\timed:=\pktxd@timeds\do{\expandafter\pktxd@processtimed\timed:#2}
+  \def\pktxd@timeds{0/0/0}
 
   % set styles
   \pgfkeysifdefined{/pktxd/flows/\pktxd@id/style}{
@@ -540,11 +552,14 @@
     \pgfkeyslet{/pktxd/entities/#3/Tsend}{\Tsndr}
   \fi
 
-  \ifpktxd@cancel
-    \pktxd@debug{cancel}
-    \pktxd@canceltimer{#3}{\if l\align r\else l\fi}{\pktxd@cancelid}{\Tcancel}
-    \pktxd@cancelfalse
-  \fi
+  % process cancel/cancel2 args
+  \@for\id:=\pktxd@cancels\do{
+    \if 0\id\else
+    \pktxd@debug{cancel \id}
+    \pktxd@canceltimer{#3}{\if l\align r\else l\fi}{\id}{\Tcancel}
+    \fi}
+  \def\pktxd@cancels{0}
+
   \fi %pktxd@ignore
 }
 
@@ -590,7 +605,7 @@
   %% - it's a left timer and @timerleftbelow is set (placed below)
   %% - it's a left timer and @timerleftbottomup is set (placed above +
   %% rotate).  We use /pktxd/reverse in this case cause we don't know
-  %% how to pass two keys in a single macro...
+  %% how to pass two keys in a single macro... -> expandafter?
   
   \if#2r\def\above{above}\else
   \ifpktxd@timerleftbelow\def\above{below}\else
