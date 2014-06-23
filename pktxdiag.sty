@@ -171,11 +171,13 @@
 \pgfkeys{
   /pktxd/space same/.code=\setlength{\pktxd@spacesame}{#1},
   /pktxd/space other/.code=\setlength{\pktxd@spaceother}{#1},
-  /pktxd/width/.code=\def\pktxd@width{#1}}
+  /pktxd/width/.code=\def\pktxd@width{#1},
+  /pktxd/reversed/.is if=pktxd@reversed}
 
 \newlength{\pktxd@spacesame}\setlength{\pktxd@spacesame}{1cm}
 \newlength{\pktxd@spaceother}\setlength{\pktxd@spaceother}{5mm}
 \def\pktxd@width{2.75cm}
+\newif\ifpktxd@reversed
 
 \pgfkeys{
   /pktxd/A/.initial={},
@@ -750,10 +752,10 @@
 \newcommand{\pktxd@finishtimers}{
 % can't use that because of \foreach local scope for body
 %  \pktxd@alltimers{\pktxd@flushtimer}
-  \pktxd@flushtimer{A}{l}{1}
-  \pktxd@flushtimer{A}{l}{2}
-  \pktxd@flushtimer{B}{r}{1}
-  \pktxd@flushtimer{B}{r}{2}
+  \pktxd@flushtimer{\pktxd@A}{l}{1}
+  \pktxd@flushtimer{\pktxd@A}{l}{2}
+  \pktxd@flushtimer{\pktxd@B}{r}{1}
+  \pktxd@flushtimer{\pktxd@B}{r}{2}
 }
 
 \newcommand{\pktxd@drawlateronetimer}[3]{
@@ -894,6 +896,9 @@
 \def\pAr{\pktxd@Trecv{A}}
 \def\pBr{\pktxd@Trecv{B}}
 
+\def\pktxd@A{\ifpktxd@reversed B\else A\fi}
+\def\pktxd@B{\ifpktxd@reversed A\else B\fi}
+
 %%%% user environments
 
 \newenvironment{pktxdiag}[1][]{
@@ -905,8 +910,8 @@
   \def\pktxd@arrow{\pktxd@arrowv}
   \def\y{-1}
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
-  \pktxd@setpos{A}{-\pktxd@width/2}
-  \pktxd@setpos{B}{\pktxd@width/2}
+  \pktxd@setpos{\pktxd@A}{-\pktxd@width/2}
+  \pktxd@setpos{\pktxd@B}{\pktxd@width/2}
   }
   {
     % if fullduplex, set \pXs (used for vert lines)
@@ -927,8 +932,8 @@
     \ifdim \pos>\atmax \def\pos{\atmax}\fi
     \ifdim \pos>\btmax \def\pos{\btmax}\fi
 
-    \draw[thin](\pktxd@pos{A},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/A}}-- (\pktxd@pos{A},\pos);
-    \draw[thin](\pktxd@pos{B},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/B}}-- (\pktxd@pos{B},\pos);
+    \draw[thin](\pktxd@pos{A},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/\pktxd@A}}-- (\pktxd@pos{A},\pos);
+    \draw[thin](\pktxd@pos{B},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/\pktxd@B}}-- (\pktxd@pos{B},\pos);
 
     % process later(s)
     \pgfkeys{/pktxd/laters/.get=\laters}
@@ -951,12 +956,12 @@
   \def\pktxd@arrow{\pktxd@arrowh}
   \def\y{1}
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
-  \pktxd@setpos{A}{-\pktxd@width/2}
-  \pktxd@setpos{B}{\pktxd@width/2}
+  \pktxd@setpos{\pktxd@A}{-\pktxd@width/2}
+  \pktxd@setpos{\pktxd@B}{\pktxd@width/2}
   }
   {
     % finish drawing all timers
     \pktxd@finishtimers
-    \draw (-\pktxd@spacesame/2,-\pktxd@pos{A}) node [left]{\pgfkeysvalueof{/pktxd/A}};
-    \draw (-\pktxd@spacesame/2,-\pktxd@pos{B}) node [left]{\pgfkeysvalueof{/pktxd/B}};
+    \draw (-\pktxd@spacesame/2,-\pktxd@pos{A}) node [left]{\pgfkeysvalueof{/pktxd/\pktxd@A}};
+    \draw (-\pktxd@spacesame/2,-\pktxd@pos{B}) node [left]{\pgfkeysvalueof{/pktxd/\pktxd@B}};
   \end{tikzpicture}}
