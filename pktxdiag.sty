@@ -1,8 +1,8 @@
 
-\RequirePackage{xstring}
+\RequirePackage{xstring} % \IfBeginWith in @settrans
 \RequirePackage{tikz}
 \RequirePackage{pgfkeys}
-\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{decorations.pathmorphing} % for drawing zigzag
 
 
 \pgfkeys{/pktxd/.search also={/tikz}}
@@ -16,6 +16,10 @@
 
 \ifpktxd@debug\colorlet{graphicbackground}{orange}
 \else\colorlet{graphicbackground}{white}\fi
+
+% multiple entities mode?
+% false globaly, set to true in env scope by 'entities' key
+\newif\ifpktxd@mmode
 
 \newif\ifpktxd@h  % is current env horizontal?
 
@@ -169,6 +173,7 @@
 %% environment keys
 
 \pgfkeys{
+  /pktxd/entities/.code=\pktxd@initmentities{#1},
   /pktxd/space same/.code=\setlength{\pktxd@spacesame}{#1},
   /pktxd/space other/.code=\setlength{\pktxd@spaceother}{#1},
   /pktxd/width/.code=\def\pktxd@width{#1},
@@ -180,9 +185,11 @@
 \newif\ifpktxd@reversed
 
 \pgfkeys{
-  /pktxd/A/.initial={},
+  % in two-entities mode, these are valid options for env
+  % (we cannot create them *inside* the env...)
+  /pktxd/A/.code=\pgfkeyssetvalue{/pktxd/entities/A}{#1},
   /pktxd/A/.default=A,
-  /pktxd/B/.initial={},
+  /pktxd/B/.code=\pgfkeyssetvalue{/pktxd/entities/B}{#1},
   /pktxd/B/.default=B,
   %
   /pktxd/timerleftbottomup/.is if=pktxd@timerleftbottomup,
@@ -193,7 +200,7 @@
 
 
 % by default frames whose label starts with ACK are short
-% key no shorts remove this rule
+% key 'no shorts' removes this rule
 % key hdlc sets names for HDLC
 % key shorts=list sets the names of short frames
 
@@ -279,6 +286,7 @@
   \pgfkeys{#1}\endgroup}
 
 \newcommand{\pktxd@createentity}[1]{
+  \xdef\pktxd@entities{#1,\pktxd@entities}
   \pgfglobalkeys{/pktxd/entities/#1/pos/.initial=0cm}   % space position
   \pgfglobalkeys{/pktxd/entities/#1/Tsend/.initial=0cm} % send time
   \pgfglobalkeys{/pktxd/entities/#1/Trecv/.initial=0cm} % recv time
@@ -396,7 +404,7 @@
     % iflate, use control points (ignores lost)
     \ifpktxd@late
        \draw (#2,#4) 
-       .. controls (0,#4-\pktxd@prop/2) and (0,#4-\pktxd@latev)
+       .. controls (#2/2+#3/2,#4-\pktxd@prop/2) and (#2/2+#3/2,#4-\pktxd@latev)
        .. (#3, #4-\pktxd@latev-\pktxd@prop)
                    node[\labelstyle,\thisls,pos=0.1]{\pktxd@nodelabel{#5}};
 
@@ -466,6 +474,7 @@
   \edef\recvpos{\pgfkeysvalueof{/pktxd/entities/#3/pos}}
   \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
 
+  % which side are timers and send notes on?
   \ifdim\sendpos<\recvpos\def\align{l}\else\def\align{r}\fi
 
   \setlength{\pktxd@savedtrans}{\pktxd@trans}
@@ -750,13 +759,15 @@
   }
 
 \newcommand{\pktxd@finishtimers}{
-% can't use that because of \foreach local scope for body
-%  \pktxd@alltimers{\pktxd@flushtimer}
-  \pktxd@flushtimer{\pktxd@A}{l}{1}
-  \pktxd@flushtimer{\pktxd@A}{l}{2}
-  \pktxd@flushtimer{\pktxd@B}{r}{1}
-  \pktxd@flushtimer{\pktxd@B}{r}{2}
-}
+  \@for\e:=\pktxd@entities\do{
+    \if\e\relax\else
+    \pktxd@flushtimer{\e}{l}{1}
+    \pktxd@flushtimer{\e}{l}{2}
+    \pktxd@flushtimer{\e}{r}{1}
+    \pktxd@flushtimer{\e}{r}{2}
+    \fi
+    }
+  }
 
 \newcommand{\pktxd@drawlateronetimer}[3]{
   \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
@@ -885,19 +896,57 @@
 \newcommand{\BAstop}[5][]{\BA[#1,stop={#2}{#3}{#4}]{#5}}
 
 
-
-%%%% our two entities
-\pktxd@createentity{A}
-\pktxd@createentity{B}
-
 %% shortcuts
 \def\pAs{\pktxd@Tsend{A}}
 \def\pBs{\pktxd@Tsend{B}}
 \def\pAr{\pktxd@Trecv{A}}
 \def\pBr{\pktxd@Trecv{B}}
 
-\def\pktxd@A{\ifpktxd@reversed B\else A\fi}
-\def\pktxd@B{\ifpktxd@reversed A\else B\fi}
+
+%%%% intialize entities
+
+% in two entities mode
+\def\pktxd@initentities{
+  \def\pktxd@entities{\relax}
+  \pktxd@createentity{A}
+  \pktxd@createentity{B}
+  \def\pktxd@A{\ifpktxd@reversed B\else A\fi}
+  \def\pktxd@B{\ifpktxd@reversed A\else B\fi}
+  \pktxd@setpos{\pktxd@A}{-\pktxd@width/2}
+  \pktxd@setpos{\pktxd@B}{\pktxd@width/2}
+  \pktxd@debugentities{two mode}
+}
+
+% in multiple entities mode
+\newlength{\currentpos}
+
+\def\pktxd@initmentities#1{
+  \gdef\pktxd@entities{\relax}
+  \setlength{\currentpos}{0cm}
+  \foreach \e/\n/\w in {#1} {
+    \ifx\n\w\def\w{\pktxd@width}\fi
+    \addtolength{\currentpos}{\w}
+    \pktxd@debug{entity \e ~ name \n ~ width \w ~ position \the\currentpos}
+    \pktxd@createentity{\e}
+    \pgfglobalkeys{/pktxd/entities/\e/.initial/.expanded=\n}
+    \pgfglobalkeys{/pktxd/entities/\e/pos/.initial/.expanded=\the\currentpos} 
+    % see http://tex.stackexchange.com/questions/33125/tikz-foreach-and-sum
+    % for some reason, we can't \global the \addtolength above
+    \global\currentpos=\currentpos
+  }
+  \pktxd@debugentities{multiple mode}
+  \pktxd@mmodetrue
+}
+    
+\def\pktxd@debugentities#1{
+  \pktxd@debug{entities: #1}
+  \foreach \e in \pktxd@entities {
+    \if\e\relax\else
+    \edef\name{\pgfkeysvalueof{/pktxd/entities/\e}}
+    \edef\pos{\pgfkeysvalueof{/pktxd/entities/\e/pos}}
+    \pktxd@debug{entity: \e/\name/\pos}
+    \fi
+  }}
 
 %%%% user environments
 
@@ -910,37 +959,52 @@
   \def\pktxd@arrow{\pktxd@arrowv}
   \def\y{-1}
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
-  \pktxd@setpos{\pktxd@A}{-\pktxd@width/2}
-  \pktxd@setpos{\pktxd@B}{\pktxd@width/2}
+  \ifpktxd@mmode\else\pktxd@initentities\fi
   }
   {
-    % if fullduplex, set \pXs (used for vert lines)
-    \ifpktxd@sync\else
-    \pgfmathsetlengthmacro\pAs{\pAr-\pktxd@spaceother}
-    \pgfmathsetlengthmacro\pBs{\pBr-\pktxd@spaceother}
-    \fi
-
     % finish drawing all timers
     % this also moves Tsend to end of timer if needed
     \pktxd@finishtimers
 
-    % bottom of vert lines is the minimum of A and B (negative values)
-    \edef\pos{\pAs}
-    \pgfmathsetlengthmacro\atmax{\pgfkeysvalueof{/pktxd/entities/A/Tmax}-\pktxd@spaceother}
-    \pgfmathsetlengthmacro\btmax{\pgfkeysvalueof{/pktxd/entities/B/Tmax}-\pktxd@spaceother}
-    \ifdim \pos>\pBs \def\pos{\pBs}\fi
-    \ifdim \pos>\atmax \def\pos{\atmax}\fi
-    \ifdim \pos>\btmax \def\pos{\btmax}\fi
+    % compute the bottom position of vertical lines:
+    % it's the minimum of all entities (negative values)
+    \def\pos{0pt}
+    \@for\e:=\pktxd@entities\do{
+      \if\e\relax\else
+      % in full-duplex we consider the Tsend, else Trecv-@spaceother
+      \ifpktxd@sync\edef\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Tsend}}\else
+      \pgfmathsetlengthmacro\tsnd{
+        \pgfkeysvalueof{/pktxd/entities/\e/Trecv}-\pktxd@spaceother}\fi
+      % Tmax may still be below (late frames)
+      \pgfmathsetlengthmacro\tmax{
+        \pgfkeysvalueof{/pktxd/entities/\e/Tmax}-\pktxd@spaceother}
+      \pktxd@debug{e=\e ~ pos=\pos ~ tsnd=\tsnd ~ tmax=\tmax}
+      \ifdim \pos>\tsnd \edef\pos{\tsnd}\fi
+      \ifdim \pos>\tmax \edef\pos{\tmax}\fi
+      \fi
+    }
+    \pktxd@debug{final pos=\pos}
 
-    \draw[thin](\pktxd@pos{A},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/\pktxd@A}}-- (\pktxd@pos{A},\pos);
-    \draw[thin](\pktxd@pos{B},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/\pktxd@B}}-- (\pktxd@pos{B},\pos);
+    % draw vertical lines and labels
+    \foreach \e in \pktxd@entities {
+      \if\e\relax\else
+    \draw[thin](\pktxd@pos{\e},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/entities/\e}}-- (\pktxd@pos{\e},\pos);
+    \fi
+    }
 
-    % process later(s)
+    % draw later(s)
     \pgfkeys{/pktxd/laters/.get=\laters}
-    %\pktxd@debug{laters \laters}
     \foreach \t/\l in \laters {
       %\pktxd@debug{time \t~ len \l}
       \ifdim\t=0cm\else\pktxd@drawlater{\t}{\l}\fi
+    }
+
+    % remove entities names
+    % they are set through pgfglobalkeys and would persist accross envs
+    \foreach \e in \pktxd@entities {
+      \if\e\relax\else
+      \pgfglobalkeys{/pktxd/entities/\e/.initial=\relax}
+    \fi
     }
   \end{tikzpicture}
 }
@@ -948,6 +1012,7 @@
 \newenvironment{hpktxdiag}[1][]{
   \newcommand{\fullduplex}{\pktxd@syncfalse}
   \newcommand{\halfduplex}{\pktxd@synctrue}
+%  \def\frame{\pktxd@frame}
   \pktxd@htrue
   \setlength{\pktxd@spacesame}{0cm}
   \setlength{\pktxd@spaceother}{0cm}
@@ -956,12 +1021,24 @@
   \def\pktxd@arrow{\pktxd@arrowh}
   \def\y{1}
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
-  \pktxd@setpos{\pktxd@A}{-\pktxd@width/2}
-  \pktxd@setpos{\pktxd@B}{\pktxd@width/2}
+  \ifpktxd@mmode
+  \PackageError{pktxdiag}{Multi-entities mode not supported in h
+    diagrams}{Multi-entities mode was triggered by use of 'entities'
+    key.  This occured in a hpktxdiag environment, however horizontal
+    diagrams do not support multi-entities mode.}
+  \fi
+  \pktxd@initentities
   }
   {
     % finish drawing all timers
     \pktxd@finishtimers
-    \draw (-\pktxd@spacesame/2,-\pktxd@pos{A}) node [left]{\pgfkeysvalueof{/pktxd/\pktxd@A}};
-    \draw (-\pktxd@spacesame/2,-\pktxd@pos{B}) node [left]{\pgfkeysvalueof{/pktxd/\pktxd@B}};
-  \end{tikzpicture}}
+
+    % draw labels (we could do it at env opening)
+    \foreach \e in \pktxd@entities {
+      \if\e\relax\else
+      \draw(-\pktxd@spacesame/2,-\pktxd@pos{\e}) node[left]{\pgfkeysvalueof{/pktxd/entities/\e}};
+    \fi
+  }
+  % no need to remove names : /pktxd/A|B/.code sets them in env scope
+  % (contrary to @initmentities)
+\end{tikzpicture}}

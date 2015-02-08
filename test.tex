@@ -423,6 +423,34 @@
   \BA[snoteoffset=6mm,rnoteoffset=1mm,snote=less close,rnote=closer]{DATA}
 \end{pktxdiag}
 
+\subsubsection*{The \texttt{reversed} key}
+
+\def\example{
+  \fullduplex
+  \AB{toto}
+  \ABtimed{toto2}{3cm}{toto}
+  \Await
+  \AB{toto3}
+  \BwaitA
+  \BA{titi}}
+
+\begin{pktxdiag}[A,B]
+\example
+\end{pktxdiag}
+%
+\begin{pktxdiag}[A,B,reversed]
+\example
+\end{pktxdiag}
+
+\begin{hpktxdiag}[A,B]
+  \example
+\end{hpktxdiag}
+
+\begin{hpktxdiag}[A,B,reversed]
+  \example
+\end{hpktxdiag}
+
+
 \subsubsection*{States and actions}
 
 \begin{pktxdiag}[prop=7mm,A=client,B=serveur,action time
@@ -606,5 +634,50 @@
 \begin{hpktxdiag}
 \testframelabelstyle
 \end{hpktxdiag}
+
+\subsubsection*{Multiple entities}
+
+% possible mistake: A/name/  -> no trailing slash if width not given
+
+\begin{pktxdiag}[width=4cm,space other=2mm,space same=2mm,entities={A/bsd-pc.cisco.com,B/cisco.com proxy,C/princeton.edu proxy,D/llp-ph.cs.princeton.edu}]
+
+\derivestyle{big}{default}{latex-latex,line width=3mm}
+\derivestyle{def}{labeldefault}{sloped=false}
+\setflowstyle{big}{big}
+\setflowlabelstyle{main}{def}
+\frame{A}{B}{invite}
+\frame{B}{C}{invite}
+\frame{C}{D}{invite}
+\frame{B}{A}{100 trying}
+\frame{C}{B}{100 trying}
+\frame{D}{C}{100 trying}
+\wait{D}
+\frame{D}{C}{180 ringing}
+\frame{C}{B}{180 ringing}
+\frame{B}{A}{180 ringing}
+\wait{D}
+\frame{D}{C}{200 OK}
+\frame{C}{B}{200 OK}
+\frame{B}{A}{200 OK}
+\frame{A}{D}{ACK}
+\wait{D}
+\frame[id=big,prop=0cm]{D}{A}{Media}
+\wait{D}
+\frame{D}{A}{BYE}
+\frame{A}{D}{200 OK}
+\end{pktxdiag}
+
+\begin{pktxdiag}[entities={A/Network,B/NCP,C/Auth,D/LCP,E/Physical},
+  prop=0mm, show label2]
+\AB{Open}
+\frame{B}{C}{Open}
+\frame{C}{D}{Open}
+\frame[rnote=Dial]{D}{E}{Open}
+\wait{E}
+\frame[label2=Up]{E}{D}{Negotiate}
+\frame[label2=Up]{D}{C}{Negotiate}
+\frame[label2=Up]{C}{B}{Negotiate}
+\BA[label2=Up,rnote=Transmit\\begins]{Negotiate}
+\end{pktxdiag}
 
 \end{document}
