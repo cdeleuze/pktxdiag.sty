@@ -113,17 +113,17 @@
 
 \pgfkeys{
   /pktxd/cross for lost/.is if=pktxd@crosslost,
-  /pktxd/snote/.code=\gdef\pktxd@snote{#1},
-  /pktxd/rnote/.code=\gdef\pktxd@rnote{#1},
+  /pktxd/rnote/.code={\def\pktxd@rnote{#1}\pktxd@rnotetrue},
+  /pktxd/snote/.code={\def\pktxd@snote{#1}\pktxd@snotetrue},
   /pktxd/snoteoffset/.code=\def\pktxd@snoteoffset{#1},
   /pktxd/snoteoffset/.default=0,
   /pktxd/rnoteoffset/.code=\def\pktxd@rnoteoffset{#1},
   /pktxd/rnoteoffset/.default=0,
   /pktxd/noteoffset/.style={snoteoffset=#1,rnoteoffset=#1}}
 
-\newif\ifpktxd@crosslost\pktxd@crosslostfalse
-\def\pktxd@snote{\relax}
-\def\pktxd@rnote{\relax}
+\newif\ifpktxd@crosslost
+\newif\ifpktxd@snote
+\newif\ifpktxd@rnote
 \def\pktxd@snoteoffset{3mm}
 \def\pktxd@rnoteoffset{3mm}
 
@@ -523,17 +523,19 @@
   \def\opa{\pktxd@getconf{\pktxd@id}{opacity}}
   
   % draw send note
-  \pktxd@note[\thestyle,opacity=\opa]{\Tsend}{\sendpos}{\align}{\pktxd@snoteoffset}{\pktxd@snote}
+  \ifpktxd@snote
+  \pktxd@note[\thestyle,opacity=\opa]{\Tsend}{\sendpos}{\align}{s}{\pktxd@snoteoffset}{\pktxd@snote}
+  \fi
   % draw frame
   \pktxd@arrow[#1,\thestyle,opacity=\opa]{\sendpos}{\recvpos}{\Tsend}{#4}
   % update times
   \pgfmathsetlengthmacro\Trecv{\Tsend+\y*\pktxd@prop+\y*\pktxd@trans}
   \pgfmathsetlengthmacro\Tsend{\Tsend+\y*\pktxd@trans+\y*\pktxd@spacesame}
   % draw receive note
+  \ifpktxd@rnote
   \pktxd@note[\thestyle,opacity=\opa]{\Trecv-\pktxd@latev}{\recvpos}
-             {\if\align rl\else r\fi}{\pktxd@rnoteoffset}{\pktxd@rnote}
-  \gdef\pktxd@snote{\relax}
-  \gdef\pktxd@rnote{\relax}
+             {\if\align rl\else r\fi}{r}{\pktxd@rnoteoffset}{\pktxd@rnote}
+  \fi
 
   \edef\Tcancel{\Trecv}
   \ifpktxd@late
@@ -548,6 +550,8 @@
   \pgfkeyssetvalue{/pktxd/id}{main}
   \setlength{\pktxd@trans}{\pktxd@savedtrans}
   \setlength{\pktxd@prop}{\pktxd@savedprop}
+  \pktxd@snotefalse
+  \pktxd@rnotefalse
 
   % commit time updates
   \pgfkeyslet{/pktxd/entities/#2/Tsend}{\Tsend}
@@ -687,13 +691,24 @@
   {\pgfkeysvalueof{/pktxd/flows/#1/#2}}
   {\pgfkeysvalueof{/pktxd/default/#2}}}
 
-\newcommand{\pktxd@note}[6][]{ % [keys], timepos, hpos, l/r, offset, note
-  \ifpktxd@h\else\if#6\relax\else
+\newcommand{\pktxd@note}[7][]{ % [keys], timepos, hpos, l/r, s/r, offset, note
+  \pktxd@debug{note: #2 #3 #4 #5 #6 } % #7 fails if multi-line
+  \ifpktxd@h
+  % is the note going up or down?
+  \edef\orient{\if#5s\if#4 ru\else d\fi\else\if#4 ld\else u\fi\fi}
+  % a sent if offset to the right, a recv to the left
+  \edef\dpos{\if#5s 2mm\else-2mm\fi}
+  \if\orient d   % down
+    \node[rotate=-90,#1] at (#2+\dpos, -#3\if#5r-\else+\fi 10mm) { #7 };
+  \else          % up
+    \node[rotate=90,#1] at (#2+\dpos, -#3\if#5r+\else-\fi 10mm) { #7 };
+  \fi
+  \else % vertical diagram
   \if#4l
-    \node[align=left,left,#1] at (#3-#5, #2) { #6 };
+    \node[align=left,left,#1] at (#3-#6, #2) { #7 };
   \else
-    \node[align=right,right,#1] at (#3+#5, #2) { #6 };
-  \fi\fi\fi}
+    \node[align=right,right,#1] at (#3+#6, #2) { #7 };
+  \fi\fi}
 
 
 %%%%%% side decorations (eg for TCP)
