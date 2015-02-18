@@ -1,3 +1,15 @@
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesPackage{pktxdiag}[2015/02/09 Tikz add-on for packet exchange diagrams]
+
+\DeclareOption{debug}{\pktxd@debugtrue}
+\newif\ifpktxd@debug
+
+% use PackageWarning rather than PackageError when canceling expired
+% timers.  Also 'warn only' env option.
+\DeclareOption{warnonly}{\pktxd@warnonlytrue}
+\newif\ifpktxd@warnonly
+
+\ProcessOptions
 
 \RequirePackage{xstring} % \IfBeginWith in @settrans
 \RequirePackage{tikz}
@@ -7,9 +19,11 @@
 
 \pgfkeys{/pktxd/.search also={/tikz}}
 
+\newcommand{\pktxd@error}[2]{
+  \ifpktxd@warnonly\PackageWarning{pktxdiag}{#1}
+  \else\PackageError{pktxdiag}{#1}{#2}
+  \fi}
 
-\newif\ifpktxd@debug
-%\pktxd@debugtrue
 
 \newcommand{\pktxd@debug}[1]{
   \ifpktxd@debug\typeout{pktxd@debug: #1}\fi}
@@ -56,6 +70,8 @@
 %% keys controlling frame characteristics
 
 \pgfkeys{
+  /pktxd/debug/.is if=pktxd@debug,
+  /pktxd/warn only/.is if=pktxd@warnonly,
   /pktxd/prop/.default=1cm,
   /pktxd/prop/.code=\setlength{\pktxd@prop}{#1},
   % 
@@ -656,13 +672,18 @@
 
   \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
   \ifpktxd@h
-    \ifdim#4>\timerend\typeout{Expired timer!}
-    \node at (#4,\hpos)[draw,red,fill=yellow]{Expired timer!};\else
+    \ifdim#4>\timerend
+    \pktxd@error{Your're trying to cancel an expired timer}
+      {A prominent yellow box has been drawn to show where the problem occured.}
+    \node at (#4,\hpos)[draw,red,fill=yellow]{Cancel expired timer!};\else
     \draw[thin,<-](\timerstart,\hpos-\timerhoffset) --(#4,\hpos-\timerhoffset);
     \fi
   \else
-    \ifdim#4<\timerend\typeout{Expired timer!}
-    \node at (\hpos,#4)[draw,red,fill=yellow]{Expired timer!};\else
+
+    \ifdim#4<\timerend
+    \pktxd@error{Your're trying to cancel an expired timer}
+      {A prominent yellow box has been drawn to show where the problem occured.}
+    \node at (\hpos,#4)[draw,red,fill=yellow]{Cancel expired timer!};\else
     \draw[thin,<-](\hpos,\timerstart-\pktxd@timertoffset) --(\hpos,#4);
     \fi
   \fi
