@@ -121,7 +121,7 @@
   \if 0#1\else
   \pktxd@debug{timed: id #1 ~ len #2 ~ label #3}
   \pgfmathsetlengthmacro\temp{\Tsend+\y*\pktxd@trans}
-  \pktxd@settimer{#4}{\align}{#1}{\temp}{#2}{#3}\fi}
+  \pktxd@starttimer{#4}{\align}{#1}{\temp}{#2}{#3}\fi}
 
 %% same idea for cancelled timers
 \def\pktxd@cancels{0}
@@ -316,6 +316,7 @@
 \newcommand{\pktxd@createtimer}[3]{ % entity l/r id
   \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/active/.initial=0}
   \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/cancel/.initial=0}
+  \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/label/.initial=0}
   \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/start/.initial=0}
   \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/end/.initial=0}}
 
@@ -323,11 +324,6 @@
 \pgfkeys{/pktxd/default/timers/l/2/offset/.initial=9mm}
 \pgfkeys{/pktxd/default/timers/r/1/offset/.initial=4mm}
 \pgfkeys{/pktxd/default/timers/r/2/offset/.initial=9mm}
-%% horizontal mode requires additional offset for timers
-\pgfkeys{/pktxd/default/timers/l/1/haddoffset/.initial=-3mm}
-\pgfkeys{/pktxd/default/timers/l/2/haddoffset/.initial=-3mm}
-\pgfkeys{/pktxd/default/timers/r/1/haddoffset/.initial=7mm}
-\pgfkeys{/pktxd/default/timers/r/2/haddoffset/.initial=7mm}
 
 \newcommand{\pktxd@pos}[1]{\pgfkeysvalueof{/pktxd/entities/#1/pos}}
 \newcommand{\pktxd@Tsend}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Tsend}}
@@ -509,7 +505,7 @@
     \pktxd@debug{delayed: len \pktxd@delayedlen ~ label \pktxd@delayedlabel ~ id \pktxd@delayedid}
     \edef\Trecv{\pgfkeysvalueof{/pktxd/entities/#2/Trecv}}
 
-    \pktxd@settimer{#2}{\align}{\pktxd@delayedid}{\Trecv}{\pktxd@delayedlen}{\pktxd@delayedlabel}
+    \pktxd@starttimer{#2}{\align}{\pktxd@delayedid}{\Trecv}{\pktxd@delayedlen}{\pktxd@delayedlabel}
     \pktxd@setTsend{#2}{\Trecv}%%%
     \pktxd@addtosend{#2}{\pktxd@delayedlen}
     \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
@@ -520,7 +516,7 @@
   \ifpktxd@stop
     \pktxd@debug{stop: len \pktxd@stoplen ~ label \pktxd@stoplabel ~delay \pktxd@stopdelay ~ id \pktxd@stopid}
     \edef\Trecv{\pgfkeysvalueof{/pktxd/entities/#2/Trecv}}
-    \pktxd@settimer{#2}{\align}{\pktxd@stopid}{\Trecv}{\pktxd@stoplen}{\pktxd@stoplabel}
+    \pktxd@starttimer{#2}{\align}{\pktxd@stopid}{\Trecv}{\pktxd@stoplen}{\pktxd@stoplabel}
     \pktxd@setTsend{#2}{\pktxd@Trecv{#2}}
     \pktxd@addtosend{#2}{\pktxd@stopdelay}
     \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
@@ -597,6 +593,67 @@
 
 %%%%%% handling of timers
 
+
+% entity, start time, end time, cancel time(or x), label, pos offset, style
+% TODO: time should always be positive
+%       currently, is negative for v diagrams
+
+\newcommand{\pktxd@drawtimer}[7]{
+  % pos is entity pos + offset
+  % get side from offset sign
+
+  \pktxd@debug{drawtimer #1, #2/#3/#4 #5 #6}
+  \def\entitypos{\pktxd@pos{#1}}
+  \def\offset{#6}
+  \def\side{\ifdim#6<0cm l\else r\fi}
+  \def\pos{
+    \ifpktxd@h
+       -\entitypos-\offset
+    \else
+       \entitypos+\if\side r\offset\else\ifpktxd@timerleftbelow\offset\else\ifpktxd@timerleftbottomup\offset
+    \else\offset-3mm\fi\fi\fi
+    \fi}
+
+  %% get label orientation for v diagrams
+  %% the timer label is placed above except if:
+  %% - it's a left timer and @timerleftbelow is set (placed below)
+  %% - it's a left timer and @timerleftbottomup is set (placed above +
+  %% rotate).  We use /pktxd/reverse in this case cause we don't know
+  %% how to pass two keys in a single macro... -> expandafter?
+  \if\side r\def\above{above}\else
+  \ifpktxd@timerleftbelow\def\above{below}\else
+  \ifpktxd@timerleftbottomup\def\above{/pktxd/reverse}\else
+  \def\above{above}\fi
+  \fi\fi
+
+  % for h diagrams, need an additionnal offset
+  % TODO: should be configurable (haddoffset)
+  \edef\timerhoffset{\if\side r\if#1\ifpktxd@reversed A\else B\fi
+    7mm\else 3mm\fi\else\if#1\ifpktxd@reversed B\else A\fi-3mm\else 0mm\fi\fi}
+
+  \if x#4 % no cancel
+    \ifpktxd@h
+      \draw[thin,<->](#2,\pos-\timerhoffset)
+           -- (#3,\pos-\timerhoffset) node[midway,sloped,above]{#5};
+    \else
+      \draw[thin,<->](\pos,#2-\pktxd@timertoffset)
+           -- (\pos,#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
+    \fi
+  \else % including a cancel
+    \ifpktxd@h
+      \draw[thin,dotted,<->](#2,\pos-\timerhoffset)
+           -- (#3,\pos-\timerhoffset) node[midway,sloped,above]{#5};
+      \draw[thin](#2,\pos-\timerhoffset) -- (#4,\pos-\timerhoffset);
+    \else
+      \draw[thin,dotted,<->](\pos,#2-\pktxd@timertoffset)
+           -- (\pos,#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
+      \draw[thin](\pos,#2-\pktxd@timertoffset)
+              -- (\pos,#4);
+    \fi
+  \fi
+}
+
+
 %% so that arrows of consecutive timers are spaced a very little bit
 \newlength{\pktxd@timertoffset}\setlength{\pktxd@timertoffset}{0.2mm}
 \pgfkeys{/pktxd/timer time offset/.code=\setlength{\pktxd@timertoffset}{#1}}
@@ -620,39 +677,17 @@
   \pos+\if #2r\offset\else\ifpktxd@timerleftbelow-\offset\else\ifpktxd@timerleftbottomup-\offset
   \else-\offset-3mm\fi\fi\fi\fi}}
 
-\newcommand{\pktxd@settimer}[6]{ % entity, l/r, id, starttime, len, label
+\newcommand{\pktxd@starttimer}[6]{ % entity, l/r, id, starttime, len, label
   \pktxd@endtimerifactive{#1}{#2}{#3}
   \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/active}{t}
   \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
   \def\timeroffset{\pktxd@getconftimer{#1}{#2}{#3}{offset}}
-  \def\timerhoffset{\pktxd@getconftimer{#1}{#2}{#3}{haddoffset}}
   \pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/start}{#4}
   \pgfmathsetlengthmacro\temp{#4+\y*#5}
   \pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/end}{\temp}
-  \def\timerstart{\pktxd@gettimerstart{#1}{#2}{#3}}
-  \def\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
+  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/label}{#6}
 
-  %% the timer label is placed above except if:
-  %% - it's a left timer and @timerleftbelow is set (placed below)
-  %% - it's a left timer and @timerleftbottomup is set (placed above +
-  %% rotate).  We use /pktxd/reverse in this case cause we don't know
-  %% how to pass two keys in a single macro... -> expandafter?
-  
-  \if#2r\def\above{above}\else
-  \ifpktxd@timerleftbelow\def\above{below}\else
-  \ifpktxd@timerleftbottomup\def\above{/pktxd/reverse}\else
-  \def\above{above}\fi
-  \fi\fi
-
-  \pktxd@debugtimer{settimer}{#1}{#2}{#3}
-  \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
-  \ifpktxd@h
-      \draw[thin,dotted,<->](\timerstart,\hpos-\timerhoffset) -- (\timerend,\hpos-\timerhoffset)
-                         node[midway,sloped,above]{#6};
-  \else
-      \draw[thin,dotted,<->](\hpos,\timerstart-\pktxd@timertoffset)
-                         -- (\hpos,\timerend+\pktxd@timertoffset) node[midway,sloped,\above]{#6};
-  \fi
+  \pktxd@debugtimer{starttimer}{#1}{#2}{#3}
 }
 
 \newcommand{\pktxd@debugtimer}[4]{
@@ -662,21 +697,22 @@
 }
 
 \newcommand{\pktxd@canceltimer}[4]{ % entity, l/r, id, time
-  \pktxd@debugtimer{canceltimer}{#1}{#2}{#3}
+  \pktxd@debugtimer{canceltimer #4}{#1}{#2}{#3}
   \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/active}{0}
   \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{t}
   \def\timerstart{\pktxd@gettimerstart{#1}{#2}{#3}}
   \def\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
-  \def\timeroffset{\pktxd@getconftimer{#1}{#2}{#3}{offset}}
-  \def\timerhoffset{\pktxd@getconftimer{#1}{#2}{#3}{haddoffset}}
+  \def\timeroffset{\if#2l-\fi\pktxd@getconftimer{#1}{#2}{#3}{offset}}
 
   \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
   \ifpktxd@h
     \ifdim#4>\timerend
     \pktxd@error{Your're trying to cancel an expired timer}
       {A prominent yellow box has been drawn to show where the problem occured.}
-    \node at (#4,\hpos)[draw,red,fill=yellow]{Cancel expired timer!};\else
-    \draw[thin,<-](\timerstart,\hpos-\timerhoffset) --(#4,\hpos-\timerhoffset);
+    \node at (#4,\hpos)[draw,red,fill=yellow]{Cancel expired timer!};
+    \else
+    \pktxd@drawtimer{#1}{\timerstart}{\timerend}{#4}
+        {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}
     \fi
   \else
 
@@ -684,7 +720,8 @@
     \pktxd@error{Your're trying to cancel an expired timer}
       {A prominent yellow box has been drawn to show where the problem occured.}
     \node at (\hpos,#4)[draw,red,fill=yellow]{Cancel expired timer!};\else
-    \draw[thin,<-](\hpos,\timerstart-\pktxd@timertoffset) --(\hpos,#4);
+    \pktxd@drawtimer{#1}{\timerstart}{\timerend}{#4}
+        {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}
     \fi
   \fi
 }
@@ -695,16 +732,10 @@
   \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
   \def\timerstart{\pktxd@gettimerstart{#1}{#2}{#3}}
   \def\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
-  \def\timeroffset{\pktxd@getconftimer{#1}{#2}{#3}{offset}}
-  \def\timerhoffset{\pktxd@getconftimer{#1}{#2}{#3}{haddoffset}}
-  \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
-  \ifpktxd@h
-    \draw[thin,<->](\timerstart,\hpos-\timerhoffset)
-                -- (\timerend,\hpos-\timerhoffset);
-  \else
-    \draw[thin,<->](\hpos,\timerstart-\pktxd@timertoffset)
-                -- (\hpos,\timerend+\pktxd@timertoffset);
-  \fi
+  \def\timeroffset{\if#2l-\fi\pktxd@getconftimer{#1}{#2}{#3}{offset}}
+  
+  \pktxd@drawtimer{#1}{\timerstart}{\timerend}{x}
+    {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}
 }
 
 \newcommand{\pktxd@getconf}[2]{
@@ -862,10 +893,10 @@
 \def\timerBioffset{\pgfkeysvalueof{/pktxd/default/timers/r/2/offset}}
 
 % time, len, label
-\newcommand{\settimerA} [3]{\pktxd@settimer{A}{l}{1}{#1}{#2}{#3}}
-\newcommand{\settimerAi}[3]{\pktxd@settimer{A}{l}{2}{#1}{#2}{#3}}
-\newcommand{\settimerB} [3]{\pktxd@settimer{B}{r}{1}{#1}{#2}{#3}}
-\newcommand{\settimerBi}[3]{\pktxd@settimer{B}{r}{2}{#1}{#2}{#3}}
+\newcommand{\settimerA} [3]{\pktxd@starttimer{A}{l}{1}{#1}{#2}{#3}}
+\newcommand{\settimerAi}[3]{\pktxd@starttimer{A}{l}{2}{#1}{#2}{#3}}
+\newcommand{\settimerB} [3]{\pktxd@starttimer{B}{r}{1}{#1}{#2}{#3}}
+\newcommand{\settimerBi}[3]{\pktxd@starttimer{B}{r}{2}{#1}{#2}{#3}}
 
 \newcommand{\pktxd@endtimerA} {\pktxd@endtimer{A}{l}{1}}
 \newcommand{\pktxd@endtimerAi}{\pktxd@endtimer{A}{l}{2}}
