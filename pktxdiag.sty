@@ -120,7 +120,7 @@
 \def\pktxd@processtimed #1/#2/#3:#4{ % id/len/label:entity
   \if 0#1\else
   \pktxd@debug{timed: id #1 ~ len #2 ~ label #3}
-  \pgfmathsetlengthmacro\temp{\Tsend+\y*\pktxd@trans}
+  \pgfmathsetlengthmacro\temp{\Tsend+\pktxd@trans}
   \pktxd@starttimer{#4}{\align}{#1}{\temp}{#2}{#3}\fi}
 
 %% same idea for cancelled timers
@@ -401,7 +401,7 @@
     % ifbad, draw a zigzag
     \ifpktxd@bad
 
-       \draw (#2,#4) --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
+       \draw (#2,-#4) --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
 
                  \ifpktxd@sync\else node[near end,\labelstyle,\thisls]{\pktxd@nodelabel{#5}}\fi
     
@@ -411,22 +411,22 @@
 
                  --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3);
                    \ifpktxd@lost\ifpktxd@crosslost \draw[-]
-                   (\sign*2mm,#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
+                   (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
     \else
     % iflate, use control points (ignores lost)
     \ifpktxd@late
-       \draw (#2,#4) 
-       .. controls (#2/2+#3/2,#4-\pktxd@prop/2) and (#2/2+#3/2,#4-\pktxd@latev)
-       .. (#3, #4-\pktxd@latev-\pktxd@prop)
+       \draw (#2,-#4) 
+       .. controls (#2/2+#3/2,-#4-\pktxd@prop/2) and (#2/2+#3/2,-#4-\pktxd@latev)
+       .. (#3, -#4-\pktxd@latev-\pktxd@prop)
                    node[\labelstyle,\thisls,pos=0.1]{\pktxd@nodelabel{#5}};
 
     \else
     % not bad, not late
-       \draw (#2,#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
+       \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
                    node[\ifpktxd@sync midway\else near
                    start\fi,\labelstyle,\thisls]{\pktxd@nodelabel{#5}};
                    \ifpktxd@lost\ifpktxd@crosslost \draw[-]
-                   (\sign*2mm,#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
+                   (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
     \fi
     \fi
   \end{scope}
@@ -466,18 +466,18 @@
 
 
 \newcommand{\pktxd@addtosend}[2]{
-  \pgfmathsetlengthmacro\temp{\pktxd@Tsend{#1}+\y*#2}
+  \pgfmathsetlengthmacro\temp{\pktxd@Tsend{#1}+#2}
   \pgfkeyslet{/pktxd/entities/#1/Tsend}{\temp}}
 
 \newcommand{\pktxd@addtorecv}[2]{
-  \pgfmathsetlengthmacro\temp{\pktxd@Trecv{#1}+\y*#2}
+  \pgfmathsetlengthmacro\temp{\pktxd@Trecv{#1}+#2}
   \pgfkeyslet{/pktxd/entities/#1/Trecv}{\temp}}
 
 
 %% the main macro for drawing a frame:
 %% - handle all frame keys (prop, trans, delayed, late...)
 %% - draw frame
-%% - draw timers
+%% - setup timers
 %% - draw notes
 %% - udpate time positions
 
@@ -541,8 +541,8 @@
   % draw frame
   \pktxd@arrow[#1,\thestyle,opacity=\opa]{\sendpos}{\recvpos}{\Tsend}{#4}
   % update times
-  \pgfmathsetlengthmacro\Trecv{\Tsend+\y*\pktxd@prop+\y*\pktxd@trans}
-  \pgfmathsetlengthmacro\Tsend{\Tsend+\y*\pktxd@trans+\y*\pktxd@spacesame}
+  \pgfmathsetlengthmacro\Trecv{\Tsend+\pktxd@prop+\pktxd@trans}
+  \pgfmathsetlengthmacro\Tsend{\Tsend+\pktxd@trans+\pktxd@spacesame}
   % draw receive note
   \ifpktxd@rnote
   \pktxd@note[\thestyle,opacity=\opa]{\Trecv-\pktxd@latev}{\recvpos}
@@ -552,7 +552,7 @@
   \edef\Tcancel{\Trecv}
   \ifpktxd@late
     % no simpler way to _copy_ the length value?
-    \pgfmathsetlengthmacro\Tcancel{\Trecv-\pktxd@latev}
+    \pgfmathsetlengthmacro\Tcancel{\Trecv+\pktxd@latev}
     \pgfkeyslet{/pktxd/values/#3/\pktxd@latename}{\Tcancel}
     \pktxd@latefalse
     \setlength\pktxd@latev{0mm}
@@ -570,12 +570,12 @@
   \pgfkeyslet{/pktxd/entities/#3/Trecv}{\Trecv}
 
   % update Tmax (Tcancel set above to Trecv + pktxd@latev)
-  \ifdim\Tcancel<\pgfkeysvalueof{/pktxd/entities/#3/Tmax}
+  \ifdim\Tcancel>\pgfkeysvalueof{/pktxd/entities/#3/Tmax}
   \pgfkeyslet{/pktxd/entities/#3/Tmax}{\Tcancel}
   \fi
 
   \ifpktxd@sync
-    \pgfmathsetlengthmacro\Tsndr{\Trecv+\y*\pktxd@spaceother}
+    \pgfmathsetlengthmacro\Tsndr{\Trecv+\pktxd@spaceother}
     \pgfkeyslet{/pktxd/entities/#3/Tsend}{\Tsndr}
   \fi
 
@@ -595,8 +595,6 @@
 
 
 % entity, start time, end time, cancel time(or x), label, pos offset, style
-% TODO: time should always be positive
-%       currently, is negative for v diagrams
 
 \newcommand{\pktxd@drawtimer}[7]{
   % pos is entity pos + offset
@@ -636,8 +634,8 @@
       \draw[thin,<->](#2,\pos-\timerhoffset)
            -- (#3,\pos-\timerhoffset) node[midway,sloped,above]{#5};
     \else
-      \draw[thin,<->](\pos,#2-\pktxd@timertoffset)
-           -- (\pos,#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
+      \draw[thin,<->](\pos,-#2-\pktxd@timertoffset)
+           -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
     \fi
   \else % including a cancel
     \ifpktxd@h
@@ -645,10 +643,10 @@
            -- (#3,\pos-\timerhoffset) node[midway,sloped,above]{#5};
       \draw[thin](#2,\pos-\timerhoffset) -- (#4,\pos-\timerhoffset);
     \else
-      \draw[thin,dotted,<->](\pos,#2-\pktxd@timertoffset)
-           -- (\pos,#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
-      \draw[thin](\pos,#2-\pktxd@timertoffset)
-              -- (\pos,#4);
+      \draw[thin,dotted,<->](\pos,-#2-\pktxd@timertoffset)
+           -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
+      \draw[thin](\pos,-#2-\pktxd@timertoffset)
+              -- (\pos,-#4);
     \fi
   \fi
 }
@@ -683,7 +681,7 @@
   \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
   \def\timeroffset{\pktxd@getconftimer{#1}{#2}{#3}{offset}}
   \pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/start}{#4}
-  \pgfmathsetlengthmacro\temp{#4+\y*#5}
+  \pgfmathsetlengthmacro\temp{#4+#5}
   \pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/end}{\temp}
   \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/label}{#6}
 
@@ -716,10 +714,10 @@
     \fi
   \else
 
-    \ifdim#4<\timerend
+    \ifdim#4>\timerend
     \pktxd@error{Your're trying to cancel an expired timer}
       {A prominent yellow box has been drawn to show where the problem occured.}
-    \node at (\hpos,#4)[draw,red,fill=yellow]{Cancel expired timer!};\else
+    \node at (\hpos,-#4)[draw,red,fill=yellow]{Cancel expired timer!};\else
     \pktxd@drawtimer{#1}{\timerstart}{\timerend}{#4}
         {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}
     \fi
@@ -757,9 +755,9 @@
   \fi
   \else % vertical diagram
   \if#4l
-    \node[align=left,left,#1] at (#3-#6, #2) { #7 };
+    \node[align=left,left,#1] at (#3-#6, -#2) { #7 };
   \else
-    \node[align=right,right,#1] at (#3+#6, #2) { #7 };
+    \node[align=right,right,#1] at (#3+#6, -#2) { #7 };
   \fi\fi}
 
 
@@ -768,14 +766,14 @@
 \newcommand{\pktxd@action}[4]{ % timepos, hpos, l/r, text
   \ifpktxd@h\else
   \if#3l\def\align{left}\else\def\align{right}\fi
-  \draw[<-](#2+\if#3l-\pktxd@actionoffset\else\pktxd@actionoffset\fi,#1-\y\pktxd@actiontimeoffset)
+  \draw[<-](#2+\if#3l-\pktxd@actionoffset\else\pktxd@actionoffset\fi,-#1+\pktxd@actiontimeoffset)
            -- ++(\if#3l180\else0\fi:\pktxd@actionlength) node[\align]{#4};
   \fi}
 
 \newcommand{\pktxd@state}[4]{ % timepos, hpos, l/r, text
   \ifpktxd@h\else
   \if#3l\def\align{left}\else\def\align{right}\fi
-  \draw(#2+\if#3l-\pktxd@stateoffset\else\pktxd@stateoffset\fi,#1)
+  \draw(#2+\if#3l-\pktxd@stateoffset\else\pktxd@stateoffset\fi,-#1)
        node[draw,\align]{\textsc{#4}};
   \fi}
 
@@ -836,18 +834,20 @@
     }
   }
 
+% warning: uses \tpos (dynamic scope?)
 \newcommand{\pktxd@drawlateronetimer}[3]{
   \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
-  \draw[graphicbackground,dashed] (\hpos,\tpos) -- ++(0,\y\pktxd@laterdashedlen);}
+  \draw[graphicbackground,dashed] (\hpos,\tpos) -- ++(0,\pktxd@laterdashedlen);}
 
 % draw one later: erase part of the vertical lines
+% starttime len
 \newcommand{\pktxd@drawlater}[2]{
-  \def\tpos{#1+\y*#2/2-\y*\pktxd@laterdashedlen/2}
+  \def\tpos{-#1-#2/2-\pktxd@laterdashedlen/2}
 
   % vertical lines
   \ifpktxd@h\else
-  \draw[graphicbackground,dashed](\pktxd@pos{A},\tpos) -- ++(0,\y\pktxd@laterdashedlen);
-  \draw[graphicbackground,dashed](\pktxd@pos{B},\tpos) -- ++(0,\y\pktxd@laterdashedlen);
+  \draw[graphicbackground,dashed](\pktxd@pos{A},\tpos) -- ++(0,\pktxd@laterdashedlen);
+  \draw[graphicbackground,dashed](\pktxd@pos{B},\tpos) -- ++(0,\pktxd@laterdashedlen);
   \fi
 
   % timer lines
@@ -875,9 +875,8 @@
 \newcommand{\pktxd@waittimer}[3]{
   \edef\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
   \edef\Tsend{\pktxd@Tsend{#1}}
-  \ifpktxd@h \ifdim \Tsend<\timerend\pktxd@letTsend{#1}{\timerend}\fi
-  \else      \ifdim \Tsend>\timerend\pktxd@letTsend{#1}{\timerend}\fi
-  \fi}
+  \ifdim \Tsend<\timerend\pktxd@letTsend{#1}{\timerend}\fi
+}
 
 
 %%% specialized code for two entities diagrams
@@ -1024,7 +1023,6 @@
   \pktxd@hfalse
   \setlength{\pktxd@trans}{0cm}
   \def\pktxd@arrow{\pktxd@arrowv}
-  \def\y{-1}
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
   \ifpktxd@mmode\else\pktxd@initentities\fi
   }
@@ -1034,20 +1032,20 @@
     \pktxd@finishtimers
 
     % compute the bottom position of vertical lines:
-    % it's the minimum of all entities (negative values)
+    % it's the maximum time of all entities
     \def\pos{0pt}
     \@for\e:=\pktxd@entities\do{
       \if\e\relax\else
-      % in full-duplex we consider the Tsend, else Trecv-@spaceother
+      % in full-duplex we consider the Tsend, else Trecv+@spaceother
       \ifpktxd@sync\edef\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Tsend}}\else
       \pgfmathsetlengthmacro\tsnd{
-        \pgfkeysvalueof{/pktxd/entities/\e/Trecv}-\pktxd@spaceother}\fi
+        \pgfkeysvalueof{/pktxd/entities/\e/Trecv}+\pktxd@spaceother}\fi
       % Tmax may still be below (late frames)
       \pgfmathsetlengthmacro\tmax{
-        \pgfkeysvalueof{/pktxd/entities/\e/Tmax}-\pktxd@spaceother}
+        \pgfkeysvalueof{/pktxd/entities/\e/Tmax}+\pktxd@spaceother}
       \pktxd@debug{e=\e ~ pos=\pos ~ tsnd=\tsnd ~ tmax=\tmax}
-      \ifdim \pos>\tsnd \edef\pos{\tsnd}\fi
-      \ifdim \pos>\tmax \edef\pos{\tmax}\fi
+      \ifdim \pos<\tsnd \edef\pos{\tsnd}\fi
+      \ifdim \pos<\tmax \edef\pos{\tmax}\fi
       \fi
     }
     \pktxd@debug{final pos=\pos}
@@ -1055,7 +1053,7 @@
     % draw vertical lines and labels
     \foreach \e in \pktxd@entities {
       \if\e\relax\else
-    \draw[thin](\pktxd@pos{\e},-\y\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/entities/\e}}-- (\pktxd@pos{\e},\pos);
+    \draw[thin](\pktxd@pos{\e},\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/entities/\e}} -- (\pktxd@pos{\e},-\pos);
     \fi
     }
 
@@ -1086,7 +1084,6 @@
   \def\pktxd@width{1cm}
   \setlength{\pktxd@prop}{3mm}
   \def\pktxd@arrow{\pktxd@arrowh}
-  \def\y{1}
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
   \ifpktxd@mmode
   \PackageError{pktxdiag}{Multi-entities mode not supported in h

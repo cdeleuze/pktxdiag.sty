@@ -493,11 +493,11 @@
 \def\width{6cm}
 \begin{fpktxdiag}[prop=1cm,width=\width,A=émetteur,B=récepteur]{Contrôle de flot TCP}
   \newcommand{\buf}[3][0cm]{
-    \begin{scope}[shift={(\width/2+1cm,\pBr-3.75mm-#1)},x=7.5mm]
+    \begin{scope}[shift={(\width/2+1cm,-\pBr-3.75mm-#1)},x=7.5mm]
       %% xscale so that we reason on a 4k buffer (of length 3cm)
     \draw (0,0) rectangle +(4,0.75);
-    \draw[->] (#2,0.90) -- +(0,4mm);
-    \draw[<-] (#3,-0.10) -- +(0,-4mm);
+    \draw[->] (#2,0.90) -- +(0,4mm);    % up arrow
+    \draw[<-] (#3,-0.10) -- +(0,-4mm);  % down arrow
     \ifnum#2>#3
     \filldraw[gray!30,draw=black] (#2,0) rectangle (4,0.75);
     \filldraw[gray!30,draw=black] (0,0) rectangle (#3,0.75);
