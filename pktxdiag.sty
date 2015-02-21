@@ -301,6 +301,13 @@
     \globaldefs=1\fi
   \pgfkeys{#1}\endgroup}
 
+% loop on entities: arg is code using \e
+\newcommand{\pktxd@forallentities}[1]{
+  \@for\e:=\pktxd@entities\do{
+    \if\e\relax\else #1\fi
+  }
+}
+
 \newcommand{\pktxd@createentity}[1]{
   \xdef\pktxd@entities{#1,\pktxd@entities}
   \pgfglobalkeys{/pktxd/entities/#1/pos/.initial=0cm}   % space position
@@ -824,13 +831,11 @@
   }
 
 \newcommand{\pktxd@finishtimers}{
-  \@for\e:=\pktxd@entities\do{
-    \if\e\relax\else
+  \pktxd@forallentities{
     \pktxd@flushtimer{\e}{l}{1}
     \pktxd@flushtimer{\e}{l}{2}
     \pktxd@flushtimer{\e}{r}{1}
     \pktxd@flushtimer{\e}{r}{2}
-    \fi
     }
   }
 
@@ -1006,12 +1011,10 @@
     
 \def\pktxd@debugentities#1{
   \pktxd@debug{entities: #1}
-  \foreach \e in \pktxd@entities {
-    \if\e\relax\else
+  \pktxd@forallentities {
     \edef\name{\pgfkeysvalueof{/pktxd/entities/\e}}
     \edef\pos{\pgfkeysvalueof{/pktxd/entities/\e/pos}}
     \pktxd@debug{entity: \e/\name/\pos}
-    \fi
   }}
 
 %%%% user environments
@@ -1034,8 +1037,7 @@
     % compute the bottom position of vertical lines:
     % it's the maximum time of all entities
     \def\pos{0pt}
-    \@for\e:=\pktxd@entities\do{
-      \if\e\relax\else
+    \pktxd@forallentities{
       % in full-duplex we consider the Tsend, else Trecv+@spaceother
       \ifpktxd@sync\edef\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Tsend}}\else
       \pgfmathsetlengthmacro\tsnd{
@@ -1046,15 +1048,12 @@
       \pktxd@debug{e=\e ~ pos=\pos ~ tsnd=\tsnd ~ tmax=\tmax}
       \ifdim \pos<\tsnd \edef\pos{\tsnd}\fi
       \ifdim \pos<\tmax \edef\pos{\tmax}\fi
-      \fi
     }
     \pktxd@debug{final pos=\pos}
 
     % draw vertical lines and labels
-    \foreach \e in \pktxd@entities {
-      \if\e\relax\else
+    \pktxd@forallentities {
     \draw[thin](\pktxd@pos{\e},\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/entities/\e}} -- (\pktxd@pos{\e},-\pos);
-    \fi
     }
 
     % draw later(s)
@@ -1066,10 +1065,8 @@
 
     % remove entities names
     % they are set through pgfglobalkeys and would persist accross envs
-    \foreach \e in \pktxd@entities {
-      \if\e\relax\else
+    \pktxd@forallentities {
       \pgfglobalkeys{/pktxd/entities/\e/.initial=\relax}
-    \fi
     }
   \end{tikzpicture}
 }
@@ -1098,10 +1095,8 @@
     \pktxd@finishtimers
 
     % draw labels (we could do it at env opening)
-    \foreach \e in \pktxd@entities {
-      \if\e\relax\else
+    \pktxd@forallentities {
       \draw(-\pktxd@spacesame/2,-\pktxd@pos{\e}) node[left]{\pgfkeysvalueof{/pktxd/entities/\e}};
-    \fi
   }
   % no need to remove names : /pktxd/A|B/.code sets them in env scope
   % (contrary to @initmentities)
