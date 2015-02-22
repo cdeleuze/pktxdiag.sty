@@ -387,7 +387,7 @@
 
 \newlength{\pktxd@len}
 
-%% the draw arrow function for vertical packet exchange diagram
+%% the draw arrow macro for vertical packet exchange diagram
 
 % #1 are keys, #2 is sender pos, #3 is receiver pos
 % #4 is send time, #5 is label
@@ -420,13 +420,17 @@
                    \ifpktxd@lost\ifpktxd@crosslost \draw[-]
                    (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
     \else
-    % iflate, use control points (ignores lost)
+    % iflate, use control points (lost not accepted)
     \ifpktxd@late
+       \ifpktxd@lost \pktxd@error{Frame both late and lost}
+                                 {A frame can't be both late and lost.}
+       \else
        \draw (#2,-#4) 
        .. controls (#2/2+#3/2,-#4-\pktxd@prop/2) and (#2/2+#3/2,-#4-\pktxd@latev)
        .. (#3, -#4-\pktxd@latev-\pktxd@prop)
                    node[\labelstyle,\thisls,pos=0.1]{\pktxd@nodelabel{#5}};
 
+       \fi
     \else
     % not bad, not late
        \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
@@ -439,7 +443,7 @@
   \end{scope}
 }
 
-%% the draw arrow function for horizontal packet exchange diagram
+%% the draw arrow macro for horizontal packet exchange diagram
 
 \newcommand{\pktxd@arrowh}[5][]{
   \pgfkeysifdefined{/pktxd/flows/\pktxd@id/labelstyle}
@@ -494,7 +498,7 @@
   \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
 
   % which side are timers and send notes on?
-  \ifdim\sendpos<\recvpos\def\align{l}\else\def\align{r}\fi
+  \edef\align{\ifdim\sendpos<\recvpos l\else r\fi}
 
   \setlength{\pktxd@savedtrans}{\pktxd@trans}
   \setlength{\pktxd@savedprop}{\pktxd@prop}
@@ -602,6 +606,7 @@
 
 
 % entity, start time, end time, cancel time(or x), label, pos offset, style
+% TODO: style currently unused
 
 \newcommand{\pktxd@drawtimer}[7]{
   % pos is entity pos + offset
@@ -710,24 +715,24 @@
   \def\timeroffset{\if#2l-\fi\pktxd@getconftimer{#1}{#2}{#3}{offset}}
 
   \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
-  \ifpktxd@h
-    \ifdim#4>\timerend
-    \pktxd@error{Your're trying to cancel an expired timer}
-      {A prominent yellow box has been drawn to show where the problem occured.}
-    \node at (#4,\hpos)[draw,red,fill=yellow]{Cancel expired timer!};
-    \else
-    \pktxd@drawtimer{#1}{\timerstart}{\timerend}{#4}
-        {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}
-    \fi
-  \else
 
-    \ifdim#4>\timerend
+  \ifdim#4>\timerend % check cancelling is indeed possible
+    \ifpktxd@h
+      \node at (#4,\hpos)[draw,red,fill=yellow]{Cancel expired timer!};
+    \else
+      \node at (\hpos,-#4)[draw,red,fill=yellow]{Cancel expired timer!};
+    \fi
+    {\tikzset{draw,red,fill=yellow}
+      \pktxd@drawtimer{#1}{\timerstart}{\timerend}{x}
+        {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label} THIS TIMER!}
+        {\timeroffset}{}}
     \pktxd@error{Your're trying to cancel an expired timer}
-      {A prominent yellow box has been drawn to show where the problem occured.}
-    \node at (\hpos,-#4)[draw,red,fill=yellow]{Cancel expired timer!};\else
+       {The timer has been tagged 'THIS TIMER!' in red, a prominent
+        yellow box has been drawn to show where the cancel was requested.}
+
+  \else              % all right
     \pktxd@drawtimer{#1}{\timerstart}{\timerend}{#4}
         {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}
-    \fi
   \fi
 }
 
