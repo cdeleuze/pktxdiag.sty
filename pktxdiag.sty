@@ -1022,15 +1022,37 @@
     \pktxd@debug{entity: \e/\name/\pos}
   }}
 
+
+% compute the maximum time of all entities
+% arg is added offset to Trecv
+
+\newcommand{\pktxd@computemaxtime}[1]{
+  \def\maxtime{0pt}
+  \pktxd@forallentities{
+    % if full-duplex we consider the Tsend, else Trecv+#1 (@spaceother
+    % for v diags)
+    \ifpktxd@sync\edef\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Tsend}}\else
+    \pgfmathsetlengthmacro\tsnd{
+      \pgfkeysvalueof{/pktxd/entities/\e/Trecv}+#1}\fi
+    % Tmax may still be below (late frames)
+    \pgfmathsetlengthmacro\tmax{
+      \pgfkeysvalueof{/pktxd/entities/\e/Tmax}+#1}
+    \pktxd@debug{e=\e ~ maxtime=\maxtime ~ tsnd=\tsnd ~ tmax=\tmax}
+    \ifdim \maxtime<\tsnd \edef\maxtime{\tsnd}\fi
+    \ifdim \maxtime<\tmax \edef\maxtime{\tmax}\fi
+  }
+  \pktxd@debug{final maxtime=\maxtime}
+}
+
 %%%% user environments
 
 \newenvironment{pktxdiag}[1][]{
-  \newcommand{\fullduplex}{\pktxd@syncfalse}
-  \newcommand{\halfduplex}{\pktxd@synctrue}
-  \def\frame{\pktxd@frame}
-  \pktxd@hfalse
-  \setlength{\pktxd@trans}{0cm}
-  \def\pktxd@arrow{\pktxd@arrowv}
+  \newcommand{\fullduplex}{\pktxd@syncfalse}%
+  \newcommand{\halfduplex}{\pktxd@synctrue}%
+  \def\frame{\pktxd@frame}%
+  \pktxd@hfalse%
+  \setlength{\pktxd@trans}{0cm}%
+  \def\pktxd@arrow{\pktxd@arrowv}%
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
   \ifpktxd@mmode\else\pktxd@initentities\fi
   }
@@ -1039,26 +1061,10 @@
     % this also moves Tsend to end of timer if needed
     \pktxd@finishtimers
 
-    % compute the bottom position of vertical lines:
-    % it's the maximum time of all entities
-    \def\pos{0pt}
-    \pktxd@forallentities{
-      % in full-duplex we consider the Tsend, else Trecv+@spaceother
-      \ifpktxd@sync\edef\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Tsend}}\else
-      \pgfmathsetlengthmacro\tsnd{
-        \pgfkeysvalueof{/pktxd/entities/\e/Trecv}+\pktxd@spaceother}\fi
-      % Tmax may still be below (late frames)
-      \pgfmathsetlengthmacro\tmax{
-        \pgfkeysvalueof{/pktxd/entities/\e/Tmax}+\pktxd@spaceother}
-      \pktxd@debug{e=\e ~ pos=\pos ~ tsnd=\tsnd ~ tmax=\tmax}
-      \ifdim \pos<\tsnd \edef\pos{\tsnd}\fi
-      \ifdim \pos<\tmax \edef\pos{\tmax}\fi
-    }
-    \pktxd@debug{final pos=\pos}
-
     % draw vertical lines and labels
+    \pktxd@computemaxtime{\pktxd@spaceother}
     \pktxd@forallentities {
-    \draw[thin](\pktxd@pos{\e},\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/entities/\e}} -- (\pktxd@pos{\e},-\pos);
+    \draw[thin](\pktxd@pos{\e},\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/entities/\e}} -- (\pktxd@pos{\e},-\maxtime);
     }
 
     % draw later(s)
@@ -1077,15 +1083,15 @@
 }
 
 \newenvironment{hpktxdiag}[1][]{
-  \newcommand{\fullduplex}{\pktxd@syncfalse}
-  \newcommand{\halfduplex}{\pktxd@synctrue}
-%  \def\frame{\pktxd@frame}
-  \pktxd@htrue
-  \setlength{\pktxd@spacesame}{0cm}
-  \setlength{\pktxd@spaceother}{0cm}
-  \def\pktxd@width{1cm}
-  \setlength{\pktxd@prop}{3mm}
-  \def\pktxd@arrow{\pktxd@arrowh}
+  \newcommand{\fullduplex}{\pktxd@syncfalse}%
+  \newcommand{\halfduplex}{\pktxd@synctrue}%
+  \def\frame{\pktxd@frame}%
+  \pktxd@htrue%
+  \setlength{\pktxd@spacesame}{0cm}%
+  \setlength{\pktxd@spaceother}{0cm}%
+  \def\pktxd@width{1cm}%
+  \setlength{\pktxd@prop}{3mm}%
+  \def\pktxd@arrow{\pktxd@arrowh}%
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
   \ifpktxd@mmode
   \PackageError{pktxdiag}{Multi-entities mode not supported in h
@@ -1103,6 +1109,10 @@
     \pktxd@forallentities {
       \draw(-\pktxd@spacesame/2,-\pktxd@pos{\e}) node[left]{\pgfkeysvalueof{/pktxd/entities/\e}};
   }
+  % add to the right margin to get centered picture
+  \pktxd@computemaxtime{2mm}
+  \draw(\maxtime,0) node {};
+
   % no need to remove names : /pktxd/A|B/.code sets them in env scope
   % (contrary to @initmentities)
 \end{tikzpicture}}
