@@ -1,6 +1,8 @@
 \documentclass{article}
 \usepackage{a4wide}
-\usepackage{pktxdiag}
+\usepackage{subfig}
+\usepackage{float}
+\usepackage[warnonly]{pktxdiag}
 
 \begin{document}
 
@@ -415,6 +417,23 @@
  \testtimersir
 \end{pktxdiag}
 
+\subsubsection*{Timers: cancelled too late}
+
+\def\testtimercancel{
+  \AB[timed={2cm}{tada}]{yo}
+  \Await
+  \AB{ya}
+  \BA[cancel]{ta}
+}
+
+\begin{pktxdiag}[warn only]
+  \testtimercancel
+\end{pktxdiag}
+
+\begin{hpktxdiag}[warn only]
+  \testtimercancel
+\end{hpktxdiag}
+
 
 \subsubsection*{Send and receive notes}
 
@@ -556,22 +575,23 @@
                       \BA[id=1]{RR 3 (1)}
 }
 
-{\tikzset{/pktxd/width=2.15cm}
-\begin{pktxdiag}
-  \testfilter
-\end{pktxdiag}
-\begin{pktxdiag}[hide=2]
-  \testfilter
-\end{pktxdiag}
-\begin{pktxdiag}[ignore=2]
-  \testfilter
-\end{pktxdiag}
-\begin{pktxdiag}[hide=1]
-  \testfilter
-\end{pktxdiag}
-\begin{pktxdiag}[ignore=1]
+\begin{figure}[H]\tikzset{/pktxd/width=2.15cm}
+\centering\subfloat[both flows]{\begin{pktxdiag}
   \testfilter
 \end{pktxdiag}}
+\subfloat[hide flow 2]{\begin{pktxdiag}[hide=2]
+  \testfilter
+\end{pktxdiag}}
+\subfloat[ignore flow 2]{\begin{pktxdiag}[ignore=2]
+  \testfilter
+\end{pktxdiag}}
+\subfloat[hide flow 1]{\begin{pktxdiag}[hide=1]
+  \testfilter
+\end{pktxdiag}}
+\subfloat[ignore flow 1]{\begin{pktxdiag}[ignore=1]
+  \testfilter
+\end{pktxdiag}}
+\end{figure}
 
 \subsubsection*{Filtering, styles, label styles}
 
@@ -633,6 +653,24 @@
 \end{pktxdiag}
 \begin{hpktxdiag}
 \testframelabelstyle
+\end{hpktxdiag}
+
+\subsubsection*{Multi line labels and entity names}
+
+\begin{pktxdiag}[B=this is ``B'']
+  \entityname{A}{this is the\\``A'' entity}
+  \AB{I'm flying!\\DATA}
+  \BA{Going back\\ACK}
+\end{pktxdiag}
+
+\begin{hpktxdiag}[B=this is ``B'',shorts=ACK]
+  \entityname{A}{this is the\\``A'' entity}
+  \AB{I'm flying!\\DATA}
+  \BA{Going back\\ACK}
+  \Bwait
+  \BA{ACK}
+  \Bwait
+  \BA{ACK\\Going back}
 \end{hpktxdiag}
 
 \subsubsection*{Multiple entities}

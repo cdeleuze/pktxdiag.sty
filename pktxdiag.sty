@@ -233,6 +233,10 @@
 \newcommand{\pktxd@settrans}[1]{
   \ifpktxd@h
   \gdef\pktxd@thistrans{\pktxd@trans}
+  % command from xstring package
+  % only the first line of multi line labels is considered
+  % (otherwise, this crashes)
+  \expandarg
   \foreach \x in \pktxd@shorts {
     \IfBeginWith{#1}{\x}{\gdef\pktxd@thistrans{\pgfkeysvalueof{/pktxd/short trans}}}{}
   }
@@ -407,18 +411,23 @@
     \ifpktxd@lost\def\lost{2}\else\def\lost{1}\fi
     % ifbad, draw a zigzag
     \ifpktxd@bad
+       % can't be both bad and late
+       \ifpktxd@late \pktxd@error{Frame both bad and late}
+                                 {Sorry, a frame currently can't be both late and lost.}
+       \else
 
        \draw (#2,-#4) --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
 
-                 \ifpktxd@sync\else node[near end,\labelstyle,\thisls]{\pktxd@nodelabel{#5}}\fi
+                 \ifpktxd@sync\else node[align=center,near end,\labelstyle,\thisls]{\pktxd@nodelabel{#5}}\fi
     
                  decorate[decoration=zigzag,segment length=2mm]
                  {--++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
-                   \ifpktxd@sync node[midway,\labelstyle,\thisls]{\pktxd@nodelabel{#5}}\fi}
+                   \ifpktxd@sync node[align=center,midway,\labelstyle,\thisls]{\pktxd@nodelabel{#5}}\fi}
 
                  --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3);
                    \ifpktxd@lost\ifpktxd@crosslost \draw[-]
                    (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
+       \fi
     \else
     % iflate, use control points (lost not accepted)
     \ifpktxd@late
@@ -428,13 +437,13 @@
        \draw (#2,-#4) 
        .. controls (#2/2+#3/2,-#4-\pktxd@prop/2) and (#2/2+#3/2,-#4-\pktxd@latev)
        .. (#3, -#4-\pktxd@latev-\pktxd@prop)
-                   node[\labelstyle,\thisls,pos=0.1]{\pktxd@nodelabel{#5}};
+                   node[align=center,\labelstyle,\thisls,pos=0.1]{\pktxd@nodelabel{#5}};
 
        \fi
     \else
     % not bad, not late
        \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
-                   node[\ifpktxd@sync midway\else near
+                   node[align=center,\ifpktxd@sync midway\else near
                    start\fi,\labelstyle,\thisls]{\pktxd@nodelabel{#5}};
                    \ifpktxd@lost\ifpktxd@crosslost \draw[-]
                    (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
@@ -462,11 +471,11 @@
 
        \draw (#4,#3) --++(\pktxd@trans/3,0)
                  decorate[decoration=zigzag,segment length=2mm]
-                 {--++(\pktxd@trans/3,0) node[\labelstyle,\thisls,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}}}
+                 {--++(\pktxd@trans/3,0) node[align=center,\labelstyle,\thisls,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}}}
                  --++(\pktxd@trans/3,0);
   \else
        \draw (#4,#3) -- ++(\pktxd@trans,0)
-           node[\labelstyle,\thisls,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}};
+           node[align=center,\labelstyle,\thisls,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}};
   \fi
   % then draw 'propagation time' arrow
   \draw[thin,->] (#4+\pktxd@trans,#3) -- ++ (\pktxd@prop/\lost,\pktxd@len/\lost);
@@ -767,9 +776,9 @@
   \fi
   \else % vertical diagram
   \if#4l
-    \node[align=left,left,#1] at (#3-#6, -#2) { #7 };
+    \node[align=right,left,#1] at (#3-#6, -#2) { #7 };
   \else
-    \node[align=right,right,#1] at (#3+#6, -#2) { #7 };
+    \node[align=left,right,#1] at (#3+#6, -#2) { #7 };
   \fi\fi}
 
 
@@ -981,6 +990,8 @@
 
 %%%% intialize entities
 
+\newcommand{\pktxd@entityname}[2]{\pgfglobalkeys{/pktxd/entities/#1/.initial=#2}}
+
 % in two entities mode
 \def\pktxd@initentities{
   \def\pktxd@entities{\relax}
@@ -1050,9 +1061,11 @@
   \newcommand{\fullduplex}{\pktxd@syncfalse}%
   \newcommand{\halfduplex}{\pktxd@synctrue}%
   \def\frame{\pktxd@frame}%
+  \def\pktxd@arrow{\pktxd@arrowv}%
+  \def\entityname{\pktxd@entityname}%
+  %
   \pktxd@hfalse%
   \setlength{\pktxd@trans}{0cm}%
-  \def\pktxd@arrow{\pktxd@arrowv}%
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
   \ifpktxd@mmode\else\pktxd@initentities\fi
   }
@@ -1064,7 +1077,7 @@
     % draw vertical lines and labels
     \pktxd@computemaxtime{\pktxd@spaceother}
     \pktxd@forallentities {
-    \draw[thin](\pktxd@pos{\e},\pktxd@spacesame/2) node[above]{\pgfkeysvalueof{/pktxd/entities/\e}} -- (\pktxd@pos{\e},-\maxtime);
+    \draw[thin](\pktxd@pos{\e},\pktxd@spacesame/2) node[align=center,above]{\pgfkeysvalueof{/pktxd/entities/\e}} -- (\pktxd@pos{\e},-\maxtime);
     }
 
     % draw later(s)
@@ -1086,12 +1099,14 @@
   \newcommand{\fullduplex}{\pktxd@syncfalse}%
   \newcommand{\halfduplex}{\pktxd@synctrue}%
   \def\frame{\pktxd@frame}%
+  \def\pktxd@arrow{\pktxd@arrowh}%
+  \def\entityname{\pktxd@entityname}%
+  %
   \pktxd@htrue%
   \setlength{\pktxd@spacesame}{0cm}%
   \setlength{\pktxd@spaceother}{0cm}%
   \def\pktxd@width{1cm}%
   \setlength{\pktxd@prop}{3mm}%
-  \def\pktxd@arrow{\pktxd@arrowh}%
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
   \ifpktxd@mmode
   \PackageError{pktxdiag}{Multi-entities mode not supported in h
@@ -1107,7 +1122,7 @@
 
     % draw labels (we could do it at env opening)
     \pktxd@forallentities {
-      \draw(-\pktxd@spacesame/2,-\pktxd@pos{\e}) node[left]{\pgfkeysvalueof{/pktxd/entities/\e}};
+      \draw(-\pktxd@spacesame/2,-\pktxd@pos{\e}) node[align=center,left]{\pgfkeysvalueof{/pktxd/entities/\e}};
   }
   % add to the right margin to get centered picture
   \pktxd@computemaxtime{2mm}
