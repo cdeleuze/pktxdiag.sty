@@ -626,10 +626,11 @@
 \newlength{\pktxd@labellength}
 \newlength{\pktxd@temp}
 
-% entity, start time, end time, cancel time(or x), label, pos offset, style
-% TODO: style currently unused
+% entity, start time, end time, cancel time (or x), label, pos offset,
+% arrow style, label style
+% TODO include cancel arrow style?
 
-\newcommand{\pktxd@drawtimer}[7]{
+\newcommand{\pktxd@drawtimer}[8]{
   \pktxd@debug{drawtimer #1, #2/#3/#4 #5 #6}
 
   % @putlabelonarrow will be set if 'timer label on arrow' is set
@@ -690,22 +691,22 @@
 
   \if x#4 % no cancel
     \ifpktxd@h
-      \draw[thin,<->](#2,\pos-\timerhoffset)
-           -- (#3,\pos-\timerhoffset) node[midway,sloped,\above]{#5};
+      \draw[thin,<->,#7] (#2,\pos-\timerhoffset)
+           -- (#3,\pos-\timerhoffset) node[midway,sloped,\above,#8]{#5};
     \else
-      \draw[thin,<->](\pos,-#2-\pktxd@timertoffset)
-           -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
+      \draw[thin,<->,#7] (\pos,-#2-\pktxd@timertoffset)
+           -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above,#8]{#5};
     \fi
   \else % including a cancel
     \ifpktxd@h
-      \draw[thin](#2,\pos-\timerhoffset) -- (#4,\pos-\timerhoffset);
-      \draw[thin,dotted,<->](#2,\pos-\timerhoffset)
-           -- (#3,\pos-\timerhoffset) node[midway,sloped,\above]{#5};
+      \draw[thin,#7](#2,\pos-\timerhoffset) -- (#4,\pos-\timerhoffset);
+      \draw[thin,dotted,<->,#7](#2,\pos-\timerhoffset)
+           -- (#3,\pos-\timerhoffset) node[midway,sloped,\above,#8]{#5};
     \else
-      \draw[thin](\pos,-#2-\pktxd@timertoffset)
+      \draw[thin,#7](\pos,-#2-\pktxd@timertoffset)
               -- (\pos,-#4);
-      \draw[thin,dotted,<->](\pos,-#2-\pktxd@timertoffset)
-           -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
+      \draw[thin,dotted,<->,#7](\pos,-#2-\pktxd@timertoffset)
+           -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above,#8]{#5};
     \fi
   \fi
 }
@@ -769,17 +770,18 @@
     \else
       \node at (\hpos,-#4)[draw,red,fill=yellow]{Cancel expired timer!};
     \fi
-    {\tikzset{draw,red,fill=yellow}
       \pktxd@drawtimer{#1}{\timerstart}{\timerend}{x}
-        {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label} THIS TIMER!}
-        {\timeroffset}{}}
-    \pktxd@error{Your're trying to cancel an expired timer}
-       {The timer has been tagged 'THIS TIMER!' in red, a prominent
-        yellow box has been drawn to show where the cancel was requested.}
+        {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}
+        {\timeroffset}{}{}
+      \pktxd@drawtimer{#1}{\timerend}{#4}{x}{}
+        {\timeroffset}{dotted,red,->}{}
+      \pktxd@error{Your're trying to cancel an expired timer}
+        {A prominent yellow box has been drawn to show where the cancel
+        was requested.}
 
   \else              % all right
     \pktxd@drawtimer{#1}{\timerstart}{\timerend}{#4}
-        {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}
+        {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}{}
   \fi
 }
 
@@ -792,7 +794,7 @@
   \def\timeroffset{\if#2l-\fi\pktxd@getconftimer{#1}{#2}{#3}{offset}}
   
   \pktxd@drawtimer{#1}{\timerstart}{\timerend}{x}
-    {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}
+    {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}{}
 }
 
 \newcommand{\pktxd@getconf}[2]{
