@@ -172,7 +172,8 @@
 
 % since we fail to define several keys in a \if
 % used for left timers when pktxd@bottomuptrue
-\pgfkeys{/pktxd/reverse/.style={/tikz/rotate=180,/tikz/above}}
+\pgfkeys{/pktxd/reverse/.style={/tikz/rotate=180,/tikz/above},
+         /pktxd/fill/.style={fill=graphicbackground}}
 
 %% states and actions
 \pgfkeys{
@@ -208,12 +209,20 @@
   /pktxd/B/.code=\pgfkeyssetvalue{/pktxd/entities/B}{#1},
   /pktxd/B/.default=B,
   %
+  % TODO: merge in one key?
+  /pktxd/timer label on arrow/.is if=pktxd@timeronarrow,
+  /pktxd/timer label add/.code=\edef\pktxd@timerlabeladd{#1},
+  %
   /pktxd/timerleftbottomup/.is if=pktxd@timerleftbottomup,
   /pktxd/timerleftbelow/.is if=pktxd@timerleftbelow}
 
+% timer label on arrow effective only if label width+this value is
+% less than the timer width
+\def\pktxd@timerlabeladd{8mm}
+
+\newif\ifpktxd@timeronarrow
 \newif\ifpktxd@timerleftbottomup
 \newif\ifpktxd@timerleftbelow
-
 
 % by default frames whose label starts with ACK are short
 % key 'no shorts' removes this rule
@@ -613,15 +622,30 @@
 
 %%%%%% handling of timers
 
+\newif\ifpktxd@putlabelonarrow
+\newlength{\pktxd@labellength}
+\newlength{\pktxd@temp}
 
 % entity, start time, end time, cancel time(or x), label, pos offset, style
 % TODO: style currently unused
 
 \newcommand{\pktxd@drawtimer}[7]{
+  \pktxd@debug{drawtimer #1, #2/#3/#4 #5 #6}
+
+  % @putlabelonarrow will be set if 'timer label on arrow' is set
+  % and label is not too wide
+  \pktxd@putlabelonarrowfalse
+  \settowidth{\pktxd@labellength}{#5}
+  \addtolength{\pktxd@labellength}{\pktxd@timerlabeladd}
+  \ifpktxd@timeronarrow
+    \pgfmathsetlength\pktxd@temp{#3-#2}
+    \ifdim\pktxd@labellength<\pktxd@temp
+      \pktxd@putlabelonarrowtrue
+    \fi
+  \fi
+
   % pos is entity pos + offset
   % get side from offset sign
-
-  \pktxd@debug{drawtimer #1, #2/#3/#4 #5 #6}
   \def\entitypos{\pktxd@pos{#1}}
   \def\offset{#6}
   \def\side{\ifdim#6<0cm l\else r\fi}
@@ -629,45 +653,59 @@
     \ifpktxd@h
        -\entitypos-\offset
     \else
-       \entitypos+\if\side r\offset\else\ifpktxd@timerleftbelow\offset\else\ifpktxd@timerleftbottomup\offset
-    \else\offset-3mm\fi\fi\fi
+       \entitypos+\if\side r                \offset\else
+                  \ifpktxd@timerleftbelow   \offset\else
+                  \ifpktxd@timerleftbottomup\offset\else
+                  \ifpktxd@putlabelonarrow  \offset\else
+                                            \offset-3mm
+                  \fi\fi\fi\fi
     \fi}
 
-  %% get label orientation for v diagrams
-  %% the timer label is placed above except if:
-  %% - it's a left timer and @timerleftbelow is set (placed below)
-  %% - it's a left timer and @timerleftbottomup is set (placed above +
-  %% rotate).  We use /pktxd/reverse in this case cause we don't know
-  %% how to pass two keys in a single macro... -> expandafter?
-  \if\side r\def\above{above}\else
-  \ifpktxd@timerleftbelow\def\above{below}\else
-  \ifpktxd@timerleftbottomup\def\above{/pktxd/reverse}\else
-  \def\above{above}\fi
+  \ifpktxd@putlabelonarrow
+     \def\above{/pktxd/fill}
+  \else
+  \ifpktxd@h\def\above{above}\else
+    %% get label orientation for v diagrams
+    %% the timer label is placed above except if:
+    %% - it's a left timer and @timerleftbelow is set (placed below)
+    %% - it's a left timer and @timerleftbottomup is set (placed above +
+    %% rotate).  We use /pktxd/reverse in this case cause we don't know
+    %% how to pass two keys in a single macro... -> expandafter?
+    \if\side r\def\above{above}\else
+    \ifpktxd@timerleftbelow\def\above{below}\else
+    \ifpktxd@timerleftbottomup\def\above{/pktxd/reverse}\else
+    \def\above{above}\fi
+    \fi\fi
   \fi\fi
 
   % for h diagrams, need an additionnal offset
   % TODO: should be configurable (haddoffset)
-  \edef\timerhoffset{\if\side r\if#1\ifpktxd@reversed A\else B\fi
-    7mm\else 3mm\fi\else\if#1\ifpktxd@reversed B\else A\fi-3mm\else 0mm\fi\fi}
+
+  \edef\timerhoffset{\if\side r
+    % side r
+    \if#1\ifpktxd@reversed A\else B\fi
+    \ifpktxd@putlabelonarrow 4mm\else 7mm\fi\else 3mm\fi\else
+    % side l
+    \if#1\ifpktxd@reversed B\else A\fi-3mm\else 0mm\fi\fi}
 
   \if x#4 % no cancel
     \ifpktxd@h
       \draw[thin,<->](#2,\pos-\timerhoffset)
-           -- (#3,\pos-\timerhoffset) node[midway,sloped,above]{#5};
+           -- (#3,\pos-\timerhoffset) node[midway,sloped,\above]{#5};
     \else
       \draw[thin,<->](\pos,-#2-\pktxd@timertoffset)
            -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
     \fi
   \else % including a cancel
     \ifpktxd@h
-      \draw[thin,dotted,<->](#2,\pos-\timerhoffset)
-           -- (#3,\pos-\timerhoffset) node[midway,sloped,above]{#5};
       \draw[thin](#2,\pos-\timerhoffset) -- (#4,\pos-\timerhoffset);
+      \draw[thin,dotted,<->](#2,\pos-\timerhoffset)
+           -- (#3,\pos-\timerhoffset) node[midway,sloped,\above]{#5};
     \else
-      \draw[thin,dotted,<->](\pos,-#2-\pktxd@timertoffset)
-           -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
       \draw[thin](\pos,-#2-\pktxd@timertoffset)
               -- (\pos,-#4);
+      \draw[thin,dotted,<->](\pos,-#2-\pktxd@timertoffset)
+           -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above]{#5};
     \fi
   \fi
 }
