@@ -307,7 +307,7 @@
 
 \subsubsection*{Timers: timerleftbelow}
 
-{\pgfkeys{/pktxd/timerleftbelow}
+{\pgfkeys{/pktxd/timers=left below}
 \begin{pktxdiag}[]
 \testx
 \end{pktxdiag}
@@ -329,7 +329,7 @@
 
 \subsubsection*{Timers: timerleftbottomup}
 
-{\pgfkeys{/pktxd/timerleftbottomup}
+{\pgfkeys{/pktxd/timers=left bottom up}
 \begin{pktxdiag}[]
 \testx
 \end{pktxdiag}
@@ -350,15 +350,45 @@
 }
 \vfill
 
+\subsubsection*{Timers: timer label on arrow}
+
+{\pgfkeys{/pktxd/timers=on arrow}
+\begin{pktxdiag}[]
+\testx
+\end{pktxdiag}
+\hfill
+\begin{pktxdiag}[]
+\testxi
+\end{pktxdiag}
+
+\begin{hpktxdiag}
+\testx
+\end{hpktxdiag}
+
+\bigskip
+
+\begin{hpktxdiag}
+\testxi
+\end{hpktxdiag}
+}
+
+\bigskip
+
+\begin{hpktxdiag}[timers={on arrow=1cm}]
+\testxi
+\end{hpktxdiag}
+
+\vfill
+
 \subsubsection*{Timers: later}
 
 \begin{pktxdiag}
   \testlatertimer
 \end{pktxdiag}
-\begin{pktxdiag}[timerleftbelow]
+\begin{pktxdiag}[timers=left below]
   \testlatertimer
 \end{pktxdiag}
-\begin{pktxdiag}[timerleftbottomup]
+\begin{pktxdiag}[timers=left bottom up]
   \testlatertimer
 \end{pktxdiag}
 \begin{pktxdiag}

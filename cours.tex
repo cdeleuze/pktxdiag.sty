@@ -1,11 +1,12 @@
 \documentclass{article}
-\usepackage{pktxdiag}
+\usepackage[]{pktxdiag}
 \usepackage[francais]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{a4wide}
 %\usepackage{cours}
 \usepackage{float}
 \usepackage{subfig}
+\usepackage{alltt}
 
 \newenvironment{fpktxdiag}[2][]{\begin{figure}[H]\centering\begin{pktxdiag}[#1]\gdef\mycap{#2}}
 {\end{pktxdiag}\caption{\mycap}\end{figure}}
@@ -16,7 +17,7 @@
 \begin{document}
 
 
-\pgfkeys{/pktxd/timerleftbottomup}
+\pgfkeys{/pktxd/timers=left bottom up}
 
 \section{NE321}
 
@@ -228,6 +229,121 @@
 \AB{ConfAck}  
 \end{fpktxdiag}
 
+\subsection{TD}
+
+\begin{pktxdiag}
+  \AB{D0}
+  \BA{A1}
+  \AB{D1}
+  \BA{A0}
+  \AB{D0}
+  \Await
+  \fullduplex
+  \Bwait
+  \BA{A1}
+  \AB{D0}
+  \halfduplex
+  \BA{A1}
+\end{pktxdiag}
+
+
+\begin{figure}[H]
+\begin{minipage}{.5\linewidth}
+\begin{alltt}\footnotesize
+    TFTP A                  TFTP B
+
+(1)  Receive ACK X-1
+     Send DATA X
+(2)                          Receive DATA X
+                             Send ACK X
+       (ACK X is delayed in network,
+        and  A times out):
+(3)  Retransmit DATA X
+(4)                          Receive DATA X again
+                             Send ACK X again
+(5)  Receive (delayed) ACK X
+     Send DATA X+1
+(6)                          Receive DATA X+1
+                             Send ACK X+1
+(7)  Receive ACK X again
+     Send DATA X+1 again
+(8)                          Receive DATA X+1 again
+                             Send ACK X+1 again
+(9)  Receive ACK X+1
+     Send DATA X+2
+(10)                         Receive DATA X+2
+                             Send ACK X+3
+(11) Receive ACK X+1 again
+     Send DATA X+2 again
+(12)                         Receive DATA X+2 again
+                             Send ACK X+3 again
+\end{alltt}
+\end{minipage}
+\begin{minipage}{.5\linewidth}
+\hfill\begin{pktxdiag}[width=5cm,A=TFTP A,B=TFTP B]
+    \BA[rnote=1]{ACK X-1}
+    \AB[rnote=2,timed={2cm}{retrans}]{DATA X}
+    \BA[rnote=5,late=1cm]{ACK X}
+    \Awaittimer\AB[snote=3,rnote=4]{DATA X}
+    \fullduplex
+    \BA[rnote=7]{ACK X}
+    \Awaitlate
+    \AB[rnote=6]{DATA X+1}
+    \BA[rnote=9]{ACK X+1}
+    \AB[rnote=8]{DATA X+1}
+    \BA[rnote=11]{ACK X+1}
+    \AB[rnote=10]{DATA X+2}
+    \BA[]{ACK X+3}
+    \AB[rnote=12]{DATA X+2}
+    \BA{ACK X+3}
+  \end{pktxdiag}
+\end{minipage}
+\caption{Syndrome de l'Apprenti-sorcier -- RFC1123}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+\begin{pktxdiag}[width=5cm]
+    \BA{ACK 0}
+    \AB[timed={2cm}{retrans}]{DATA 0}
+    \BA[late=1cm]{ACK 1}
+    \Awaittimer\AB{DATA 0}
+    \fullduplex
+    \BA{ACK 1}
+    \Awaitlate
+    \AB{DATA 1}
+    \BA{ACK 0}
+    \AB{DATA 1}
+    \BA{ACK 0}
+    \AB{DATA 0}
+    \BA{ACK 1}
+    \AB{DATA 0}
+    \BA{ACK 1}
+  \end{pktxdiag}
+  \caption{Syndrome de l'apprenti-sorcier -- S\&W à 1 bit}
+\end{figure}
+
+\newpage
+
+\begin{figure}[H]
+  \centering
+  \begin{pktxdiag}[prop=15mm,width=4cm]
+    \AB{D0}
+    \fullduplex
+    \BA{A1}
+    \AB{D1}
+    \BA{A2}
+    \AB[lost]{D2}
+    \AB{D3}
+    \BwaitA\BA{A2}
+    \AB{D4}
+    \BA{A2}
+    \AB{D5}
+    \BA{A2}
+    
+  \end{pktxdiag}
+  \caption{ACKs dupliqués (exo 22)}
+\end{figure}
 
 
 % \begin{figure}[H]
@@ -585,5 +701,26 @@
 }
 \section{NE520}
 
+\section{Autres}
 
+\begin{figure}[H]
+  \centering
+  \begin{pktxdiag}[A,B,space same=5mm,prop=3mm]
+    \AB{I ..,..}
+    \AB{I ..,..}
+    \AB{I ..,..}
+    \BA{I ..,..}
+    \AB{I ..,..}
+    \AB[lost]{I ..,..}
+    \AB{I ..,..}
+    \BA{REJ 4}
+    \AB{I ..,..}
+    \AB{I ..,..}
+    \AB{I ..,..}
+    \BA{I ..,..}
+    \BA{I ..,..}
+    \AB{I ..,..}
+  \end{pktxdiag}
+  \caption{exo 5.1 toutain (p. 221)}
+\end{figure}
 \end{document}

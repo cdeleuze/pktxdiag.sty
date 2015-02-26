@@ -210,15 +210,16 @@
   /pktxd/B/.default=B,
   %
   % TODO: merge in one key?
-  /pktxd/timer label on arrow/.is if=pktxd@timeronarrow,
-  /pktxd/timer label add/.code=\edef\pktxd@timerlabeladd{#1},
-  %
-  /pktxd/timerleftbottomup/.is if=pktxd@timerleftbottomup,
-  /pktxd/timerleftbelow/.is if=pktxd@timerleftbelow}
-
+  /pktxd/timers/.is choice,
+  /pktxd/timers/above/.code={},
+  /pktxd/timers/left bottom up/.is if=pktxd@timerleftbottomup,
+  /pktxd/timers/left below/.is if=pktxd@timerleftbelow,
+  /pktxd/timers/on arrow/.code={\pktxd@timeronarrowtrue\def\pktxd@timerlabeladd{#1}},
+  /pktxd/timers/on arrow/.default=5mm}
+  
 % timer label on arrow effective only if label width+this value is
 % less than the timer width
-\def\pktxd@timerlabeladd{8mm}
+\def\pktxd@timerlabeladd{}
 
 \newif\ifpktxd@timeronarrow
 \newif\ifpktxd@timerleftbottomup
@@ -636,9 +637,11 @@
   % @putlabelonarrow will be set if 'timer label on arrow' is set
   % and label is not too wide
   \pktxd@putlabelonarrowfalse
-  \settowidth{\pktxd@labellength}{#5}
-  \addtolength{\pktxd@labellength}{\pktxd@timerlabeladd}
   \ifpktxd@timeronarrow
+    \settowidth{\pktxd@labellength}
+      %% need this to use settowidth in tikzpicture
+      {\pgfinterruptpicture#5\endpgfinterruptpicture}  %% should use #8?
+    \addtolength{\pktxd@labellength}{\pktxd@timerlabeladd}
     \pgfmathsetlength\pktxd@temp{#3-#2}
     \ifdim\pktxd@labellength<\pktxd@temp
       \pktxd@putlabelonarrowtrue
