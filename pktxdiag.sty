@@ -173,7 +173,9 @@
 % since we fail to define several keys in a \if
 % used for left timers when pktxd@bottomuptrue
 \pgfkeys{/pktxd/reverse/.style={/tikz/rotate=180,/tikz/above},
-         /pktxd/fill/.style={fill=graphicbackground}}
+         /pktxd/fill/.style={fill=graphicbackground},
+         /pktxd/left note/.style={align=right,left},
+         /pktxd/right note/.style={align=left,right}}
 
 %% states and actions
 \pgfkeys{
@@ -566,7 +568,14 @@
   
   % draw send note
   \ifpktxd@snote
-  \pktxd@note[\thestyle,opacity=\opa]{\Tsend}{\sendpos}{\align}{s}{\pktxd@snoteoffset}{\pktxd@snote}
+  \ifpktxd@h
+    \pktxd@drawnote{\Tsend}{#2}{s}{\pktxd@snote}
+       {\if\align l-\fi\pktxd@snoteoffset}{/pktxd/left note,\thestyle,opacity=\opa}
+  \else
+    \pktxd@drawnote{\Tsend}{#2}{s}{\pktxd@snote}
+       {\if\align l-\fi\pktxd@snoteoffset}{\if\align l/pktxd/left
+        note\else/pktxd/right note\fi,\thestyle,opacity=\opa}
+  \fi
   \fi
   % draw frame
   \pktxd@arrow[#1,\thestyle,opacity=\opa]{\sendpos}{\recvpos}{\Tsend}{#4}
@@ -575,10 +584,15 @@
   \pgfmathsetlengthmacro\Tsend{\Tsend+\pktxd@trans+\pktxd@spacesame}
   % draw receive note
   \ifpktxd@rnote
-  \pktxd@note[\thestyle,opacity=\opa]{\Trecv-\pktxd@latev}{\recvpos}
-             {\if\align rl\else r\fi}{r}{\pktxd@rnoteoffset}{\pktxd@rnote}
+  \ifpktxd@h
+    \pktxd@drawnote{\Trecv-\pktxd@latev}{#3}{r}{\pktxd@rnote}
+       {\if\align r-\fi\pktxd@rnoteoffset}{/pktxd/right note,\thestyle,opacity=\opa}
+  \else
+    \pktxd@drawnote{\Trecv-\pktxd@latev}{#3}{r}{\pktxd@rnote}
+       {\if\align r-\fi\pktxd@rnoteoffset}{\if\align l/pktxd/right
+        note\else/pktxd/left note\fi,\thestyle,opacity=\opa}
   \fi
-
+  \fi
   \edef\Tcancel{\Trecv}
   \ifpktxd@late
     % no simpler way to _copy_ the length value?
@@ -805,24 +819,22 @@
   {\pgfkeysvalueof{/pktxd/flows/#1/#2}}
   {\pgfkeysvalueof{/pktxd/default/#2}}}
 
-\newcommand{\pktxd@note}[7][]{ % [keys], timepos, hpos, l/r, s/r, offset, note
-  \pktxd@debug{note: #2 #3 #4 #5 #6 } % #7 fails if multi-line
+\newcommand{\pktxd@drawnote}[6]{ % timepos, entity, s/r, note, offset, style
+  \pktxd@debug{note: #1 #2 #3 [hide note label] #5 #6 } % #4 fails if multi-line
+  \edef\pos{\pgfkeysvalueof{/pktxd/entities/#2/pos}}
   \ifpktxd@h
   % is the note going up or down?
-  \edef\orient{\if#5s\if#4 ru\else d\fi\else\if#4 ld\else u\fi\fi}
+  \edef\orient{\if#3s\ifdim#5>0pt u\else d\fi\else\ifdim#5>0pt d\else u\fi\fi}
   % a sent if offset to the right, a recv to the left
-  \edef\dpos{\if#5s 2mm\else-2mm\fi}
+  \edef\dpos{\if#3s 4mm\else-4mm\fi}
   \if\orient d   % down
-    \node[rotate=-90,#1] at (#2+\dpos, -#3\if#5r-\else+\fi 10mm) { #7 };
+    \node[rotate=-90,#6] at (#1+\dpos, -\pos\if#3r-\else+\fi 10mm) { #4 };
   \else          % up
-    \node[rotate=90,#1] at (#2+\dpos, -#3\if#5r+\else-\fi 10mm) { #7 };
+    \node[rotate=90,#6] at (#1+\dpos, -\pos\if#3r+\else-\fi 10mm) { #4 };
   \fi
   \else % vertical diagram
-  \if#4l
-    \node[align=right,left,#1] at (#3-#6, -#2) { #7 };
-  \else
-    \node[align=left,right,#1] at (#3+#6, -#2) { #7 };
-  \fi\fi}
+    \node[#6] at (\pos+#5, -#1) { #4 };
+  \fi}
 
 
 %%%%%% side decorations (eg for TCP)
