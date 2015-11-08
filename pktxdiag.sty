@@ -479,12 +479,12 @@
   % first draw 'transmission time' line
   \ifpktxd@bad
 
-       \draw (#4,#3) --++(\pktxd@trans/3,0)
+       \draw (#4,-#2) --++(\pktxd@trans/3,0)
                  decorate[decoration=zigzag,segment length=2mm]
                  {--++(\pktxd@trans/3,0) node[align=center,\labelstyle,\thisls,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}}}
                  --++(\pktxd@trans/3,0);
   \else
-       \draw (#4,#3) -- ++(\pktxd@trans,0)
+       \draw (#4,-#2) -- ++(\pktxd@trans,0)
            node[align=center,\labelstyle,\thisls,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}};
   \fi
   % then draw 'propagation time' arrow
