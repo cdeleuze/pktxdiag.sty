@@ -146,7 +146,7 @@
 
 \pgfkeys{/pktxd/name/.code=\def\pktxd@latename{#1}}
 
-\def\pktxd@latename{lateframe}
+\def\pktxd@latename{$$lateframe}
 
 \pgfkeys{/pktxd/show label2/.is if=pktxd@showlabelii}
 \pgfkeys{/pktxd/hide label/.is if=pktxd@hidelabel}
@@ -980,12 +980,12 @@
 \newcommand{\AwaitB}{\XwaitY{A}{B}}
 \newcommand{\BwaitA}{\XwaitY{B}{A}}
 
-%%: arg is name set in the late frame ('name' key, defaults to lateframe)
-\newcommand{\Awaitlate}[1][lateframe]{
+%%: arg is name set in the late frame ('name' key, defaults to $$lateframe)
+\newcommand{\Awaitlate}[1][$$lateframe]{
   \pktxd@setTrecv{A}{\pgfkeysvalueof{/pktxd/values/A/#1}}
   \AwaitB}
 
-\newcommand{\Bwaitlate}[1][lateframe]{
+\newcommand{\Bwaitlate}[1][$$lateframe]{
   \pktxd@setTrecv{B}{\pgfkeysvalueof{/pktxd/values/B/#1}}
   \BwaitA}
   
