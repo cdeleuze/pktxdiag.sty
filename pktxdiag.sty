@@ -193,14 +193,18 @@
 
 \pgfkeys{
   /pktxd/entities/.code=\pktxd@initmentities{#1},
-  /pktxd/space same/.code=\setlength{\pktxd@spacesame}{#1},
-  /pktxd/space other/.code=\setlength{\pktxd@spaceother}{#1},
+  /pktxd/send delay/.code=\setlength{\pktxd@senddelay}{#1},
+  /pktxd/reply delay/.code=\setlength{\pktxd@replydelay}{#1},
+  /pktxd/full duplex/.code=\pktxd@syncfalse,
   /pktxd/width/.code=\def\pktxd@width{#1},
+  /pktxd/pause/.code=\def\pktxd@pausedefault{#1},
   /pktxd/reversed/.is if=pktxd@reversed}
 
-\newlength{\pktxd@spacesame}\setlength{\pktxd@spacesame}{1cm}
-\newlength{\pktxd@spaceother}\setlength{\pktxd@spaceother}{5mm}
+\newlength{\pktxd@senddelay}\setlength{\pktxd@senddelay}{1cm}
+\newlength{\pktxd@replydelay}\setlength{\pktxd@replydelay}{5mm}
+%\newlength{\pktxd@pausedefault}\setlength{\pktdx@pausedefault}{1cm}
 \def\pktxd@width{2.75cm}
+\def\pktxd@pausedefault{1cm}
 \newif\ifpktxd@reversed
 
 \pgfkeys{
@@ -581,7 +585,7 @@
   \pktxd@arrow[#1,\thestyle,opacity=\opa]{\sendpos}{\recvpos}{\Tsend}{#4}
   % update times
   \pgfmathsetlengthmacro\Trecv{\Tsend+\pktxd@prop+\pktxd@trans}
-  \pgfmathsetlengthmacro\Tsend{\Tsend+\pktxd@trans+\pktxd@spacesame}
+  \pgfmathsetlengthmacro\Tsend{\Tsend+\pktxd@trans+\pktxd@senddelay}
   % draw receive note
   \ifpktxd@rnote
   \ifpktxd@h
@@ -619,7 +623,7 @@
   \fi
 
   \ifpktxd@sync
-    \pgfmathsetlengthmacro\Tsndr{\Trecv+\pktxd@spaceother}
+    \pgfmathsetlengthmacro\Tsndr{\Trecv+\pktxd@replydelay}
     \pgfkeyslet{/pktxd/entities/#3/Tsend}{\Tsndr}
   \fi
 
@@ -935,7 +939,7 @@
   \pgfkeyslet{/pktxd/entities/#1/pos}{\toto}}
 
 
-\newcommand{\wait}[2][1cm]{\pktxd@addtosend{#2}{#1}}
+\newcommand{\pause}[2][\pktxd@pausedefault]{\pktxd@addtosend{#2}{#1}}
 
 %%: X waits for Y, Y waits for X (usefull only in fullduplex mode)
 
@@ -943,7 +947,7 @@
   \edef\temp{\pktxd@Trecv{#1}}
   \pktxd@letTsend{#1}{\temp}
   \pktxd@debug{Xwait temp=\temp Tsend=\pktxd@Tsend{#1}}
-  \pktxd@addtosend{#1}{\pktxd@spaceother}}
+  \pktxd@addtosend{#1}{\pktxd@replydelay}}
 
 %% set Tsend to end of the timer if it's later
 \newcommand{\pktxd@waittimer}[3]{
@@ -986,8 +990,8 @@
 \newcommand{\AB}[2][]{\pktxd@frame[#1]{A}{B}{#2}}
 \newcommand{\BA}[2][]{\pktxd@frame[#1]{B}{A}{#2}}
 
-\newcommand{\Await}[1][1cm]{\wait[#1]{A}}
-\newcommand{\Bwait}[1][1cm]{\wait[#1]{B}}
+\newcommand{\Apause}[1][\pktxd@pausedefault]{\pause[#1]{A}}
+\newcommand{\Bpause}[1][\pktxd@pausedefault]{\pause[#1]{B}}
 
 \newcommand{\AwaitB}{\XwaitY{A}{B}}
 \newcommand{\BwaitA}{\XwaitY{B}{A}}
@@ -1095,7 +1099,7 @@
 \newcommand{\pktxd@computemaxtime}[1]{
   \def\maxtime{0pt}
   \pktxd@forallentities{
-    % if full-duplex we consider the Tsend, else Trecv+#1 (@spaceother
+    % if full-duplex we consider the Tsend, else Trecv+#1 (@replydelay
     % for v diags)
     \ifpktxd@sync\edef\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Tsend}}\else
     \pgfmathsetlengthmacro\tsnd{
@@ -1130,9 +1134,9 @@
     \pktxd@finishtimers
 
     % draw vertical lines and labels
-    \pktxd@computemaxtime{\pktxd@spaceother}
+    \pktxd@computemaxtime{\pktxd@replydelay}
     \pktxd@forallentities {
-    \draw[thin](\pktxd@pos{\e},\pktxd@spacesame/2) node[align=center,above]{\pgfkeysvalueof{/pktxd/entities/\e}} -- (\pktxd@pos{\e},-\maxtime);
+    \draw[thin](\pktxd@pos{\e},\pktxd@senddelay/2) node[align=center,above]{\pgfkeysvalueof{/pktxd/entities/\e}} -- (\pktxd@pos{\e},-\maxtime);
     }
 
     % draw later(s)
@@ -1158,8 +1162,8 @@
   \def\entityname{\pktxd@entityname}%
   %
   \pktxd@htrue%
-  \setlength{\pktxd@spacesame}{0cm}%
-  \setlength{\pktxd@spaceother}{0cm}%
+  \setlength{\pktxd@senddelay}{0cm}%
+  \setlength{\pktxd@replydelay}{0cm}%
   \def\pktxd@width{1cm}%
   \setlength{\pktxd@prop}{3mm}%
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
@@ -1177,7 +1181,7 @@
 
     % draw labels (we could do it at env opening)
     \pktxd@forallentities {
-      \draw(-\pktxd@spacesame/2,-\pktxd@pos{\e}) node[align=center,left]{\pgfkeysvalueof{/pktxd/entities/\e}};
+      \draw(-\pktxd@senddelay/2,-\pktxd@pos{\e}) node[align=center,left]{\pgfkeysvalueof{/pktxd/entities/\e}};
   }
   % add to the right margin to get centered picture
   \pktxd@computemaxtime{2mm}

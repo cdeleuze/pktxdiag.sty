@@ -97,10 +97,10 @@
 \begin{pktxdiag}
   \BA{I 3,0}
   \AB{RNR 4}
-  \Bwait[1.5cm]
+  \Bpause[1.5cm]
   \BA{RR 0,P}
   \AB{RNR 4,F}
-  \Bwait[1.5cm]
+  \Bpause[1.5cm]
   \BA{RR 0,P}
   \AB{RR 4,F}
   \BA{I 4,0}
@@ -164,16 +164,16 @@
 
 \begin{figure}[H]
 \hfill
-\subfloat[HDLC]{\begin{pktxdiag}[space other=8mm, space same=12mm]
+\subfloat[HDLC]{\begin{pktxdiag}[reply delay=8mm, send delay=12mm]
 \figxix
 \end{pktxdiag}}
 \hfill
-\subfloat[X25]{\begin{pktxdiag}[space other=8mm, space same=12mm, hide=main,show
+\subfloat[X25]{\begin{pktxdiag}[reply delay=8mm, send delay=12mm, hide=main,show
   label2, hide label]
 \figxix
 \end{pktxdiag}}
 \hfill
-\subfloat[HDLC/X25]{\begin{pktxdiag}[space other=8mm, space same=12mm, show label2]
+\subfloat[HDLC/X25]{\begin{pktxdiag}[reply delay=8mm, send delay=12mm, show label2]
 \figxix
 \end{pktxdiag}}
 \hfill~
@@ -202,7 +202,7 @@
   \fullduplex
   \AB{I 0,0}
              \BwaitA
-             \Bwait[4mm]
+             \Bpause[4mm]
   \AB{I 1,0}
              \BA{I 0,1}
   \AB{I 2,0}
@@ -211,9 +211,9 @@
              \BA{I 2,3}
              \BA{I 3,4}
   \AwaitB
-  \Await
+  \Apause
   \AB{RR 4}
-  \Await
+  \Apause
   \AB{DISC}
   \BwaitA   \BA{UA}
 \end{fhpktxdiag}
@@ -237,9 +237,9 @@
   \AB{D1}
   \BA{A0}
   \AB{D0}
-  \Await
+  \Apause
   \fullduplex
-  \Bwait
+  \Bpause
   \BA{A1}
   \AB{D0}
   \halfduplex
@@ -455,8 +455,8 @@
 \begin{figure}[H]\centering
 \begin{pktxdiag}
   \Astate{Closed}\Bstate{Closed}
-  \Await         \Bwait
-  \Await         \Bactionstate{passive open}{listen}
+  \Apause        \Bpause
+  \Apause        \Bactionstate{passive open}{listen}
   \Aactionstate{active open}{SynSent}
   \AB{SYN}
                  \Bstate{SynRecvd}
@@ -464,7 +464,7 @@
   \Astate{Established}
   \AB[trans]{ACK}
                  \Bstate{Established}
-  \Await
+  \Apause
 \end{pktxdiag}
 \caption{Ouverture de connexion}
 \end{figure}
@@ -472,7 +472,7 @@
 \begin{figure}[H]\centering
 \begin{pktxdiag}  
   \Astate{Established}\Bstate{Established}
-  \Await
+  \Apause
   \Aactionstate{close}{FinWait1}
   \AB{FIN}
                       \Bstate{CloseWait}
@@ -541,7 +541,7 @@
 \later{2cm}
   
                       \Bactionstate{passive open}{Listen}
-  \Await
+  \Apause
   \Aactionstate{active open}{SynSent}
   \AB{SYN}
                       \Bstate{SynRecvd}
@@ -573,7 +573,7 @@
 
 \later{2cm}
 
-  \Await         \Bactionstate{passive open}{Listen}
+  \Apause        \Bactionstate{passive open}{Listen}
   \Aactionstate{active open}{SynSent}
   \AB{SYN}
                  \Bstate{SynRecvd}
@@ -581,7 +581,7 @@
   \Astate{Established}
   \AB{ACK}
                  \Bstate{Established}
-  \Await
+  \Apause
 \end{pktxdiag}}
   \caption{Sans le TIME-WAIT : insertion de paquets retardés dans une nouvelle connexion}
 \end{figure}
@@ -626,7 +626,7 @@
 \buf{0}{0}
 \node at (\width/2+2.5cm,-1mm) {tampon récepteur};
 
-\Await
+\Apause
 \AB[snote=Appli écrit 1 k\\TCP envoie 1 k]{seq=0 (1024)}
 \buf{0}{1}
 

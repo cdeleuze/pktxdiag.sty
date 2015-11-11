@@ -10,7 +10,7 @@
 
 \def\test{
   \AB{DATA1}
-  \Await
+  \Apause
   \AB[lost,color=red,dashed]{lost}
   \BA[lost]{aussi}
   \AB[bad,thin]{bad}
@@ -47,7 +47,7 @@
   \AB{DATA1}
   \AB{DATA2}
   \BA{ACK3}
-  \pgfkeys{/pktxd/space same=5mm}
+  \pgfkeys{/pktxd/send delay=5mm}
   \AB{DATA1}
   \AB{DATA2}
   \BA{ACK3}}
@@ -148,8 +148,8 @@
 
 \def\testxii{
   \Astate{Closed}\Bstate{Closed}
-  \Await         \Bwait
-  \Await         \Bactionstate{passive open}{listen}
+  \Apause        \Bpause
+  \Apause        \Bactionstate{passive open}{listen}
   \Aactionstate{active open}{Syn-Sent}
   \AB{SYN}
                  \Bstate{SynRecvd}
@@ -161,7 +161,7 @@
 \later{3cm}
 
   \Astate{Established}\Bstate{Established}
-  \Await
+  \Apause
   \Aactionstate{close}{FinWait1}
   \AB{FIN}
                       \Bstate{CloseWait}
@@ -420,7 +420,7 @@
 
   \BA[stop2={1cm}{zz}{5mm},cancel2]{stop \& cancel}
   \BA{rien}
-  \Await[2cm]
+  \Apause[2cm]
   \AB[stop={2cm}{stop}{1cm},late=2cm,timed2={3cm}{timed}]{s \& t \& l!}
 }
 \def\testtimersir{
@@ -430,7 +430,7 @@
 
   \AB[stop2={1cm}{zz}{5mm},cancel2]{stop \& cancel}
   \AB{rien}
-  \Bwait[2cm]
+  \Bpause[2cm]
   \BA[stop={2cm}{stop}{1cm},late=2cm,timed2={3cm}{timed}]{s \& t \& l!}
 }
 \begin{pktxdiag}
@@ -451,7 +451,7 @@
 
 \def\testtimercancel{
   \AB[timed={2cm}{tada}]{yo}
-  \Await
+  \Apause
   \AB{ya}
   \BA[cancel]{ta}
 }
@@ -478,7 +478,7 @@
   \fullduplex
   \AB{toto}
   \ABtimed{toto2}{3cm}{toto}
-  \Await
+  \Apause
   \AB{toto3}
   \BwaitA
   \BA{titi}}
@@ -697,9 +697,9 @@
   \entityname{A}{this is the\\``A'' entity}
   \AB{I'm flying!\\DATA}
   \BA{Going back\\ACK}
-  \Bwait
+  \Bpause
   \BA{ACK}
-  \Bwait
+  \Bpause
   \BA{ACK\\Going back}
 \end{hpktxdiag}
 
@@ -707,7 +707,10 @@
 
 % possible mistake: A/name/  -> no trailing slash if width not given
 
-\begin{pktxdiag}[width=4cm,space other=2mm,space same=2mm,entities={A/bsd-pc.cisco.com,B/cisco.com proxy,C/princeton.edu proxy,D/llp-ph.cs.princeton.edu}]
+\begin{pktxdiag}[width=4cm,reply delay=2mm,send delay=2mm,entities={A/bsd-pc.cisco.com,B/cisco.com proxy,C/princeton.edu proxy,D/llp-ph.cs.princeton.edu}]
+
+%\entityname{B}{cisco.com\\proxy}
+%\entityname{C}{princeton.edu\\proxy}
 
 \derivestyle{big}{default}{latex-latex,line width=3mm}
 \derivestyle{def}{labeldefault}{sloped=false}
@@ -719,18 +722,18 @@
 \frame{B}{A}{100 trying}
 \frame{C}{B}{100 trying}
 \frame{D}{C}{100 trying}
-\wait{D}
+\pause{D}
 \frame{D}{C}{180 ringing}
 \frame{C}{B}{180 ringing}
 \frame{B}{A}{180 ringing}
-\wait{D}
+\pause{D}
 \frame{D}{C}{200 OK}
 \frame{C}{B}{200 OK}
 \frame{B}{A}{200 OK}
 \frame{A}{D}{ACK}
-\wait{D}
+\pause{D}
 \frame[id=big,prop=0cm]{D}{A}{Media}
-\wait{D}
+\pause{D}
 \frame{D}{A}{BYE}
 \frame{A}{D}{200 OK}
 \end{pktxdiag}
@@ -741,11 +744,29 @@
 \frame{B}{C}{Open}
 \frame{C}{D}{Open}
 \frame[rnote=Dial]{D}{E}{Open}
-\wait{E}
+\pause{E}
 \frame[label2=Up]{E}{D}{Negotiate}
 \frame[label2=Up]{D}{C}{Negotiate}
 \frame[label2=Up]{C}{B}{Negotiate}
 \BA[label2=Up,rnote=Transmit\\begins]{Negotiate}
+\end{pktxdiag}
+
+
+\subsection{The \texttt{pause} env option}
+
+\begin{pktxdiag}[send delay=0mm,pause=3cm]
+\AB{DATA}
+\Apause
+\AB{DATA}
+\Apause[5mm]
+\AB{DATA}  
+\end{pktxdiag}
+\begin{pktxdiag}[send delay=0mm]
+\AB{DATA}
+\Apause
+\AB{DATA}
+\Apause[5mm]
+\AB{DATA}  
 \end{pktxdiag}
 
 \end{document}
