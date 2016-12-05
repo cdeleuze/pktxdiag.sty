@@ -699,13 +699,128 @@
   \ftp
 \end{pktxdiag}
 }
+
+\section{NE571}
+
+\begin{figure}[H]
+
+\subfloat[Sans connexions persistantes]{\begin{pktxdiag}[width=2cm,reply delay=2mm,send delay=4mm,prop=2mm]\tiny
+    \AB{SYN}
+    \BA{SYN-ACK}
+    \AB{ACK}
+    \AB[id=http]{requête 1}
+    \BA[id=http]{réponse 1}
+    \BA{FIN}
+    \AB{FIN-ACK}
+    \BA{ACK}
+
+    \Apause
+
+    \AB{SYN}
+    \BA{SYN-ACK}
+    \AB{ACK}
+    \AB[id=http]{requête 2}
+    \BA[id=http]{réponse 2}
+    \BA{FIN}
+    \AB{FIN-ACK}
+    \BA{ACK}
+  \end{pktxdiag}}
+\hfill
+\subfloat[Avec connexions persistantes]{\begin{pktxdiag}[width=2cm,reply delay=2mm,send delay=4mm,prop=2mm]\tiny
+    \AB{SYN}
+    \BA{SYN-ACK}
+    \AB{ACK}
+    \AB[id=http]{requête 1}
+    \BA[id=http]{réponse 1}
+
+    \Apause[2.2cm]
+
+    \AB[id=http]{requête 2}
+    \BA[id=http]{réponse 2}
+  \end{pktxdiag}}
+\end{figure}
+
+\begin{pktxdiag}[A=C,B=S,width=5cm]\small
+  \AB{GET img1.png}
+  \BA{200 img1.png}
+  \AB{GET img2.png}
+  \BA{200 img2.png}
+  \AB{GET img3.png}
+  \BA{200 img3.png}
+\end{pktxdiag}
+
+\begin{pktxdiag}[A=C,B=S,width=5cm]\small
+  \fullduplex
+  \AB{GET img1.png}
+  \BwaitA
+  \BA{200 img1.png}
+  \AB{GET img2.png}
+  \BA{200 img2.png}
+  \AB{GET img3.png}
+  \BA{200 img3.png}
+\end{pktxdiag}
+
+\begin{pktxdiag}[A=C,B=S,width=5cm]\small
+  \fullduplex
+  \AB{GET sql\_query.php}
+  \BwaitA
+  \BA[delayed={3cm}{SQL query}]{200 query\_result}
+  \AB{GET img1.png}
+  \BA{200 img1.png}
+  \AB{GET img2.png}
+  \BA{200 img2.png}
+\end{pktxdiag}
+
+\begin{pktxdiag}[A=P,B=O/P]\small
+  \AB{GET}
+  \BA{200 OK Date: d}
+\end{pktxdiag}
+\begin{pktxdiag}[A=P,B=O]\small
+  \AB[timed={1.6cm}{t}]{GET}
+  \BA{200 OK}
+\end{pktxdiag}
+\begin{pktxdiag}[A=P1,B=P2]\small
+  \AB[timed={1.6cm}{t}]{GET}
+  \BA{200 OK Age: x}
+\end{pktxdiag}
+
+\begin{pktxdiag}[send delay=15mm,reply delay=7mm,prop=0mm,width=2.5cm,
+  entities={C,R/Résolveur/3cm,r/Redirecteur,D,S/Serveur S}]\small
+\entityname{C}{Client C\\10.0.0.1}
+\entityname{R}{Résolveur R\\20.0.0.1}
+\entityname{D}{DNS D\\autorité}
+
+\derivestyle{dns}{default}{blue,above}
+\setflowlabelstyle{dns}{dns}
+
+\frame{C}{r}{GET image}
+\frame{r}{C}{302 ip10.0.0.1.example.com/image}
+\frame[id=dns]{C}{R}{ip10.0.0.1.example.com A ?}
+\frame[id=dns,rnote={IP=10.0.0.1\\DNS=20.0.0.1}]{R}{D}{ip10.0.0.1.example.com A ?}
+\frame[id=dns]{D}{R}{ip10.0.0.1.example.com A S}
+\frame[id=dns]{R}{C}{ip10.0.0.1.example.com A S}
+\frame{C}{S}{GET ip10.0.0.1.example.com/image}
+\frame{S}{C}{200 image}
+\end{pktxdiag}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
 \section{NE520}
 
 \section{Autres}
 
 \begin{figure}[H]
   \centering
-  \begin{pktxdiag}[A,B,space same=5mm,prop=3mm]
+  \begin{pktxdiag}[A,B,send delay=5mm,prop=3mm]
     \AB{I ..,..}
     \AB{I ..,..}
     \AB{I ..,..}
@@ -723,4 +838,6 @@
   \end{pktxdiag}
   \caption{exo 5.1 toutain (p. 221)}
 \end{figure}
+
+
 \end{document}

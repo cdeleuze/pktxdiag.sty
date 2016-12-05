@@ -279,7 +279,7 @@
 \testix
 \end{pktxdiag}
 \hfill
-\begin{hpktxdiag}
+\begin{hpktxdiag}%[warnonly]
 \testix
 \end{hpktxdiag}
 %\vfill
@@ -394,6 +394,12 @@
 \begin{pktxdiag}
   \testlatertimeri
 \end{pktxdiag}
+\begin{pktxdiag}[timers=on arrow]
+  \testlatertimer
+\end{pktxdiag}
+\begin{pktxdiag}[timers=on arrow]
+  \testlatertimeri
+\end{pktxdiag}
 
 %\hspace{-2cm}
 
@@ -471,6 +477,11 @@
   \AB[snote=send note,rnote=receive note]{DATA}
   \BA[snoteoffset=6mm,rnoteoffset=1mm,snote=less close,rnote=closer]{DATA}
 \end{pktxdiag}
+
+\begin{hpktxdiag}
+  \AB[snote=send note,rnote=receive note]{DATA}
+  \BA[snoteoffset=6mm,rnoteoffset=1mm,snote=less close,rnote=closer]{DATA}
+\end{hpktxdiag}
 
 \subsubsection*{The \texttt{reversed} key}
 
@@ -751,6 +762,25 @@
 \BA[label2=Up,rnote=Transmit\\begins]{Negotiate}
 \end{pktxdiag}
 
+\begin{pktxdiag}[entities={A/,B/,C//6cm,D/},send delay=2mm]
+\AB{Invite}
+\BA{Trying}
+\frame{B}{C}{Invite}
+\frame{C}{B}{Trying}
+\frame{C}{D}{Invite}
+\frame{D}{C}{Ringing}
+\frame{C}{B}{Ringing}
+\frame{B}{A}{Ringing}
+\pause{D}
+\frame{D}{C}{OK}
+\frame{C}{B}{OK}
+\frame{B}{A}{OK}
+
+\frame{A}{D}{ACK}
+\pause{D}
+\frame{D}{A}{Bye}
+\frame{A}{D}{OK}
+\end{pktxdiag}
 
 \subsection{The \texttt{pause} env option}
 

@@ -295,14 +295,14 @@
 \newcommand{\derivestyle}[3]{
   \definestyle{#1}{/pktxd/styles/#2,#3}}
 
-%% give a style to a flow
+%% give a style to a flow or its labels
 \newcommand{\setflowstyle}[2]{
   \pgfkeys{/pktxd/flows/#1/style/.initial=#2}}
 
 \newcommand{\setflowlabelstyle}[2]{
   \pgfkeys{/pktxd/flows/#1/labelstyle/.initial=#2}}
 
-%% the default style
+%% the default styles
 %% removed the >=latex, since it does not obey opacity=...
 \definestyle{default}{very thick, ->}
 
@@ -334,6 +334,7 @@
   \pgfglobalkeys{/pktxd/entities/#1/Tsend/.initial=0cm} % send time
   \pgfglobalkeys{/pktxd/entities/#1/Trecv/.initial=0cm} % recv time
   \pgfglobalkeys{/pktxd/entities/#1/Tmax/.initial=0cm}  % max time
+  \pgfglobalkeys{/pktxd/entities/#1/sync/.initial=0}    % sync Tsend/Trecv?
   \pktxd@createtimer{#1}{l}{1}
   \pktxd@createtimer{#1}{l}{2}
   \pktxd@createtimer{#1}{r}{1}
@@ -582,7 +583,8 @@
   \fi
   \fi
   % draw frame
-  \pktxd@arrow[#1,\thestyle,opacity=\opa]{\sendpos}{\recvpos}{\Tsend}{#4}
+  % explicit parameters should override \thestyle
+  \pktxd@arrow[\thestyle,opacity=\opa,#1]{\sendpos}{\recvpos}{\Tsend}{#4}
   % update times
   \pgfmathsetlengthmacro\Trecv{\Tsend+\pktxd@prop+\pktxd@trans}
   \pgfmathsetlengthmacro\Tsend{\Tsend+\pktxd@trans+\pktxd@senddelay}
@@ -1101,9 +1103,9 @@
   \pktxd@forallentities{
     % if full-duplex we consider the Tsend, else Trecv+#1 (@replydelay
     % for v diags)
-    \ifpktxd@sync\edef\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Tsend}}\else
-    \pgfmathsetlengthmacro\tsnd{
-      \pgfkeysvalueof{/pktxd/entities/\e/Trecv}+#1}\fi
+    \ifpktxd@sync\edef\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Tsend}}
+    \else\pgfmathsetlengthmacro\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Trecv}+#1}
+    \fi
     % Tmax may still be below (late frames)
     \pgfmathsetlengthmacro\tmax{
       \pgfkeysvalueof{/pktxd/entities/\e/Tmax}+#1}
