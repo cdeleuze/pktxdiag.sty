@@ -1,0 +1,897 @@
+\documentclass{ltxdoc}
+\usepackage{a4wide}
+\usepackage[utf8]{inputenc}
+\usepackage{pktxdiag}
+\usepackage{tikz}
+\usepackage{pgfmanual}
+\usepackage{calc}
+\usepackage{subfig}
+\input{pgfmanual-en-macros}
+\usepackage{makeidx}
+
+\title{\texttt{pktxdiag.sty}\\ A TikZ-based \LaTeX{} package\\ for
+  drawing packet exchange diagrams}
+\author{Christophe Deleuze}
+\date{Draft user guide - \today}
+
+\makeindex
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%\newcommand{\options}[1][options]{\opt{\oarg{#1}}}
+
+\section{Using the package}
+
+Ensure the file \texttt{pktxdiag.sty} is in \LaTeX's load path.  A fast and easy way is to copy it in the directory from which you run the compilation commands.
+
+You can then simply load the package with \texttt{usepackage}:
+
+\begin{verbatim}
+  \documentclass{article}
+  \usepackage{pktxdiag}
+  \begin{document}
+  ...
+  \end{document}
+\end{verbatim}
+
+\section{Basic diagrams}
+
+\subsection{Simple exchanges}
+
+A single DATA frame, acknowledged by an ACK frame.
+\begin{codeexample}[width=6cm]
+  \begin{pktxdiag}
+    \AB{DATA}
+    \BA{ACK}
+  \end{pktxdiag}
+\end{codeexample}
+
+A frame can be corrupted in transit...
+\begin{codeexample}[width=6cm]
+  \begin{pktxdiag}
+    \AB[bad]{DATA}
+    \BA{NAK}
+  \end{pktxdiag}
+\end{codeexample}
+\index{frame option!bad}
+
+\subsection{Timers}
+
+Frame loss is usally dealt with through a retransmission timer.
+\begin{codeexample}[width=6cm]
+  \begin{pktxdiag}
+    \AB[timed={3cm}{retrans timer},lost]{DATA}
+    \Awaittimer    
+    \AB{DATA}
+  \end{pktxdiag}
+\end{codeexample}
+\index{frame option!timed}
+\index{frame option!lost}
+\index{command!Awaittimer}
+\index{command!Bwaittimer}
+
+Such a timer is cancelled when an ACK frame is received.
+\begin{codeexample}[width=6cm]
+  \begin{pktxdiag}
+    \AB[timed={3cm}{retrans timer}]{DATA}
+    \BA[cancel]{ACK}
+  \end{pktxdiag}
+\end{codeexample}
+\index{frame option!cancel}
+
+% \begin{codeexample}[width=6cm]
+%   \begin{pktxdiag}
+%   \AB[timed={3cm}{temporisateur}]{DATA}
+%   \BA[lost]{ACK}
+%   \Awaittimer
+%   \AB[timed={3cm}{temporisateur}]{DATA}
+%   \BA[cancel]{ACK}
+% \end{pktxdiag}
+% \end{codeexample}
+% \index{frame option!lost}
+
+ACKs are often \emph{delayed}: they are not sent immediately but after
+an \emph{ack timer} expires:
+\begin{codeexample}[width=6cm]
+  \begin{pktxdiag}
+    \AB{DATA 2,x}
+    \BA[delayed={1cm}{ack}]{ACK 3}
+  \end{pktxdiag}
+\end{codeexample}
+
+The purpose of \emph{delayed ACKs} is that sending of a dedicated ACK
+frame can be cancelled if a DATA frame is to be sent shortly: the ACK
+will be \emph{piggybacked} on the data frame.
+\begin{codeexample}[width=6cm]
+  \begin{pktxdiag}
+   \AB{DATA 2,x}
+   \BA[stop={1cm}{ack}{5mm}]{DATA y,3}
+ \end{pktxdiag}
+\end{codeexample}
+
+\index{frame option!stop}
+
+Currently only two timers may be run simultaneously on each side.
+This may be increased in future versions.
+
+\index{command!Awaittimeri}
+\index{command!Bwaittimeri}
+\index{frame option!timed2}
+\index{frame option!stop2}
+\index{frame option!cancel2}
+
+TODO timed2 but waittimeri
+
+\begin{codeexample}[width=6cm]
+  \begin{pktxdiag}
+   \AB[timed={3cm}{1st timer}]{DATA 1}
+   \BA[stop2={1cm}{ack}{5mm},timed={3cm}{timed},cancel]{DATA}
+   \AB[timed2={2cm}{2nd timer},lost]{DATA 2}
+   \Awaittimeri
+   \AB[timed2={2cm}{2nd timer}]{DATA 2}
+   \BA[cancel2]{ACK}
+ \end{pktxdiag}
+\end{codeexample}
+
+\subsection{Bad timers}
+
+When a frame holds the \texttt{cancel} option, it should arrive before
+the timer expires.  If this is not the case, the compilation fails
+with an error signaling the problem.  However, if the option
+\texttt{warn only} is passed to the environment (or the option
+\texttt{warnonly}\footnote{Unfortunately, package options can't
+  contain space characters.} to the package) only a warning is issued.
+In this case a prominent yellow box is drawn at the place the problem
+occurs to help locate and correct the problem.
+
+\index{package option!warnonly}
+\index{env option!warn only}
+
+TODO cancel before any timer was run gives as latex error
+
+\begin{codeexample}[]
+\begin{pktxdiag}[warn only]
+  \AB[timed={1cm}{timer}]{DATA}
+  \BA[cancel]{ACK}
+\end{pktxdiag}
+\end{codeexample}
+
+\subsection{Late frames}
+
+Sometimes a frame is delayed in the network and arrives \emph{late}.
+\index{command!Awaittimeri}
+\index{command!Bwaittimeri}
+\index{command!Awaitlate}
+\index{command!Bwaitlate}
+
+\begin{codeexample}[width=6cm]
+  \begin{pktxdiag}
+    \AB[timed={2cm}{retrans}]{DATA 1}
+    \BA[cancel]{ACK}
+    \AB[late=4cm,timed2={2cm}{retrans}]{DATA 2}
+    \Awaittimeri
+    \AB[timed={2cm}{retrans}]{DATA 2}
+    \BA[cancel]{ACK}
+    \Bwaitlate
+    \BA{ACK}
+  \end{pktxdiag}
+\end{codeexample}
+
+If several late frames are used, they can be named to be waited upon.
+The unamed late frame is actually named \texttt{\$\$lateframe}.
+\index{frame option!name}
+
+\begin{codeexample}[]
+\begin{pktxdiag}
+  \AB{DATA1}
+  \AB[late=2cm]{DATA2}
+  \AB[late,name=n2]{DATA3}
+  \Bwaitlate
+  \BA{ACK3}
+  \Bwaitlate[n2]
+  \BA{ACK4}
+\end{pktxdiag}
+\end{codeexample}
+
+\subsection{Time is passing}
+
+\begin{description}
+\item[\texttt{prop}] The propagation delay is the time between the
+  sending and the receiving of the frame.  One can obtain horizontal
+  arrows by setting it to 0mm.
+
+\item[\texttt{send delay}] The time between the transmission of two
+  consecutive frames by the same sender.
+
+\item[\texttt{reply delay}] The time between the receipt of a frame
+  and the sending of an answer.
+\end{description}
+
+\index{env option!prop}
+\index{env option!send delay}
+\index{env option!reply delay}
+
+Commands \texttt{Apause} and \texttt{Bpause} make the entity pause
+some amount of time before sending again.  The default is 1cm and can
+be changed with the \texttt{pause} environement option.
+
+\index{command!Apause}
+\index{command!Bpause}
+\index{env option!pause}
+
+\begin{codeexample}[]
+\begin{pktxdiag}[send delay=6mm,reply delay=0mm]
+  \AB{DATA}
+  \AB{DATA}
+  \BA{ACK}
+  \Apause
+  \AB{DATA}
+  \Bpause[5mm]
+  \BA{ACK}
+\end{pktxdiag}
+\end{codeexample}
+
+The \texttt{later} command allows time to ``skip''.  Time lines
+(including timers) are dashed.  However, late frames are not (this can
+be considered a bug).
+
+\index{command!later}
+TODO should have default value?
+
+\begin{codeexample}[width=6cm]
+\begin{pktxdiag}
+  \AB{DATA1}
+  \AB[timed={6cm}{timer}]{DATA2}
+  \AB[timed2={6cm}{timer2}]{DATA3}
+  \later{2cm}
+  \BA[cancel]{ACK}
+  \BA[cancel2]{ACK}
+\end{pktxdiag}
+\end{codeexample}
+
+\subsection{Full duplex exchanges}
+
+By default, exchanges are in half duplex mode.  When a frame is sent,
+the next sending time is advanced by \texttt{send delay}.  If a frame
+is then received, this time is moved to the reception time plus
+\texttt{reply delay}.
+
+The \texttt{full duplex} environment option sets full duplex mode,
+where the second rule does not apply.  While in full duplex mode,
+commands \texttt{AwaitB} and \texttt{BwaitA} make one entity
+synchronize to the other (that is, apply the second rule above
+punctually).  Commands \texttt{fullduplex} and \texttt{halfduplex}
+allow switching between the two modes.
+
+\index{env option!full duplex}
+\index{command!AwaitB}
+\index{command!BwaitA}
+\index{command!fullduplex}
+\index{command!halfduplex}
+
+When in full duplex mode, labels are drawn close to the sender instead
+of being centered on the arrow.  See also section \ref{sec:styles} on
+label styles.
+
+\begin{codeexample}[width=8cm]
+  \begin{pktxdiag}[width=5cm]
+    \BA{ACK 0}
+    \AB[timed={2cm}{retrans}]{DATA 0}
+    \BA[late=1cm]{ACK 1}
+    \Awaittimer\AB{DATA 0}
+    \fullduplex
+    \BA{ACK 1}
+    \Awaitlate
+    \AB{DATA 1}
+    \BA{ACK 0}
+    \AB{DATA 1}
+    \BA{ACK 0}
+    \AB{DATA 0}
+    \BA{ACK 1}
+    \AB{DATA 0}
+    \BA{ACK 1}
+  \end{pktxdiag}
+\end{codeexample}
+
+%fullduplex before the ACK that shouldn't synchronize the other
+
+\section{Decorations}
+
+\subsection{Entities names}
+
+\index{env option!A}
+\index{env option!B}
+
+\begin{minipage}{.6\linewidth}
+\begin{codeexample}[]
+  \begin{pktxdiag}[A,B]
+    \AB{to B}
+    \BA{from B}
+  \end{pktxdiag}
+\end{codeexample}
+\end{minipage}
+\begin{minipage}{.4\linewidth}
+\begin{codeexample}[]
+  \begin{pktxdiag}[A=client,B=server]
+    \AB{request}
+    \BA{reply}
+  \end{pktxdiag}
+\end{codeexample}
+\end{minipage}
+
+\subsection{Lost frames}
+
+By default lost frames are simply shown disappearing in transit.  A
+cross can be added to represent their disappearing: 
+
+\index{frame option!lost}
+\index{frame option!cross for lost}
+\index{env option!cross for lost}
+
+\begin{codeexample}[]
+  \begin{pktxdiag}
+    \AB[lost]{DATA 0} \AB[lost]{DATA 1}
+  \end{pktxdiag}
+~~~~~~~~
+  \begin{pktxdiag}[cross for lost]
+    \AB[lost]{DATA 0} \AB[lost,cross for lost=false]{DATA 1}
+  \end{pktxdiag}
+~~~~~~~~
+  \begin{pktxdiag}
+    \AB[lost]{DATA 0} \AB[lost,cross for lost]{DATA 1}
+  \end{pktxdiag}
+\end{codeexample}
+
+\subsection{Timers}
+
+\subsubsection{Timer offsets}
+
+The distance between the vertical time line and the timer line/text
+can be set with the environment options \texttt{timer offset} and
+\texttt{timeri offset}.
+
+\index{env option!timer offset}
+\index{env option!timeri offset}
+
+TODO timer2 offset would be better?
+
+TODO also A/B specific offsets
+
+TODO can be used for a specific frame? maybe not
+
+\subsubsection{Left timer label positions}
+
+The default setting (left picture) is probably what you want...
+\index{env option!timers/left below}
+\index{env option!timers/left bottom up}
+
+\begin{codeexample}[]
+\def\trace{
+    \AB[timed={3cm}{timer for 0}]{DATA 0,0}
+    \AB[timed2={3cm}{timer for 1}]{DATA 1,0}
+    \BA[stop={2cm}{ack}{1cm}]{DATA 0,2}}
+  \begin{pktxdiag}
+    \trace
+  \end{pktxdiag}
+  \begin{pktxdiag}[timers/left below]
+    \trace
+  \end{pktxdiag}
+  \begin{pktxdiag}[timers/left bottom up]
+    \trace
+  \end{pktxdiag}
+\end{codeexample}
+
+TODO other setting \texttt{timers/on arrow}
+
+\subsection{Send and receive annotations}
+
+Send and receive notes can be associated with frames.  Their
+horizontal offset can be adjusted globally in the \texttt{pktxdiag}
+environment, or in a specific frame as the example shows.
+
+\index{frame option!snote}
+\index{frame option!rnote}
+\index{frame option!snoteoffset}
+\index{frame option!rnoteoffset}
+\index{env option!snote}
+\index{env option!rnote}
+\index{env option!snoteoffset}
+\index{env option!rnoteoffset}
+
+\begin{codeexample}[]
+\begin{pktxdiag}
+  \AB[snote=send note,rnote=receive note]{DATA}
+  \BA[snoteoffset=6mm,rnoteoffset=1mm,snote=less close,rnote=closer]{DATA}
+\end{pktxdiag}
+\end{codeexample}
+
+\subsection{Labels}
+
+See also section \ref{sec:styles} on styles.
+
+TODO env option show label2
+env option hide label
+frame option label2
+
+\subsection{Graphics attributes}
+
+Frames can be given most tikz graphics attributes to specify their
+colors, line width etc.
+
+\begin{codeexample}[]
+  \begin{pktxdiag}
+    \AB{DATA}
+    \BA[dashed,blue]{ACK}
+    \AB[line width=3pt,dotted,yellow,text=red]{OK !}
+  \end{pktxdiag}
+  \end{codeexample}
+
+TODO: how to change label graphics attributes?
+
+\subsection{Actions and states}
+
+Actions and states are another kind of annotations, not directly
+related to the sending or receiving of a frame.  Here's an example
+showing the application actions on the TCP layer and the states of the
+TCP state machine.
+
+\index{command!Astate}
+\index{command!Bstate}
+
+\texttt{action offset} and \texttt{state offset} set the distance
+between the timeline and the action/state. \texttt{action time offset}
+offsets the action in the past so that there's some delay between the
+action and any frame send that occurs after it.
+
+\index{env option!action time offset}
+\index{env option!action offset}
+\index{env option!state offset}
+
+\begin{codeexample}[]
+\begin{pktxdiag}[prop=7mm,A=client,B=server,action time
+  offset=2mm,action offset=2mm]
+  \Astate{Closed}\Bstate{Closed}
+  \Apause         \Bpause
+  \Apause         \Bactionstate{passive open}{listen}
+  \Aactionstate{active open}{Syn-Sent}
+  \AB{SYN}
+                 \Bstate{SynRecvd}
+                 \BA{SYN+ACK}
+  \Astate{Established}
+  \AB{ACK}
+                 \Bstate{Established}
+\end{pktxdiag}
+\end{codeexample}
+
+\section{Flows, styles, and filtering}
+
+\subsection{Flows}
+
+Each frame belongs to a given \emph{flow}, as specified by the
+\texttt{id} option\index{frame option!id}.  A frame with no
+\texttt{id} option belongs to the \texttt{main} flow.
+
+\subsection{Filtering}
+
+When a diagram contains two (or more) flows, one may want to make one
+less visible to draw the attention on the other.  A flow can be made
+less visible by:
+
+\begin{itemize}
+\item \emph{fading} it, through the \texttt{fade} environment option,
+\item hiding it, through the \texttt{hide} environment option,
+\item ignore it completely, through the \texttt{ignore} environment
+  option.
+\end{itemize}
+
+\index{env option!fade}
+\index{env option!hide}
+\index{env option!ignore}
+\index{env option!fade value}
+
+\begin{codeexample}[]
+\def\testfilter{
+  \AB[id=1]{DATA 1 (1)}
+  \AB[id=2]{DATA 1 (2)}
+  \AB[id=2]{DATA 2 (2)}
+                      \BA[id=2]{RR 3 (2)}
+  \AB[id=1]{DATA 2 (1)}
+                      \BA[id=1]{RR 3 (1)}
+}
+\tikzset{/pktxd/width=2.15cm}
+\begin{pktxdiag}
+  \testfilter
+\end{pktxdiag}
+\begin{pktxdiag}[fade=2,fade=1]
+  \testfilter
+\end{pktxdiag}
+\begin{pktxdiag}[fade=2,fade value=0.05]
+  \testfilter
+\end{pktxdiag}
+\begin{pktxdiag}[hide=2]
+  \testfilter
+\end{pktxdiag}
+\begin{pktxdiag}[ignore=2]
+  \testfilter
+\end{pktxdiag}
+\end{codeexample}
+
+TODO shallow rather than fade?
+
+The environment option \texttt{fade value} sets how much the flow
+remains visible (default is 0.25).  If you need to provide several
+arguments to one of these options either repeat the option or use the
+\texttt{/.list} key handler as in
+\texttt{hide/.list=\{1,2\}}.\footnote{See pgfmanual section 82.4.6 for
+  details.}
+
+\subsection{Styles}
+\label{sec:styles}
+
+The main usage of flows is to apply different sets of graphics
+attributes, called styles, to sequences of frames.  Styles can be
+applied to flows by commands \texttt{setflowstyle}, that defines the
+style of arrows, and \texttt{setflowlabelstyle}, that defines the
+style of frame labels.
+
+\index{command!setflowstyle}
+\index{command!setflowlabelstyle}
+\index{command!definestyle}
+\index{command!derivestyle}
+
+One can define a style with the \texttt{definestyle} command, but it
+is often more convenient to use \texttt{derivestyle}.  The new style
+adds its own attributes to those it inherits from its parent style.
+The default style for arrows is simply called \texttt{default} while
+the one for labels is called \texttt{labeldefault}.
+
+% \index{default, labeldefault} ?
+
+\begin{codeexample}[width=4cm]
+\def\testfilter{
+  \AB[id=1]{DATA 1 (1)}
+  \AB[id=2]{DATA 1 (2)}
+  \AB[id=2]{DATA 2 (2)}
+                      \BA[id=2]{RR 3 (2)}
+  \AB[id=1]{DATA 2 (1)}
+                      \BA[id=1]{RR 3 (1)}
+}
+\derivestyle{id1}{default}{green}
+\derivestyle{id1l}{labeldefault}{green!60}
+\derivestyle{id2}{default}{blue,dashed}
+\derivestyle{id2l}{labeldefault}{blue!60}
+\setflowstyle{1}{id1}
+\setflowlabelstyle{1}{id1l}
+\setflowstyle{2}{id2}
+\setflowlabelstyle{2}{id2l}
+
+\begin{pktxdiag}
+  \testfilter
+\end{pktxdiag}
+
+\begin{pktxdiag}
+  \definestyle{1b}{above,draw,orange,fill=orange!20,opacity=0.5}
+  \setflowlabelstyle{1}{1b}
+  \testfilter
+\end{pktxdiag}
+\end{codeexample}
+
+TODO interactions between styles and label styles need to be clarified
+and possibly cleaned-up
+
+\section{Multiple entities}
+
+All the previous examples where conversations involving only two
+entities.  Mutiple (more than two) entities can be used.
+
+The \texttt{entities} environment key \index{env option!entities}
+gives the list of entities, each possibly along with its full name and
+distance to its left neighbour.  If not specified, the full name is
+the entity id and the distance is taken from \texttt{width} option
+\index{env option!width} (or its default value).
+
+Note that the provided full name can only stand on a single line.  If
+such a full name is to be written on more than one line, it must be
+defined through the \texttt{entityname}
+command. \index{command!entityname}
+
+The command \texttt{frame} is used to send frames.
+\index{command!frame} It generalizes the \texttt{AB} and \texttt{BA}
+commands by adding two parameters that are the keys of the sending and
+receiving entities.
+
+\begin{codeexample}[]
+\begin{pktxdiag}[send delay=15mm,reply delay=7mm,prop=0mm,
+  entities={C,R//5cm,r/Redirector,D,S/Server S}]
+\entityname{C}{Client\\10.0.0.1}
+\entityname{R}{Resolver\\20.0.0.1}
+\entityname{D}{DNS\\authority}
+
+\derivestyle{dns}{labeldefault}{blue}
+\setflowlabelstyle{dns}{dns}
+
+\frame{C}{r}{GET image}
+\frame{r}{C}{302 ip10.0.0.1.example.com/image}
+\frame[id=dns]{C}{R}{ip10.0.0.1.example.com A ?}
+\frame[id=dns,rnote={IP=10.0.0.1\\DNS=20.0.0.1}]{R}{D}{ip10.0.0.1.example.com A ?}
+\frame[id=dns]{D}{R}{ip10.0.0.1.example.com A S}
+\frame[id=dns]{R}{C}{ip10.0.0.1.example.com A S}
+\frame{C}{S}{GET ip10.0.0.1.example.com/image}
+\frame{S}{C}{200 OK image}
+\end{pktxdiag}
+\end{codeexample}
+
+Command \texttt{XwaitY} is the generalized synchronize command:
+\texttt{AwaitB} is a shorthand for \verb+XwaitY{A}{B}+.
+
+\index{command!XwaitY}
+
+
+\section{Advanced features}
+
+\subsection{Send and receive hooks}
+
+\subsection{Buffer and window management}
+
+
+\section{Horizontal diagrams}
+
+There's some support for drawing horizontal diagrams: simply use the
+\texttt{hpktxdiag} environment.  With this kind of diagrams, the
+\emph{transmission time}\footnote{That is, the time elapsed between
+  the sending of the first and the last bit of the frame.} is shown
+and so options are provided to deal with it (they are simply ignored
+in vertical diagrams).
+
+\begin{description}
+\item[\texttt{trans}] the transmission time for a given frame, or the
+  default if given in the environnement.
+
+\index{frame option!trans}
+\index{env option!trans}
+
+\item[\texttt{short trans}] the transmission time for ``short
+  frames''.  By default such frames are those whose label starts with ``ACK''.
+
+\item[\texttt{shorts}] specifies a list of labels: frames carrying one
+  of these labels will be short (removes the default ``ACK'' rule).
+
+\item[\texttt{no shorts}] no frames are considered shorts.
+
+\item[\texttt{hdlc}] specifies the list of label for short frames in
+  the HDLC protocol.
+
+TODO: replace with shorts=hdlc ?
+
+\end{description}
+
+\index{env option!short trans}
+\index{env option!shorts}
+\index{env option!no shorts}
+\index{env option!hdlc}
+
+\begin{codeexample}[]
+\begin{hpktxdiag}[hdlc,short trans=3mm,A,B,prop=4mm]
+  \AB{SABM}
+           \BA{UA}
+  \fullduplex
+  \AB{I 0,0}
+             \BwaitA
+             \Bpause[4mm]
+  \AB{I 1,0}
+             \BA{I 0,1}
+  \AB{I 2,0}
+             \BA{I 1,2}
+  \AB{I 3,1}
+             \BA{I 2,3}
+             \BA{I 3,4}
+  \AwaitB
+  \Apause
+  \AB{RR 4}
+  \Apause
+  \halfduplex
+  \AB{DISC}
+             \BA{UA}
+\end{hpktxdiag}
+\end{codeexample}
+
+%\end{document}
+
+\appendix
+
+\section{Gallery}
+
+Some nice diagrams...
+
+
+\subsection{The need for the TCP \textsc{Time-Wait} state}
+
+\begin{codeexample}[width=8cm]
+\begin{pktxdiag}[state offset=5mm,timer offset=2mm,timeri offset=3mm,width=2cm]
+
+
+                      \Bactionstate{close}{LastAck}
+                      \BAtimed{FIN}{3.5cm}{retrans}
+  \Astate{Closed}
+  \AB[late=3cm]{ACK}
+                      \Bwaittimer
+                      \BA[late=6cm,rnote=teuuh !,rnoteoffset=-1mm]{FIN}
+                      \Bstate{Closed}
+
+\later{2cm}
+  
+                      \Bactionstate{passive open}{Listen}
+  \Apause
+  \Aactionstate{active open}{SynSent}
+  \AB{SYN}
+                      \Bstate{SynRecvd}
+                      \BA{SYN-ACK}
+  \Astate{Established}
+  \AB{ACK}
+                      \Bstate{Established}
+  \Awaitlate
+  \Astate{CloseWait}
+  \AB{ACK}
+\end{pktxdiag}
+\end{codeexample}
+
+\subsection{IPCP negociation}
+
+\begin{codeexample}[]
+\begin{pktxdiag}[A,B,width=2.5cm, fade value=0.1, fade=b]
+  \AB[id=a,snote={IP: 0.0.0.0\\DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{req id=1}
+  \BA[id=b,snote={IP comp: VJ\\IP: 10.0.0.1}]{req id=1}
+  \AB[id=b,snote=IP comp: VJ]{rej id=1}
+  \BA[id=a,snote={DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{rej id=1}
+  \BA[id=b,snote=IP: 10.0.0.1]{req id=2}
+  \AB[id=a,snote=IP: 0.0.0.0]{req id=2}
+  \AB[id=b,snote=IP: 10.0.0.1]{ack id=2}
+  \BA[id=a,snote=IP: 10.67.15.36]{nak id=2}
+  \AB[id=a,snote=IP: 10.67.15.36]{req id=3}
+  \BA[id=a,snote=IP: 10.67.15.36]{ack id=3}
+\end{pktxdiag}
+\end{codeexample}
+
+%% too ugly!
+% \subsection{An FTP file transfer}
+
+% \begin{codeexample}[width=6cm]
+% \begin{pktxdiag}[width=5cm,prop=2mm]
+% \derivestyle{data}{default}{green,line width=2pt}
+% \derivestyle{tcp}{default}{gray}
+% \setflowstyle{data}{data}
+% \derivestyle{tcplabel}{default}
+%             {above,blue,font=\footnotesize\ttfamily}
+% \setflowlabelstyle{tcp}{tcplabel}
+% \setflowstyle{tcp}{tcp}
+
+%   \AB[id=tcp]{SYN}
+%                \BA[id=tcp]{SYN-ACK}
+%   \AB[id=tcp]{ACK}
+
+%                \BA{220}
+%   \AB{USER guest}
+%                \BA{331}
+%   \AB{PASS xxxx}
+%                \BA{230}
+%    \AB{SYST}
+%                \BA{215 Unix}
+%    \AB{PORT 192,168,130,20,217,116}
+%                \BA{200}
+%    \AB{RETR toto}
+%                \BA{150}
+
+%                \BA[id=data]{SYN}
+%    \AB[id=data]{SYN-ACK}
+%                \BA[id=data]{ACK}
+%                \BA[id=data]{data}
+%                \BA[id=data]{FIN}
+%    \AB[id=data]{ACK}
+%    \AB[id=data]{FIN,ACK}
+%                \BA[id=data]{ACK}
+
+%                \BA{226}
+%    \AB{QUIT}
+%                \BA{221}
+
+%                \BA[id=tcp]{FIN}
+%    \AB[id=tcp]{FIN,ACK}
+%                \BA[id=tcp]{ACK}
+% \end{pktxdiag}
+% \end{codeexample}
+
+\subsection{Associating an IP address to its DNS resolver}
+
+\begin{codeexample}[]
+  \begin{pktxdiag}[prop=0mm,reply delay=1cm, width=4cm,
+    entities={A/client under test,B/recursive resolver,C/myresolver
+      auth NS,D/myresolver HTTP server}]
+  \entityname{A}{client\\under test}
+  \entityname{B}{recursive\\resolver}
+  \entityname{C}{myresolver\\authoritative\\name server}
+  \entityname{D}{myresolver\\HTTP server}
+
+  \pause{A}
+  \frame[rnote={Generate a random\\target name}]{A}{D}{GET http://myrevolver.info}
+  \frame{D}{A}{307 Redirect Location http://tfme6e1sxk5t.target.myrevolver.info}
+  \pause{A}
+  \frame{A}{B}{DNS Query\\tfme6e1sxk5t.target.myrevolver.info\\IN AAAA / A ?}
+  \frame[rnote={Temporarily hold\\the source IP address\\of the
+    resolver\\and associate it with\\the target name}]{B}{C}{}
+  \pause{C}
+  \frame{C}{B}{DNS reply\\tfme6e1sxk5t.target.myrevolver.info\\IN AAAA / A HTTP\_SERVER\_ADDRESS}
+  \frame{B}{A}{}
+  \frame[rnote={Fetch the resolver\\address associated\\with the
+    target name}]{A}{D}{\texttt{GET
+    http://tfme6e1sxk5t.target.myrevolver.info/}}
+  \frame{D}{A}{200 Ok}
+\end{pktxdiag}
+\end{codeexample}
+
+\subsection{SIP Session}
+
+\begin{codeexample}[]
+\begin{pktxdiag}[width=4cm,reply delay=2mm,send delay=2mm,
+  entities={A/bsd-pc.cisco.com,B/cisco.com proxy,
+    C/princeton.edu proxy,D/llp-ph.cs.princeton.edu}]
+
+\derivestyle{big}{default}{latex-latex,line width=3mm}
+\derivestyle{def}{labeldefault}{sloped=false}
+\setflowstyle{big}{big}
+\setflowlabelstyle{main}{def}
+\frame{A}{B}{invite}
+\frame{B}{C}{invite}
+\frame{C}{D}{invite}
+\frame{B}{A}{100 trying}
+\frame{C}{B}{100 trying}
+\frame{D}{C}{100 trying}
+\pause{D}
+\frame{D}{C}{180 ringing}
+\frame{C}{B}{180 ringing}
+\frame{B}{A}{180 ringing}
+\pause{D}
+\frame{D}{C}{200 OK}
+\frame{C}{B}{200 OK}
+\frame{B}{A}{200 OK}
+\frame{A}{D}{ACK}
+\pause{D}
+\frame[id=big,prop=0cm]{D}{A}{Media}
+\pause{D}
+\frame{D}{A}{BYE}
+\frame{A}{D}{200 OK}
+\end{pktxdiag}
+\end{codeexample}
+
+\subsection{TODO}
+
+more nice examples
+
+\section{Producing standalone pictures}
+
+Standalone pictures can be produced with the \texttt{standalone} document class.  If this is the content of file \texttt{example1.tex}:
+
+\begin{verbatim}
+ \documentclass[convert={density=300,outext=.png}]{standalone}
+ \usepackage{pktxdiag}
+ \begin{document}
+   \begin{pktxdiag}
+     \AB{DATA}
+     \BA{ACK}
+   \end{pktxdiag}
+ \end{document}
+\end{verbatim}
+
+\noindent running \texttt{pdflatex -shell-escape example1.tex} will create \texttt{example1.png}.  The conversion to PNG is done with ImageMagick's \texttt{convert} tool.  Other conversions can be performed, see the documentation of the \texttt{standalone} document class.
+
+\section{The low level API}
+
+TODO
+
+show the decoupling of the drawing and the protocol logic (not
+completely done so far)
+
+\printindex
+
+\end{document}
