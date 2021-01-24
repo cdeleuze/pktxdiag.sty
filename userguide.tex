@@ -2,7 +2,6 @@
 \usepackage{a4wide}
 \usepackage[utf8]{inputenc}
 \usepackage{pktxdiag}
-\usepackage{tikz}
 \usepackage{pgfmanual}
 \usepackage{calc}
 \usepackage{subfig}
@@ -122,7 +121,7 @@ This may be increased in future versions.
 \index{frame option!stop2}
 \index{frame option!cancel2}
 
-TODO timed2 but waittimeri
+%TODO timed2 but waittimeri
 
 \begin{codeexample}[width=6cm]
   \begin{pktxdiag}
@@ -149,7 +148,7 @@ occurs to help locate and correct the problem.
 \index{package option!warnonly}
 \index{env option!warn only}
 
-TODO cancel before any timer was run gives as latex error
+% TODO cancel before any timer was run raises a latex error
 
 \begin{codeexample}[]
 \begin{pktxdiag}[warn only]
@@ -238,7 +237,7 @@ The \texttt{later} command allows time to ``skip''.  Time lines
 be considered a bug).
 
 \index{command!later}
-TODO should have default value?
+% TODO should have default value?
 
 \begin{codeexample}[width=6cm]
 \begin{pktxdiag}
@@ -355,15 +354,38 @@ can be set with the environment options \texttt{timer offset} and
 \index{env option!timer offset}
 \index{env option!timeri offset}
 
-TODO timer2 offset would be better?
+% TODO timer2 offset would be better?
 
-TODO also A/B specific offsets
+% TODO also A/B specific offsets
 
-TODO can be used for a specific frame? maybe not
+% TODO can be used for a specific frame? maybe not
+
+\subsubsection{Timer label on arrow}
+
+By default, timer labels are written ``above'' the arrow, but can be
+written on the arrow (if the label is short enough).
+
+\begin{codeexample}[]
+\def\trace{
+    \AB[timed={3cm}{timer for 0}]{DATA 0,0}
+    \AB[timed2={3cm}{timer for 1}]{DATA 1,0}
+    \BA[stop={2cm}{a very long label for the ack}{1cm}]{DATA 0,2}}
+  \begin{pktxdiag}
+    \trace
+  \end{pktxdiag}
+  \begin{pktxdiag}[timers/on arrow]
+    \trace
+  \end{pktxdiag}
+\end{codeexample}
+
+\index{env option!timers/on arrow}
 
 \subsubsection{Left timer label positions}
 
-The default setting (left picture) is probably what you want...
+If the previous option is not set, there are a few more choices for
+the position of a left timer label.  The default setting (left
+picture) is probably what you want...
+
 \index{env option!timers/left below}
 \index{env option!timers/left bottom up}
 
@@ -382,8 +404,6 @@ The default setting (left picture) is probably what you want...
     \trace
   \end{pktxdiag}
 \end{codeexample}
-
-TODO other setting \texttt{timers/on arrow}
 
 \subsection{Send and receive annotations}
 
@@ -411,9 +431,9 @@ environment, or in a specific frame as the example shows.
 
 See also section \ref{sec:styles} on styles.
 
-TODO env option show label2
-env option hide label
-frame option label2
+% TODO env option show label2
+% env option hide label
+% frame option label2
 
 \subsection{Graphics attributes}
 
@@ -428,7 +448,7 @@ colors, line width etc.
   \end{pktxdiag}
   \end{codeexample}
 
-TODO: how to change label graphics attributes?
+% TODO: how to change label graphics attributes?
 
 \subsection{Actions and states}
 
@@ -464,6 +484,8 @@ action and any frame send that occurs after it.
                  \Bstate{Established}
 \end{pktxdiag}
 \end{codeexample}
+
+% TODO - show action time offset
 
 \section{Flows, styles, and filtering}
 
@@ -518,7 +540,7 @@ less visible by:
 \end{pktxdiag}
 \end{codeexample}
 
-TODO shallow rather than fade?
+% TODO shallow rather than fade?
 
 The environment option \texttt{fade value} sets how much the flow
 remains visible (default is 0.25).  If you need to provide several
@@ -623,10 +645,16 @@ receiving entities.
 \end{pktxdiag}
 \end{codeexample}
 
-Command \texttt{XwaitY} is the generalized synchronize command:
-\texttt{AwaitB} is a shorthand for \verb+XwaitY{A}{B}+.
+Some commands available for two entities diagram are actually special versions of a more general command:
 
-\index{command!XwaitY}
+\begin{itemize}
+\item \texttt{XwaitY} for synchronize: \texttt{AwaitB} is a shorthand
+  for \verb+XwaitY{A}{B}+.
+\item \texttt{Xpause} for pause: \texttt{Apause} is a shorthand for \verb+Xpause{A}+.
+\end{itemize}
+
+\index{command!XwaitY}\index{command!Xpause}
+
 
 
 \section{Advanced features}
@@ -661,9 +689,9 @@ in vertical diagrams).
 \item[\texttt{no shorts}] no frames are considered shorts.
 
 \item[\texttt{hdlc}] specifies the list of label for short frames in
-  the HDLC protocol.
+  the HDLC protocol. There are RR, RNR, REJ, SREJ, SABM, DISC, UA.
 
-TODO: replace with shorts=hdlc ?
+% TODO: replace with shorts=hdlc ?
 
 \end{description}
 
@@ -813,14 +841,14 @@ Some nice diagrams...
   \entityname{C}{myresolver\\authoritative\\name server}
   \entityname{D}{myresolver\\HTTP server}
 
-  \pause{A}
+  \Xpause{A}
   \frame[rnote={Generate a random\\target name}]{A}{D}{GET http://myrevolver.info}
   \frame{D}{A}{307 Redirect Location http://tfme6e1sxk5t.target.myrevolver.info}
-  \pause{A}
+  \Xpause{A}
   \frame{A}{B}{DNS Query\\tfme6e1sxk5t.target.myrevolver.info\\IN AAAA / A ?}
   \frame[rnote={Temporarily hold\\the source IP address\\of the
     resolver\\and associate it with\\the target name}]{B}{C}{}
-  \pause{C}
+  \Xpause{C}
   \frame{C}{B}{DNS reply\\tfme6e1sxk5t.target.myrevolver.info\\IN AAAA / A HTTP\_SERVER\_ADDRESS}
   \frame{B}{A}{}
   \frame[rnote={Fetch the resolver\\address associated\\with the
@@ -847,18 +875,18 @@ Some nice diagrams...
 \frame{B}{A}{100 trying}
 \frame{C}{B}{100 trying}
 \frame{D}{C}{100 trying}
-\pause{D}
+\Xpause{D}
 \frame{D}{C}{180 ringing}
 \frame{C}{B}{180 ringing}
 \frame{B}{A}{180 ringing}
-\pause{D}
+\Xpause{D}
 \frame{D}{C}{200 OK}
 \frame{C}{B}{200 OK}
 \frame{B}{A}{200 OK}
 \frame{A}{D}{ACK}
-\pause{D}
+\Xpause{D}
 \frame[id=big,prop=0cm]{D}{A}{Media}
-\pause{D}
+\Xpause{D}
 \frame{D}{A}{BYE}
 \frame{A}{D}{200 OK}
 \end{pktxdiag}
@@ -866,14 +894,14 @@ Some nice diagrams...
 
 \subsection{TODO}
 
-more nice examples
+More nice examples should be included!
 
 \section{Producing standalone pictures}
 
 Standalone pictures can be produced with the \texttt{standalone} document class.  If this is the content of file \texttt{example1.tex}:
 
 \begin{verbatim}
- \documentclass[convert={density=300,outext=.png}]{standalone}
+ \documentclass[convert={density=100,outext=.png}]{standalone}
  \usepackage{pktxdiag}
  \begin{document}
    \begin{pktxdiag}
@@ -885,12 +913,17 @@ Standalone pictures can be produced with the \texttt{standalone} document class.
 
 \noindent running \texttt{pdflatex -shell-escape example1.tex} will create \texttt{example1.png}.  The conversion to PNG is done with ImageMagick's \texttt{convert} tool.  Other conversions can be performed, see the documentation of the \texttt{standalone} document class.
 
+%TODO: also need -alpha remove
+%do convert manually
+
+%convert -alpha remove -density 100 file.pdf file.png
+
 \section{The low level API}
 
 TODO
 
-show the decoupling of the drawing and the protocol logic (not
-completely done so far)
+Here we could show the decoupling of the drawing and the protocol
+logic (but this is not completely done so far, anyway...)
 
 \printindex
 

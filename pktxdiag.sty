@@ -941,7 +941,7 @@
   \pgfkeyslet{/pktxd/entities/#1/pos}{\toto}}
 
 
-\newcommand{\pause}[2][\pktxd@pausedefault]{\pktxd@addtosend{#2}{#1}}
+\newcommand{\Xpause}[2][\pktxd@pausedefault]{\pktxd@addtosend{#2}{#1}}
 
 %%: X waits for Y, Y waits for X (usefull only in fullduplex mode)
 
@@ -992,8 +992,8 @@
 \newcommand{\AB}[2][]{\pktxd@frame[#1]{A}{B}{#2}}
 \newcommand{\BA}[2][]{\pktxd@frame[#1]{B}{A}{#2}}
 
-\newcommand{\Apause}[1][\pktxd@pausedefault]{\pause[#1]{A}}
-\newcommand{\Bpause}[1][\pktxd@pausedefault]{\pause[#1]{B}}
+\newcommand{\Apause}[1][\pktxd@pausedefault]{\Xpause[#1]{A}}
+\newcommand{\Bpause}[1][\pktxd@pausedefault]{\Xpause[#1]{B}}
 
 \newcommand{\AwaitB}{\XwaitY{A}{B}}
 \newcommand{\BwaitA}{\XwaitY{B}{A}}
