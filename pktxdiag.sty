@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}[1994/06/01]
-\ProvidesPackage{pktxdiag}[2015/02/09 Tikz add-on for packet exchange diagrams]
+\ProvidesPackage{pktxdiag}[2021/02/18 Tikz add-on for packet exchange diagrams]
 
 \DeclareOption{debug}{\pktxd@debugtrue}
 \newif\ifpktxd@debug
@@ -161,13 +161,13 @@
 \pgfkeyssetvalue{/pktxd/label2}{}
 
 \pgfkeys{
-  /pktxd/timerAoffset/.style={/pktxd/default/timers/l/1/offset=#1},
-  /pktxd/timerAioffset/.style={/pktxd/default/timers/l/2/offset=#1},
-  /pktxd/timerBoffset/.style={/pktxd/default/timers/r/1/offset=#1},
-  /pktxd/timerBioffset/.style={/pktxd/default/timers/r/2/offset=#1},
+  /pktxd/A timer offset/.style={/pktxd/default/timers/l/1/offset=#1},
+  /pktxd/A timer2 offset/.style={/pktxd/default/timers/l/2/offset=#1},
+  /pktxd/B timer offset/.style={/pktxd/default/timers/r/1/offset=#1},
+  /pktxd/B timer2 offset/.style={/pktxd/default/timers/r/2/offset=#1},
   % 
-  /pktxd/timer offset/.style={/pktxd/timerAoffset=#1,/pktxd/timerBoffset=#1},
-  /pktxd/timeri offset/.style={/pktxd/timerAioffset=#1,/pktxd/timerBioffset=#1}}
+  /pktxd/timer offset/.style={/pktxd/A timer offset=#1,/pktxd/B timer offset=#1},
+  /pktxd/timer2 offset/.style={/pktxd/A timer2 offset=#1,/pktxd/B timer2 offset=#1}}
 
 
 % since we fail to define several keys in a \if
@@ -1010,10 +1010,8 @@
 
 %%: A,B waits for its current timer to expire
 
-\newcommand{\Awaittimer} {\pktxd@waittimer{A}{l}{1}}
-\newcommand{\Awaittimeri}{\pktxd@waittimer{A}{l}{2}}
-\newcommand{\Bwaittimer} {\pktxd@waittimer{B}{r}{1}}
-\newcommand{\Bwaittimeri}{\pktxd@waittimer{B}{r}{2}}
+\newcommand{\Awaittimer}[1][1]{\pktxd@waittimer{A}{l}{#1}}
+\newcommand{\Bwaittimer}[1][1]{\pktxd@waittimer{B}{r}{#1}}
 
 %%: A sends a timed frame to B
 % [keys], flabel, len, tlabel

@@ -187,7 +187,7 @@
   \BAdelayed{1cm}{ack}{ACK4}}
 
 \def\testxiv{
-\pgfkeys{/pktxd/.cd,timeri offset=3mm}
+\pgfkeys{/pktxd/.cd,timer2 offset=3mm}
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{TimeWait}
@@ -197,7 +197,7 @@
   \ABtimedi{ACK}{5cm}{2xMSL}
 
                       \Bstate{Closed}
-  \Awaittimeri
+  \Awaittimer[2]
   \Astate{Closed}
 }
 

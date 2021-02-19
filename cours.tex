@@ -495,7 +495,7 @@
 
 \begin{figure}[H]
 \hspace{-1cm}\subfloat[avec]{
-\begin{pktxdiag}[state offset=7mm,timeri offset=3mm]
+\begin{pktxdiag}[state offset=7mm,timer2 offset=3mm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{TimeWait}
@@ -505,11 +505,11 @@
   \ABtimedi[trans]{ACK}{5cm}{2xMSL}
 
                       \Bstate{Closed}
-  \Awaittimeri
+  \Awaittimer[2]
   \Astate{Closed}
 \end{pktxdiag}}\hfill
 \subfloat[sans]{
-\begin{pktxdiag}[state offset=7mm,timeri offset=3mm]
+\begin{pktxdiag}[state offset=7mm,timer2 offset=3mm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{Closed}
@@ -529,7 +529,7 @@
 \pgfkeys{/pktxd/state offset=5mm,/pktxd/timer offset=2mm}
 \hspace{-2cm}
 \subfloat[un vieux FIN]{
-\begin{pktxdiag}[timeri offset=3mm,width=2cm]
+\begin{pktxdiag}[timer2 offset=3mm,width=2cm]
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{Closed}

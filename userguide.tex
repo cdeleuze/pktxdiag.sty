@@ -115,20 +115,18 @@ will be \emph{piggybacked} on the data frame.
 Currently only two timers may be run simultaneously on each side.
 This may be increased in future versions.
 
-\index{command!Awaittimeri}
-\index{command!Bwaittimeri}
+\index{command!Awaittimer}
+\index{command!Bwaittimer}
 \index{frame option!timed2}
 \index{frame option!stop2}
 \index{frame option!cancel2}
-
-%TODO timed2 but waittimeri
 
 \begin{codeexample}[width=6cm]
   \begin{pktxdiag}
    \AB[timed={3cm}{1st timer}]{DATA 1}
    \BA[stop2={1cm}{ack}{5mm},timed={3cm}{timed},cancel]{DATA}
    \AB[timed2={2cm}{2nd timer},lost]{DATA 2}
-   \Awaittimeri
+   \Awaittimer[2]
    \AB[timed2={2cm}{2nd timer}]{DATA 2}
    \BA[cancel2]{ACK}
  \end{pktxdiag}
@@ -160,8 +158,6 @@ occurs to help locate and correct the problem.
 \subsection{Late frames}
 
 Sometimes a frame is delayed in the network and arrives \emph{late}.
-\index{command!Awaittimeri}
-\index{command!Bwaittimeri}
 \index{command!Awaitlate}
 \index{command!Bwaitlate}
 
@@ -170,7 +166,7 @@ Sometimes a frame is delayed in the network and arrives \emph{late}.
     \AB[timed={2cm}{retrans}]{DATA 1}
     \BA[cancel]{ACK}
     \AB[late=4cm,timed2={2cm}{retrans}]{DATA 2}
-    \Awaittimeri
+    \Awaittimer[2]
     \AB[timed={2cm}{retrans}]{DATA 2}
     \BA[cancel]{ACK}
     \Bwaitlate
@@ -349,12 +345,16 @@ cross can be added to represent their disappearing:
 
 The distance between the vertical time line and the timer line/text
 can be set with the environment options \texttt{timer offset} and
-\texttt{timeri offset}.
+\texttt{timer2 offset}.  This can be set for only A or B with
+\texttt{A timer offset}, \texttt{BB timer2 offset} etc.
 
 \index{env option!timer offset}
-\index{env option!timeri offset}
+\index{env option!timer2 offset}
+\index{env option!A timer offset}
+\index{env option!A timer2 offset}
+\index{env option!B timer offset}
+\index{env option!B timer2 offset}
 
-% TODO timer2 offset would be better?
 
 % TODO also A/B specific offsets
 
@@ -737,7 +737,7 @@ Some nice diagrams...
 \subsection{The need for the TCP \textsc{Time-Wait} state}
 
 \begin{codeexample}[width=8cm]
-\begin{pktxdiag}[state offset=5mm,timer offset=2mm,timeri offset=3mm,width=2cm]
+\begin{pktxdiag}[state offset=5mm,timer offset=2mm,timer2 offset=3mm,width=2cm]
 
 
                       \Bactionstate{close}{LastAck}
