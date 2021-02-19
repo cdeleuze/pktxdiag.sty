@@ -2,6 +2,7 @@
 \usepackage[]{pktxdiag}
 \usepackage[francais]{babel}
 \usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
 \usepackage{a4wide}
 %\usepackage{cours}
 \usepackage{float}
@@ -19,7 +20,8 @@
 
 \pgfkeys{/pktxd/timers=left bottom up}
 
-\section{NE321}
+
+\section{NE321/324}
 
 \subsection{Stop and wait}
 
@@ -346,6 +348,8 @@
 \end{figure}
 
 
+\subsection{IPCP}
+
 % \begin{figure}[H]
 % \pgfkeys{/pktxd/width=2.5cm}
 % \def\trace{
@@ -644,6 +648,7 @@
 \BA{ack=~~~~~~~~~~ win= }
 \end{fpktxdiag}
 
+\subsection{FTP}
 
 \def\ftp{
   \AB[id=tcp]{SYN}
@@ -701,6 +706,8 @@
 }
 
 \section{NE571}
+
+\subsection{HTTP}
 
 \begin{figure}[H]
 
@@ -783,6 +790,8 @@
   \AB[timed={1.6cm}{t}]{GET}
   \BA{200 OK Age: x}
 \end{pktxdiag}
+
+\subsection{Résolveur DNS}
 
 \begin{pktxdiag}[send delay=15mm,reply delay=7mm,prop=0mm,width=2.5cm,
   entities={C,R/Résolveur/3cm,r/Redirecteur,D,S/Serveur S}]\small

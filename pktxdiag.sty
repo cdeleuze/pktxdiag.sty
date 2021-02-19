@@ -72,13 +72,12 @@
 \pgfkeys{
   /pktxd/debug/.is if=pktxd@debug,
   /pktxd/warn only/.is if=pktxd@warnonly,
+  %
   /pktxd/prop/.default=1cm,
   /pktxd/prop/.code=\setlength{\pktxd@prop}{#1},
   % 
   /pktxd/trans/.default=10mm,
   /pktxd/trans/.code=\ifpktxd@h\setlength{\pktxd@trans}{#1}\fi,
-  % 
-  /pktxd/sh/.style=trans=5mm,
   % 
   /pktxd/lost/.is if=pktxd@lost,
   /pktxd/bad/.is if=pktxd@bad,
@@ -107,7 +106,6 @@
 \newif\ifpktxd@late\pktxd@latefalse
 \newif\ifpktxd@delayed\pktxd@delayedfalse
 \newif\ifpktxd@stop\pktxd@stopfalse
-\newif\ifpktxd@sync\pktxd@synctrue
 
 %% the list of timers started by the current frame
 %% it has a dumb last element to avoid the loop break on a final comma
@@ -160,6 +158,7 @@
 \newif\ifpktxd@hidelabel
 \pgfkeyssetvalue{/pktxd/label2}{}
 
+% this makes sense only for AB diagrams
 \pgfkeys{
   /pktxd/A timer offset/.style={/pktxd/default/timers/l/1/offset=#1},
   /pktxd/A timer2 offset/.style={/pktxd/default/timers/l/2/offset=#1},
@@ -170,12 +169,15 @@
   /pktxd/timer2 offset/.style={/pktxd/A timer2 offset=#1,/pktxd/B timer2 offset=#1}}
 
 
-% since we fail to define several keys in a \if
-% used for left timers when pktxd@bottomuptrue
-\pgfkeys{/pktxd/reverse/.style={/tikz/rotate=180,/tikz/above},
-         /pktxd/fill/.style={fill=graphicbackground},
-         /pktxd/left note/.style={align=right,left},
-         /pktxd/right note/.style={align=left,right}}
+% .style since we fail to define several keys in a \if
+% reverse used for left timers when pktxd@bottomuptrue
+\pgfkeys{
+  /pktxd/reverse/.style={/tikz/rotate=180,/tikz/above},
+%
+  /pktxd/fill/.style={fill=graphicbackground},
+  /pktxd/left note/.style={align=right,left},
+  /pktxd/right note/.style={align=left,right}
+}
 
 %% states and actions
 \pgfkeys{
@@ -190,6 +192,8 @@
 \newlength{\pktxd@stateoffset}\setlength{\pktxd@stateoffset}{12mm}
 
 %% environment keys
+
+\newif\ifpktxd@sync\pktxd@synctrue
 
 \pgfkeys{
   /pktxd/entities/.code=\pktxd@initmentities{#1},
@@ -217,7 +221,6 @@
   %
   % TODO: merge in one key?
   /pktxd/timers/.is choice,
-  /pktxd/timers/above/.code={},
   /pktxd/timers/left bottom up/.is if=pktxd@timerleftbottomup,
   /pktxd/timers/left below/.is if=pktxd@timerleftbelow,
   /pktxd/timers/on arrow/.code={\pktxd@timeronarrowtrue\def\pktxd@timerlabeladd{#1}},
@@ -248,13 +251,15 @@
 % sets value of \pktxd@trans based on label #1
 \newcommand{\pktxd@settrans}[1]{
   \ifpktxd@h
-  \gdef\pktxd@thistrans{\pktxd@trans}
+  \def\pktxd@thistrans{\pktxd@trans}
   % command from xstring package
   % only the first line of multi line labels is considered
   % (otherwise, this crashes)
   \expandarg
   \foreach \x in \pktxd@shorts {
-    \IfBeginWith{#1}{\x}{\gdef\pktxd@thistrans{\pgfkeysvalueof{/pktxd/short trans}}}{}
+    \IfBeginWith{#1}{\x}{
+      \gdef\pktxd@thistrans{\pgfkeysvalueof{/pktxd/short trans}}}
+    {}
   }
   \setlength{\pktxd@trans}{\pktxd@thistrans}
   \fi
@@ -315,10 +320,9 @@
 
 % this will be usefull for creating entities in a \foreach...
 \def\pgfglobalkeys#1{
-  \begingroup \ifnum
-    \the\globaldefs>0\relax 
-  \else
-    \globaldefs=1\fi
+  \begingroup
+  \ifnum\the\globaldefs>0\relax
+  \else \globaldefs=1\fi
   \pgfkeys{#1}\endgroup}
 
 % loop on entities: arg is code using \e
@@ -413,6 +417,8 @@
 % #1 are keys, #2 is sender pos, #3 is receiver pos
 % #4 is send time, #5 is label
 
+% uses: pktxd@lost, pktxd@bad, pktxd@late, pktxd@prop, pktxd@crosslost
+
 \newcommand{\pktxd@arrowv}[5][]{
   \pgfkeysifdefined{/pktxd/flows/\pktxd@id/labelstyle}
   {\def\labelstyle{/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/labelstyle}}}
@@ -430,7 +436,7 @@
     \ifpktxd@bad
        % can't be both bad and late
        \ifpktxd@late \pktxd@error{Frame both bad and late}
-                                 {Sorry, a frame currently can't be both late and lost.}
+                                 {Sorry, a frame currently can't be both bad and late.}
        \else
 
        \draw (#2,-#4) --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
@@ -528,6 +534,8 @@
 
   \setlength{\pktxd@savedtrans}{\pktxd@trans}
   \setlength{\pktxd@savedprop}{\pktxd@prop}
+
+  % process our frame keys
   \pgfkeys{/pktxd/global/.activate family}
   \pgfkeysfiltered{/pktxd/.cd,#1}
   \pgfkeysgetvalue{/pktxd/id}{\pktxd@id}
@@ -961,34 +969,6 @@
 
 %%% specialized code for two entities diagrams
 
-\def\timerAend {\pktxd@gettimerend{A}{l}{1}}
-\def\timerAiend{\pktxd@gettimerend{A}{l}{2}}
-\def\timerBend {\pktxd@gettimerend{B}{r}{1}}
-\def\timerBiend{\pktxd@gettimerend{B}{r}{2}}
-
-\def\timerAoffset {\pgfkeysvalueof{/pktxd/default/timers/l/1/offset}}
-\def\timerAioffset{\pgfkeysvalueof{/pktxd/default/timers/l/2/offset}}
-\def\timerBoffset {\pgfkeysvalueof{/pktxd/default/timers/r/1/offset}}
-\def\timerBioffset{\pgfkeysvalueof{/pktxd/default/timers/r/2/offset}}
-
-% time, len, label
-\newcommand{\settimerA} [3]{\pktxd@starttimer{A}{l}{1}{#1}{#2}{#3}}
-\newcommand{\settimerAi}[3]{\pktxd@starttimer{A}{l}{2}{#1}{#2}{#3}}
-\newcommand{\settimerB} [3]{\pktxd@starttimer{B}{r}{1}{#1}{#2}{#3}}
-\newcommand{\settimerBi}[3]{\pktxd@starttimer{B}{r}{2}{#1}{#2}{#3}}
-
-\newcommand{\pktxd@endtimerA} {\pktxd@endtimer{A}{l}{1}}
-\newcommand{\pktxd@endtimerAi}{\pktxd@endtimer{A}{l}{2}}
-\newcommand{\pktxd@endtimerB} {\pktxd@endtimer{B}{r}{1}}
-\newcommand{\pktxd@endtimerBi}{\pktxd@endtimer{B}{r}{2}}
-
-\newcommand{\canceltimerA}[1] {\pktxd@canceltimer{A}{l}{1}{#1}}
-\newcommand{\canceltimerAi}[1]{\pktxd@canceltimer{A}{l}{2}{#1}}
-\newcommand{\canceltimerB}[1] {\pktxd@canceltimer{B}{r}{1}{#1}}
-\newcommand{\canceltimerBi}[1]{\pktxd@canceltimer{B}{r}{2}{#1}}
-
-%%: A sends to B, B sends to A
-
 \newcommand{\AB}[2][]{\pktxd@frame[#1]{A}{B}{#2}}
 \newcommand{\BA}[2][]{\pktxd@frame[#1]{B}{A}{#2}}
 
@@ -1007,7 +987,6 @@
   \pktxd@setTrecv{B}{\pgfkeysvalueof{/pktxd/values/B/#1}}
   \BwaitA}
   
-
 %%: A,B waits for its current timer to expire
 
 \newcommand{\Awaittimer}[1][1]{\pktxd@waittimer{A}{l}{#1}}
@@ -1038,7 +1017,6 @@
 %%  [keys], len, tlabel, delay, flabel
 \newcommand{\ABstop}[5][]{\AB[#1,stop={#2}{#3}{#4}]{#5}}
 \newcommand{\BAstop}[5][]{\BA[#1,stop={#2}{#3}{#4}]{#5}}
-
 
 %% shortcuts
 \def\pAs{\pktxd@Tsend{A}}

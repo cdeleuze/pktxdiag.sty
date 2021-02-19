@@ -13,6 +13,8 @@
 \author{Christophe Deleuze}
 \date{Draft user guide - \today}
 
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{1mm}
 \makeindex
 \begin{document}
 \maketitle
@@ -21,9 +23,19 @@
 
 %\newcommand{\options}[1][options]{\opt{\oarg{#1}}}
 
+% undocumented:
+% ABtimed, ABtimedi, ABcancel, ABcanceli, ABdelayed, ABstop (and BA of course)
+% settimerA, settimerAi, canceltimerA, canceltimerAi
+
+% env: reversed, width (mentioned only for multi-mode)
+
 \section{Using the package}
 
-Ensure the file \texttt{pktxdiag.sty} is in \LaTeX's load path.  A fast and easy way is to copy it in the directory from which you run the compilation commands.
+Ensure the file \texttt{pktxdiag.sty} is in \LaTeX's load path.  A
+quick and easy way is to copy it in the directory from which you run
+the compilation commands.
+
+% or standard, or TEXINPUTS
 
 You can then simply load the package with \texttt{usepackage}:
 
@@ -106,10 +118,11 @@ will be \emph{piggybacked} on the data frame.
 \begin{codeexample}[width=6cm]
   \begin{pktxdiag}
    \AB{DATA 2,x}
-   \BA[stop={1cm}{ack}{5mm}]{DATA y,3}
+   \BA[stop={1cm}{ack}{3mm}]{DATA y,3}
  \end{pktxdiag}
 \end{codeexample}
 
+\index{frame option!delayed}
 \index{frame option!stop}
 
 Currently only two timers may be run simultaneously on each side.
@@ -118,6 +131,7 @@ This may be increased in future versions.
 \index{command!Awaittimer}
 \index{command!Bwaittimer}
 \index{frame option!timed2}
+\index{frame option!delayed2}
 \index{frame option!stop2}
 \index{frame option!cancel2}
 
@@ -210,7 +224,7 @@ The unamed late frame is actually named \texttt{\$\$lateframe}.
 
 Commands \texttt{Apause} and \texttt{Bpause} make the entity pause
 some amount of time before sending again.  The default is 1cm and can
-be changed with the \texttt{pause} environement option.
+be changed with the \texttt{pause} environment option.
 
 \index{command!Apause}
 \index{command!Bpause}
@@ -277,16 +291,16 @@ label styles.
     \BA[late=1cm]{ACK 1}
     \Awaittimer\AB{DATA 0}
     \fullduplex
-    \BA{ACK 1}
+                \BA{ACK 1}
     \Awaitlate
     \AB{DATA 1}
-    \BA{ACK 0}
+                \BA{ACK 0}
     \AB{DATA 1}
-    \BA{ACK 0}
+                \BA{ACK 0}
     \AB{DATA 0}
-    \BA{ACK 1}
+                \BA{ACK 1}
     \AB{DATA 0}
-    \BA{ACK 1}
+                \BA{ACK 1}
   \end{pktxdiag}
 \end{codeexample}
 
@@ -363,17 +377,21 @@ can be set with the environment options \texttt{timer offset} and
 \subsubsection{Timer label on arrow}
 
 By default, timer labels are written ``above'' the arrow, but can be
-written on the arrow (if the label is short enough).
+written on the arrow if the label is short enough.  By default, the
+label must be 5mm shorter than the arrow.
 
 \begin{codeexample}[]
 \def\trace{
     \AB[timed={3cm}{timer for 0}]{DATA 0,0}
-    \AB[timed2={3cm}{timer for 1}]{DATA 1,0}
-    \BA[stop={2cm}{a very long label for the ack}{1cm}]{DATA 0,2}}
+    \AB[timed2={3cm}{the timer for 1}]{DATA 1,0}
+    \BA[stop={2cm}{ack}{1cm}]{DATA 0,2}}
   \begin{pktxdiag}
     \trace
   \end{pktxdiag}
   \begin{pktxdiag}[timers/on arrow]
+    \trace
+  \end{pktxdiag}
+  \begin{pktxdiag}[timers/on arrow=1cm]
     \trace
   \end{pktxdiag}
 \end{codeexample}
@@ -459,6 +477,8 @@ TCP state machine.
 
 \index{command!Astate}
 \index{command!Bstate}
+\index{command!Aactionstate}
+\index{command!Bactionstate}
 
 \texttt{action offset} and \texttt{state offset} set the distance
 between the timeline and the action/state. \texttt{action time offset}
@@ -606,13 +626,14 @@ and possibly cleaned-up
 \section{Multiple entities}
 
 All the previous examples where conversations involving only two
-entities.  Mutiple (more than two) entities can be used.
+entities.  Multiple (more than two) entities can be used.
 
 The \texttt{entities} environment key \index{env option!entities}
 gives the list of entities, each possibly along with its full name and
 distance to its left neighbour.  If not specified, the full name is
 the entity id and the distance is taken from \texttt{width} option
-\index{env option!width} (or its default value).
+\index{env option!width} (or its default value).  The \texttt{width}
+key must be included before \texttt{entities} to be effective.
 
 Note that the provided full name can only stand on a single line.  If
 such a full name is to be written on more than one line, it must be
@@ -645,23 +666,19 @@ receiving entities.
 \end{pktxdiag}
 \end{codeexample}
 
-Some commands available for two entities diagram are actually special versions of a more general command:
+Some commands available for two entities diagrams are actually special
+versions of a more general command:
 
 \begin{itemize}
 \item \texttt{XwaitY} for synchronize: \texttt{AwaitB} is a shorthand
-  for \verb+XwaitY{A}{B}+.
-\item \texttt{Xpause} for pause: \texttt{Apause} is a shorthand for \verb+Xpause{A}+.
+  for \verb+XwaitY{A}{B}+.  Unfortunately, this does not currently
+  work as it should: X waits for anyone, not Y specifically.
+\item \texttt{Xpause} for pause: \texttt{Apause} is a shorthand for
+  \verb+Xpause{A}+.
 \end{itemize}
 
-\index{command!XwaitY}\index{command!Xpause}
-
-
-
-\section{Advanced features}
-
-\subsection{Send and receive hooks}
-
-\subsection{Buffer and window management}
+\index{command!XwaitY}
+\index{command!Xpause}
 
 
 \section{Horizontal diagrams}
@@ -681,7 +698,8 @@ in vertical diagrams).
 \index{env option!trans}
 
 \item[\texttt{short trans}] the transmission time for ``short
-  frames''.  By default such frames are those whose label starts with ``ACK''.
+  frames''.  By default such frames are those whose label starts with
+  ``ACK''.
 
 \item[\texttt{shorts}] specifies a list of labels: frames carrying one
   of these labels will be short (removes the default ``ACK'' rule).
@@ -689,11 +707,18 @@ in vertical diagrams).
 \item[\texttt{no shorts}] no frames are considered shorts.
 
 \item[\texttt{hdlc}] specifies the list of label for short frames in
-  the HDLC protocol. There are RR, RNR, REJ, SREJ, SABM, DISC, UA.
+  the HDLC protocol. These are RR, RNR, REJ, SREJ, SABM, DISC, UA.
 
 % TODO: replace with shorts=hdlc ?
 
 \end{description}
+
+Timers are supported.  Beware that the transmission time may make that
+a timer canceling frame correct in a vertical diagram may be incorrect
+in a horizontal diagram.
+
+Missing features available in vertical diagrams include : late frames,
+laters, states and actions.
 
 \index{env option!short trans}
 \index{env option!shorts}
@@ -870,18 +895,18 @@ Some nice diagrams...
 \setflowstyle{big}{big}
 \setflowlabelstyle{main}{def}
 \frame{A}{B}{invite}
-\frame{B}{C}{invite}
-\frame{C}{D}{invite}
+   \frame{B}{C}{invite}
+      \frame{C}{D}{invite}
 \frame{B}{A}{100 trying}
-\frame{C}{B}{100 trying}
-\frame{D}{C}{100 trying}
-\Xpause{D}
-\frame{D}{C}{180 ringing}
-\frame{C}{B}{180 ringing}
+   \frame{C}{B}{100 trying}
+      \frame{D}{C}{100 trying}
+      \Xpause{D}
+      \frame{D}{C}{180 ringing}
+   \frame{C}{B}{180 ringing}
 \frame{B}{A}{180 ringing}
-\Xpause{D}
-\frame{D}{C}{200 OK}
-\frame{C}{B}{200 OK}
+      \Xpause{D}
+      \frame{D}{C}{200 OK}
+   \frame{C}{B}{200 OK}
 \frame{B}{A}{200 OK}
 \frame{A}{D}{ACK}
 \Xpause{D}
@@ -898,7 +923,8 @@ More nice examples should be included!
 
 \section{Producing standalone pictures}
 
-Standalone pictures can be produced with the \texttt{standalone} document class.  If this is the content of file \texttt{example1.tex}:
+Standalone pictures can be produced with the \texttt{standalone}
+document class.  If this is the content of file \texttt{example1.tex}:
 
 \begin{verbatim}
  \documentclass[convert={density=100,outext=.png}]{standalone}
@@ -911,12 +937,44 @@ Standalone pictures can be produced with the \texttt{standalone} document class.
  \end{document}
 \end{verbatim}
 
-\noindent running \texttt{pdflatex -shell-escape example1.tex} will create \texttt{example1.png}.  The conversion to PNG is done with ImageMagick's \texttt{convert} tool.  Other conversions can be performed, see the documentation of the \texttt{standalone} document class.
+\noindent Running \texttt{pdflatex -shell-escape example1.tex} will
+create \texttt{example1.png}.  The conversion to PNG is done with
+ImageMagick's \texttt{convert} tool.  Other conversions can be
+performed, see the documentation of the \texttt{standalone} document
+class.
+
+Several pictures can be produced by giving the \texttt{multi} option
+to \texttt{standalone}.  File \texttt{example2.tex} below will create
+files \texttt{example2-0.png} and \texttt{example2-1.png}.
+
+\begin{verbatim}
+\documentclass[convert={density=100,outext=.png},multi={pktxdiag}]{standalone}
+\usepackage{pktxdiag}
+\begin{document}
+   \begin{pktxdiag} % picture 0
+     \AB{DATA 0}
+     \BA{ACK 1}
+   \end{pktxdiag}
+   \begin{pktxdiag} % picture 1
+     \AB{DATA 1}
+     \BA{ACK 0}
+   \end{pktxdiag}
+ \end{document}
+\end{verbatim}
 
 %TODO: also need -alpha remove
 %do convert manually
 
 %convert -alpha remove -density 100 file.pdf file.png
+
+\section{Debugging}
+
+The option \texttt{debug} can be given to either the package or an
+environment to get debugging information displayed.
+
+\index{package option!debug}
+\index{env option!debug}
+
 
 \section{The low level API}
 

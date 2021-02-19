@@ -782,7 +782,7 @@
 \frame{A}{D}{OK}
 \end{pktxdiag}
 
-\subsection{The \texttt{pause} env option}
+\subsubsection*{The \texttt{pause} env option}
 
 \begin{pktxdiag}[send delay=0mm,pause=3cm]
 \AB{DATA}
@@ -797,6 +797,40 @@
 \AB{DATA}
 \Apause[5mm]
 \AB{DATA}  
+\end{pktxdiag}
+
+\subsubsection*{XwaitY for multiple entities}
+
+does not work! is actually XwaitAny
+
+\begin{pktxdiag}[entities={A,B,C,D}]
+  \fullduplex
+  \AB{A to B}
+  \frame{A}{C}{A to C}
+  \BA{B to A}
+  \frame{C}{A}{C to A}
+  \XwaitY{A}{B}
+  \AB{ok B}
+  \XwaitY{A}{C}
+  \frame{A}{C}{ok C}
+\end{pktxdiag}
+
+\subsubsection*{timers for multiple entities}
+
+\begin{pktxdiag}[entities={A,B,C,D}]
+  \AB[timed={4cm}{timer for AB}]{A to B}
+  \frame[timed2={4cm}{timer for AC}]{A}{C}{A to C}
+  \BA[delayed={1cm}{gna},cancel]{B to A}
+  \frame[cancel2,delayed={1cm}{gna}]{C}{A}{C to A}
+  \XwaitY{A}{B}
+  \AB{ok B}
+  \XwaitY{A}{C}
+  \frame{A}{C}{ok C}
+  \frame[timed={4cm}{timer for CD}]{C}{D}{C to D}
+  \frame[timed={4cm}{timer for CB}]{C}{B}{C to B}
+  \frame[cancel]{B}{C}{gnarg}
+  \Xpause[2cm]{D}
+  \frame[cancel]{D}{C}{gnargD}
 \end{pktxdiag}
 
 \end{document}
