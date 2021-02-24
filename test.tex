@@ -681,19 +681,34 @@
   \testlabelii
 \end{pktxdiag}
 
-\subsubsection*{Per frame label style}
+\subsubsection*{Explicit label styles}
 
 \def\testframelabelstyle{
   \AB{toto}
-  \BA[label style=orange]{titi}
-  \AB[label style={font=\scshape}]{tutu}
+  \BA[id=1, label style=orange]{titi}
+  \AB{toto again}
+  \AB[id=1,label style={font=\scshape}]{tutu}
   \BA[label style={sloped=false,draw,fill=orange!20,opacity=0.75}]{tata}
   \AB{toutou}}
-\begin{pktxdiag}
+
+\begin{figure}[H]
+\centering\subfloat[explicit]{\begin{pktxdiag}
 \testframelabelstyle
-\end{pktxdiag}
+\end{pktxdiag}}
+\centering\subfloat[explicit and env label style]{
+\begin{pktxdiag}[label style={font=\it}]
+  \testframelabelstyle
+\end{pktxdiag}}
+\centering\subfloat[explicit,env, and flow label style]{
+\begin{pktxdiag}[label style={font=\it}]
+  \derivestyle{ls1}{labeldefault}{blue,font=\rmfamily}
+  \setflowlabelstyle{1}{ls1}
+  \testframelabelstyle
+\end{pktxdiag}}
+\end{figure}
+
 \begin{hpktxdiag}
-\testframelabelstyle
+    \testframelabelstyle
 \end{hpktxdiag}
 
 \subsubsection*{Multi line labels and entity names}

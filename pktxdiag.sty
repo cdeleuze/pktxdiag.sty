@@ -305,9 +305,26 @@
 
 \definestyle{labeldefault}{above,sloped}
 
-\pgfkeys{/pktxd/styles/thislabel/.style={}}
-\pgfkeys{/pktxd/label style/.code=\pgfkeys{/pktxd/styles/thislabel/.style={{#1}}},
-         /pktxd/frame/label style/.style={/pktxd/label style={#1}}}
+% the label style of the current frame is styles/current label style.
+% This includes (in order):
+% 1. the 'label global' style (set by the labelstyle env key),
+% 2. the label style from the frame flow, if any else 'labeldefault',
+% 3. the local frame style set by the labelstyle frame key.
+%
+% 1 and 3 are set by pgfkeys, 2 by pktxd@frame
+
+\pgfkeys{
+  /pktxd/styles/label this frame/.style={},
+  /pktxd/styles/label global/.style={},
+  /pktxd/styles/label this flow/.style={},
+  /pktxd/styles/current label style/.style={
+    /pktxd/styles/label global,
+    /pktxd/styles/label this flow,
+    /pktxd/styles/label this frame}
+}
+
+\pgfkeys{/pktxd/label style/.code=\pgfkeys{/pktxd/styles/label global/.style={{#1}}},
+         /pktxd/frame/label style/.code=\pgfkeys{/pktxd/styles/label this frame/.style={#1}}}
 
 %%%%%% various definitions
 
@@ -411,10 +428,7 @@
 % uses: pktxd@lost, pktxd@bad, pktxd@late, pktxd@prop, pktxd@crosslost
 
 \newcommand{\pktxd@arrowv}[5][]{
-  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/labelstyle}
-  {\def\labelstyle{/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/labelstyle}}}
-  {\def\labelstyle{/pktxd/styles/labeldefault}}
-  \def\thisls{/pktxd/styles/thislabel}
+  \def\lstyle{/pktxd/styles/current label style}
 
   \pktxd@debug{arrowv ##1=#1}
   
@@ -434,11 +448,11 @@
 
        \draw (#2,-#4) --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
 
-                 \ifpktxd@sync\else node[align=center,near end,\labelstyle,\thisls]{\pktxd@nodelabel{#5}}\fi
+                 \ifpktxd@sync\else node[align=center,near end,\lstyle]{\pktxd@nodelabel{#5}}\fi
     
                  decorate[decoration=zigzag,segment length=2mm]
                  {--++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
-                   \ifpktxd@sync node[align=center,midway,\labelstyle,\thisls]{\pktxd@nodelabel{#5}}\fi}
+                   \ifpktxd@sync node[align=center,midway,\lstyle]{\pktxd@nodelabel{#5}}\fi}
 
                  --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3);
                    \ifpktxd@lost\ifpktxd@crosslost \draw[-]
@@ -453,14 +467,14 @@
        \draw (#2,-#4) 
        .. controls (#2/2+#3/2,-#4-\pktxd@prop/2) and (#2/2+#3/2,-#4-\pktxd@latev)
        .. (#3, -#4-\pktxd@latev-\pktxd@prop)
-                   node[align=center,\labelstyle,\thisls,pos=0.1]{\pktxd@nodelabel{#5}};
+                   node[align=center,\lstyle,pos=0.1]{\pktxd@nodelabel{#5}};
 
        \fi
     \else
     % not bad, not late
        \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
                    node[align=center,\ifpktxd@sync midway\else near
-                   start\fi,\labelstyle,\thisls]{\pktxd@nodelabel{#5}};
+                   start\fi,\lstyle]{\pktxd@nodelabel{#5}};
                    \ifpktxd@lost\ifpktxd@crosslost \draw[-]
                    (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
     \fi
@@ -471,11 +485,8 @@
 %% the draw arrow macro for horizontal packet exchange diagram
 
 \newcommand{\pktxd@arrowh}[5][]{
-  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/labelstyle}
-  {\def\labelstyle{/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/labelstyle}}}
-  {\def\labelstyle{/pktxd/styles/labeldefault}}
-  \def\thisls{/pktxd/styles/thislabel}
-
+  \def\lstyle{/pktxd/styles/current label style}
+  
   \pgfmathsetlength{\pktxd@len}{#2-#3}
   \pgfmathtruncatemacro{\sign}{#2<#3?1:-1}
 
@@ -487,11 +498,11 @@
 
        \draw (#4,-#2) --++(\pktxd@trans/3,0)
                  decorate[decoration=zigzag,segment length=2mm]
-                 {--++(\pktxd@trans/3,0) node[align=center,\labelstyle,\thisls,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}}}
+                 {--++(\pktxd@trans/3,0) node[align=center,\lstyle,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}}}
                  --++(\pktxd@trans/3,0);
   \else
        \draw (#4,-#2) -- ++(\pktxd@trans,0)
-           node[align=center,\labelstyle,\thisls,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}};
+           node[align=center,\lstyle,\toto=1mm,midway]{\pktxd@nodelabel[\sign]{#5}};
   \fi
   % then draw 'propagation time' arrow
   \draw[thin,->] (#4+\pktxd@trans,#3) -- ++ (\pktxd@prop/\lost,\pktxd@len/\lost);
@@ -542,6 +553,12 @@
   \pgfkeysifdefined{/pktxd/flows/\pktxd@id/ignore}{\pktxd@ignoretrue}{\pktxd@ignorefalse}
   \ifpktxd@ignore\else
 
+  % update '/pktxd/styles/label this flow' according to current flow
+  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/labelstyle}
+    {\pgfkeys{/pktxd/styles/label this flow/.style=
+      {/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/labelstyle}}}}
+    {\pgfkeys{/pktxd/styles/label this flow/.style={/pktxd/styles/labeldefault}}}
+  
   \pktxd@settrans{#4}
 
   % delayed key
@@ -660,7 +677,7 @@
   \pktxd@snotefalse
   \edef\pktxd@snoteoffset{\envsnoteoffset}
   \edef\pktxd@rnoteoffset{\envrnoteoffset}
-  \pgfkeys{/pktxd/styles/thislabel/.style={}}
+  \pgfkeys{/pktxd/styles/label this frame/.style={}}
 }
 
 
