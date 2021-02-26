@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}[1994/06/01]
-\ProvidesPackage{pktxdiag}[2021/02/18 Tikz add-on for packet exchange diagrams]
+\ProvidesPackage{pktxdiag}[2021/02/26 Tikz add-on for packet exchange diagrams]
 
 \DeclareOption{debug}{\pktxd@debugtrue}
 \newif\ifpktxd@debug
@@ -13,7 +13,6 @@
 
 \RequirePackage{xstring} % \IfBeginWith in @settrans
 \RequirePackage{tikz}
-\RequirePackage{pgfkeys}
 \usetikzlibrary{decorations.pathmorphing} % for drawing zigzag
 
 \newcommand{\pktxd@error}[2]{
@@ -80,12 +79,15 @@
 \pgfkeys{/pktxd/frame/.cd,
   % these can also be set for the whole env
   % so we defined them as .styles
+  %
   prop/.style={/pktxd/prop=#1},
   trans/.style={/pktxd/trans=#1},
   cross for lost/.style={/pktxd/cross for lost=#1},
   snoteoffset/.style={/pktxd/snoteoffset=#1},
   rnoteoffset/.style={/pktxd/rnoteoffset=#1},
-  % 
+  %
+  % now the frame specific keys
+  %
   id/.code={\def\pktxd@id{#1}},
   lost/.is if=pktxd@lost,
   bad/.is if=pktxd@bad,
@@ -196,7 +198,6 @@
 
 \newlength{\pktxd@senddelay}\setlength{\pktxd@senddelay}{1cm}
 \newlength{\pktxd@replydelay}\setlength{\pktxd@replydelay}{5mm}
-%\newlength{\pktxd@pausedefault}\setlength{\pktdx@pausedefault}{1cm}
 \def\pktxd@width{2.75cm}
 \def\pktxd@pausedefault{1cm}
 \newif\ifpktxd@reversed
@@ -328,12 +329,23 @@
 
 %%%%%% various definitions
 
-% this will be usefull for creating entities in a \foreach...
+% The state of the diagram (current send and receive times of each
+% entity, running timers...) is changed when processing a frame but
+% must persist accross the whole env.  We thus have to make it global.
+% Hence we'll use \pgfglobalkeys, \pgfkeysgsetvalue (g for global) and
+% \global\pgfkeyslet for the elements of the state.
+
 \def\pgfglobalkeys#1{
   \begingroup
   \ifnum\the\globaldefs>0\relax
   \else \globaldefs=1\fi
   \pgfkeys{#1}\endgroup}
+
+\def\pgfkeysgsetvalue#1#2{
+  \begingroup
+  \ifnum\the\globaldefs>0\relax
+  \else \globaldefs=1\fi
+  \pgfkeyssetvalue{#1}{#2}\endgroup}
 
 % loop on entities: arg is code using \e
 \newcommand{\pktxd@forallentities}[1]{
@@ -344,11 +356,9 @@
 
 \newcommand{\pktxd@createentity}[1]{
   \xdef\pktxd@entities{#1,\pktxd@entities}
-  \pgfglobalkeys{/pktxd/entities/#1/pos/.initial=0cm}   % space position
   \pgfglobalkeys{/pktxd/entities/#1/Tsend/.initial=0cm} % send time
   \pgfglobalkeys{/pktxd/entities/#1/Trecv/.initial=0cm} % recv time
   \pgfglobalkeys{/pktxd/entities/#1/Tmax/.initial=0cm}  % max time
-  \pgfglobalkeys{/pktxd/entities/#1/sync/.initial=0}    % sync Tsend/Trecv?
   \pktxd@createtimer{#1}{l}{1}
   \pktxd@createtimer{#1}{l}{2}
   \pktxd@createtimer{#1}{r}{1}
@@ -356,11 +366,11 @@
 }
 
 \newcommand{\pktxd@createtimer}[3]{ % entity l/r id
-  \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/active/.initial=0}
-  \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/cancel/.initial=0}
-  \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/label/.initial=0}
-  \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/start/.initial=0}
-  \pgfglobalkeys{/pktxd/entities/#1/timer/#2/#3/end/.initial=0}}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/active}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/cancel}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/label}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/start}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/end}{0}}
 
 \pgfkeys{/pktxd/default/timers/l/1/offset/.initial=4mm}
 \pgfkeys{/pktxd/default/timers/l/2/offset/.initial=9mm}
@@ -374,8 +384,8 @@
 %% beware of 'macro sharing': we use setvalue here!
 %% (note how we use pgfkeyslet in \pktxd@frame)
 \newcommand{\pktxd@setTsend}[2]{\pgfkeyssetvalue{/pktxd/entities/#1/Tsend}{#2}}
-\newcommand{\pktxd@setTrecv}[2]{\pgfkeyssetvalue{/pktxd/entities/#1/Trecv}{#2}}
-\newcommand{\pktxd@letTsend}[2]{\pgfkeyslet{/pktxd/entities/#1/Tsend}{#2}}
+\newcommand{\pktxd@setTrecv}[2]{\pgfkeysgsetvalue{/pktxd/entities/#1/Trecv}{#2}}
+\newcommand{\pktxd@letTsend}[2]{\global\pgfkeyslet{/pktxd/entities/#1/Tsend}{#2}}
 
 %% if the pgfkey is defined in entity dir, use it
 %% otherwise use value in default dir
@@ -392,14 +402,12 @@
 
 
 \newlength{\pktxd@prop}\setlength{\pktxd@prop}{0.5cm}
-\newlength{\pktxd@savedprop}
 \newlength{\pktxd@trans}\setlength{\pktxd@trans}{2cm}
-\newlength{\pktxd@savedtrans}  %% to keep default value accross frames
 \newlength{\pktxd@latev}       %% amount of lateness if pktxd@latetrue
 
 
 %% Draw a frame label: it can be made of:
-%%  - l1 label (passed as arg to commands)
+%%  - l1 label (passed as arg 2)
 %%  - the l2 label (passed as label2 option key)
 %%  - both
 
@@ -514,14 +522,14 @@
 
 \newcommand{\pktxd@addtosend}[2]{
   \pgfmathsetlengthmacro\temp{\pktxd@Tsend{#1}+#2}
-  \pgfkeyslet{/pktxd/entities/#1/Tsend}{\temp}}
+  \global\pgfkeyslet{/pktxd/entities/#1/Tsend}{\temp}}
 
 \newcommand{\pktxd@addtorecv}[2]{
   \pgfmathsetlengthmacro\temp{\pktxd@Trecv{#1}+#2}
-  \pgfkeyslet{/pktxd/entities/#1/Trecv}{\temp}}
+  \global\pgfkeyslet{/pktxd/entities/#1/Trecv}{\temp}}
 
 
-%% the main macro for drawing a frame:
+%% the main macro for processing a frame command:
 %% - handle all frame keys (prop, trans, delayed, late...)
 %% - draw frame by calling @arrow, passing it style and remaining tikz keys
 %% - setup timers
@@ -535,20 +543,10 @@
 
   % which side are timers and send notes on?
   \edef\align{\ifdim\sendpos<\recvpos l\else r\fi}
+  
+  % apply frame settings in local scope
+  \begin{scope}[/pktxd/frame/.cd, remainingkeys/.style={}, #1]
 
-  % save state
-  \setlength{\pktxd@savedtrans}{\pktxd@trans}
-  \setlength{\pktxd@savedprop}{\pktxd@prop}
-  \newif\ifenvcrosslost
-  \ifpktxd@crosslost\envcrosslosttrue\else\envcrosslostfalse\fi
-  \edef\envsnoteoffset{\pktxd@snoteoffset}
-  \edef\envrnoteoffset{\pktxd@rnoteoffset}
-  
-  % apply frame settings
-  \pgfkeys{/pktxd/frame/.cd,
-    remainingkeys/.style={}, #1
-  }
-  
   % if flow has 'ignore' set, we're (almost) done
   \pgfkeysifdefined{/pktxd/flows/\pktxd@id/ignore}{\pktxd@ignoretrue}{\pktxd@ignorefalse}
   \ifpktxd@ignore\else
@@ -561,7 +559,7 @@
   
   \pktxd@settrans{#4}
 
-  % delayed key
+  % delayed key: fully process the timer
   \ifpktxd@delayed
     \pktxd@debug{delayed: len \pktxd@delayedlen ~ label \pktxd@delayedlabel ~ id \pktxd@delayedid}
     \edef\Trecv{\pgfkeysvalueof{/pktxd/entities/#2/Trecv}}
@@ -573,7 +571,7 @@
     \pktxd@endtimer{#2}{\align}{\pktxd@delayedid}
   \fi
 
-  % stop key
+  % stop key: fully process the timer
   \ifpktxd@stop
     \pktxd@debug{stop: len \pktxd@stoplen ~ label \pktxd@stoplabel ~delay \pktxd@stopdelay ~ id \pktxd@stopid}
     \edef\Trecv{\pgfkeysvalueof{/pktxd/entities/#2/Trecv}}
@@ -631,25 +629,26 @@
   \ifpktxd@late
     % no simpler way to _copy_ the length value?
     \pgfmathsetlengthmacro\Tcancel{\Trecv+\pktxd@latev}
-    \pgfkeyslet{/pktxd/values/#3/\pktxd@latename}{\Tcancel}
+    \global\pgfkeyslet{/pktxd/values/#3/\pktxd@latename}{\Tcancel}
     \setlength\pktxd@latev{0mm}
   \fi
 
   % commit time updates
-  \pgfkeyslet{/pktxd/entities/#2/Tsend}{\Tsend}
-  \pgfkeyslet{/pktxd/entities/#3/Trecv}{\Trecv}
+  \global\pgfkeyslet{/pktxd/entities/#2/Tsend}{\Tsend}
+  \global\pgfkeyslet{/pktxd/entities/#3/Trecv}{\Trecv}
 
   % update Tmax (Tcancel set above to Trecv + pktxd@latev)
   \ifdim\Tcancel>\pgfkeysvalueof{/pktxd/entities/#3/Tmax}
-  \pgfkeyslet{/pktxd/entities/#3/Tmax}{\Tcancel}
+  \global\pgfkeyslet{/pktxd/entities/#3/Tmax}{\Tcancel}
   \fi
 
+  % if not full duplex, update Tsend at receiver
   \ifpktxd@sync
     \pgfmathsetlengthmacro\Tsndr{\Trecv+\pktxd@replydelay}
-    \pgfkeyslet{/pktxd/entities/#3/Tsend}{\Tsndr}
+    \global\pgfkeyslet{/pktxd/entities/#3/Tsend}{\Tsndr}
   \fi
 
-  % cancel/cancel2 keys
+  % cancel key
   \@for\id:=\pktxd@cancels\do{
     \if 0\id\else
     \pktxd@debug{cancel \id}
@@ -657,27 +656,7 @@
     \fi}
 
   \fi %pktxd@ignore
-
-  % restore env state (even ignored frame can have changed these)
-  \setlength{\pktxd@trans}{\pktxd@savedtrans}
-  \setlength{\pktxd@prop}{\pktxd@savedprop}
-  % or should we do that *before* processing keys?
-  \def\pktxd@id{main}
-  \ifenvcrosslost\pktxd@crosslosttrue\else\pktxd@crosslostfalse\fi
-  \pktxd@delayedfalse
-  \pktxd@stopfalse
-  \pktxd@lostfalse
-  \pktxd@badfalse
-  \pktxd@latefalse
-  \def\pktxd@latename{$$lateframe}
-  \def\pktxd@timeds{0/0/0}
-  \def\pktxd@cancels{0}
-  \pgfkeyssetvalue{/pktxd/frame/label2}{}
-  \pktxd@rnotefalse
-  \pktxd@snotefalse
-  \edef\pktxd@snoteoffset{\envsnoteoffset}
-  \edef\pktxd@rnoteoffset{\envrnoteoffset}
-  \pgfkeys{/pktxd/styles/label this frame/.style={}}
+  \end{scope}
 }
 
 
@@ -800,13 +779,12 @@
 
 \newcommand{\pktxd@starttimer}[6]{ % entity, l/r, id, starttime, len, label
   \pktxd@endtimerifactive{#1}{#2}{#3}
-  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/active}{t}
-  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
-  \def\timeroffset{\pktxd@getconftimer{#1}{#2}{#3}{offset}}
-  \pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/start}{#4}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/active}{t}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
+  \global\pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/start}{#4}
   \pgfmathsetlengthmacro\temp{#4+#5}
-  \pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/end}{\temp}
-  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/label}{#6}
+  \global\pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/end}{\temp}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/label}{#6}
 
   \pktxd@debugtimer{starttimer}{#1}{#2}{#3}
 }
@@ -819,8 +797,8 @@
 
 \newcommand{\pktxd@canceltimer}[4]{ % entity, l/r, id, time
   \pktxd@debugtimer{canceltimer #4}{#1}{#2}{#3}
-  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/active}{0}
-  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{t}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/active}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{t}
   \def\timerstart{\pktxd@gettimerstart{#1}{#2}{#3}}
   \def\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
   \def\timeroffset{\if#2l-\fi\pktxd@getconftimer{#1}{#2}{#3}{offset}}
@@ -850,8 +828,8 @@
 
 %% finish drawing a timer
 \newcommand{\pktxd@endtimer}[3]{
-  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/active}{0}
-  \pgfkeyssetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/active}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
   \def\timerstart{\pktxd@gettimerstart{#1}{#2}{#3}}
   \def\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
   \def\timeroffset{\if#2l-\fi\pktxd@getconftimer{#1}{#2}{#3}{offset}}
@@ -931,6 +909,7 @@
     \pktxd@waittimer{#1}{#2}{#3}
   \else
     \if\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/cancel}t
+      \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
       \pktxd@debugtimer{flush/cancel}{#1}{#2}{#3}
       \pktxd@debug{pos#1 = \pktxd@Tsend{#1}}
       \pktxd@waittimer{#1}{#2}{#3}
@@ -1059,7 +1038,7 @@
 
 %%%% intialize entities
 
-\newcommand{\pktxd@entityname}[2]{\pgfglobalkeys{/pktxd/entities/#1/.initial=#2}}
+\newcommand{\pktxd@entityname}[2]{\pgfkeysgsetvalue{/pktxd/entities/#1}{#2}}
 
 % in two entities mode
 \def\pktxd@initentities{
