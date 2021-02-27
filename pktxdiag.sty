@@ -795,8 +795,26 @@
   \pktxd@debug{end   \pktxd@gettimerend{#2}{#3}{#4}}
 }
 
+% macro for showing an incorrect timer cancelling
+\def\pktxd@errorcanceltimer#1#2#3{% text time hpos
+  \pktxd@error{You're trying to cancel an #1 timer}
+    {A prominent yellow box has been drawn to show where the cancel
+     was requested.}
+  \ifpktxd@h
+    \node at (#2,#3)[draw,red,fill=yellow]{Cancel #1 timer!};
+  \else
+    \node at (#3,-#2)[draw,red,fill=yellow]{Cancel #1 timer!};
+  \fi
+}
+
 \newcommand{\pktxd@canceltimer}[4]{ % entity, l/r, id, time
   \pktxd@debugtimer{canceltimer #4}{#1}{#2}{#3}
+  \newif\iferror
+  % check timer is indeed active...
+  \if\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/active}t\errorfalse\else\errortrue\fi
+  \iferror\pktxd@errorcanceltimer{non running}{#4}{\pktxd@pos{#1}}
+  \else
+  % good, it is!
   \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/active}{0}
   \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{t}
   \def\timerstart{\pktxd@gettimerstart{#1}{#2}{#3}}
@@ -805,24 +823,18 @@
 
   \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
 
-  \ifdim#4>\timerend % check cancelling is indeed possible
-    \ifpktxd@h
-      \node at (#4,\hpos)[draw,red,fill=yellow]{Cancel expired timer!};
-    \else
-      \node at (\hpos,-#4)[draw,red,fill=yellow]{Cancel expired timer!};
-    \fi
-      \pktxd@drawtimer{#1}{\timerstart}{\timerend}{x}
+  \ifdim#4>\timerend % now check it's not too late to cancel
+     \pktxd@errorcanceltimer{expired}{#4}{\hpos}
+     % we draw it anyway
+     \pktxd@drawtimer{#1}{\timerstart}{\timerend}{x}
         {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}
         {\timeroffset}{}{}
-      \pktxd@drawtimer{#1}{\timerend}{#4}{x}{}
-        {\timeroffset}{dotted,red,->}{}
-      \pktxd@error{Your're trying to cancel an expired timer}
-        {A prominent yellow box has been drawn to show where the cancel
-        was requested.}
-
-  \else              % all right
+     \pktxd@drawtimer{#1}{\timerend}{#4}{x}{}{\timeroffset}{dotted,red,->}{}
+  \else
+     % everything is ok!
     \pktxd@drawtimer{#1}{\timerstart}{\timerend}{#4}
         {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}{}
+  \fi
   \fi
 }
 

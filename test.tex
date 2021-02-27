@@ -453,7 +453,33 @@
  \testtimersir
 \end{pktxdiag}
 
-\subsubsection*{Timers: cancelled too late}
+\subsubsection*{Faulty cancels}
+
+Cancel a non running timer
+
+\begin{pktxdiag}[debug, warn only]
+  \AB[cancel]{hoooo}
+\end{pktxdiag}
+\begin{hpktxdiag}[debug, warn only]
+  \AB[cancel]{hoooo}
+\end{hpktxdiag}
+
+Cancel a running timer
+
+\begin{pktxdiag}[debug, warn only]
+  \BA[timed={3cm}{gnagna}]{gah !}
+  \AB[cancel]{hoooo}
+\end{pktxdiag}
+
+Cancel an non running timer, but defined in a previous env
+
+\begin{pktxdiag}[warn only]
+  \AB[cancel]{hoooo}
+\end{pktxdiag}
+\begin{hpktxdiag}[warn only]
+  \AB[cancel]{hoooo}
+\end{hpktxdiag}
+
 
 \def\testtimercancel{
   \AB[timed={2cm}{tada}]{yo}

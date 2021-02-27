@@ -1,4 +1,4 @@
-\documentclass{ltxdoc}
+\documentclass[a4paper]{ltxdoc}
 \usepackage{a4wide}
 \usepackage[utf8]{inputenc}
 \usepackage{pktxdiag}
@@ -13,13 +13,13 @@
 \author{Christophe Deleuze}
 \date{Draft user guide - \today}
 
-\setlength{\parindent}{0mm}
-\setlength{\parskip}{1mm}
 \makeindex
 \begin{document}
 \maketitle
 \tableofcontents
 \newpage
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{1mm}
 
 %\newcommand{\options}[1][options]{\opt{\oarg{#1}}}
 
@@ -148,14 +148,14 @@ This may be increased in future versions.
 
 \subsection{Bad timers}
 
-When a frame holds the \texttt{cancel} option, it should arrive before
-the timer expires.  If this is not the case, the compilation fails
-with an error signaling the problem.  However, if the option
-\texttt{warn only} is passed to the environment (or the option
-\texttt{warnonly}\footnote{Unfortunately, package options can't
+When a frame holds the \texttt{cancel} option, the corresponding timer
+must be running when the frame is received.  If this is not the case,
+the compilation fails with an error signaling the problem.  However,
+if the option \texttt{warn only} is passed to the environment (or the
+option \texttt{warnonly}\footnote{Unfortunately, package options can't
   contain space characters.} to the package) only a warning is issued.
-In this case a prominent yellow box is drawn at the place the problem
-occurs to help locate and correct the problem.
+In either case a prominent yellow box is drawn at the place the
+problem occurs to help locate and correct the problem.
 
 \index{package option!warnonly}
 \index{env option!warn only}
@@ -166,6 +166,14 @@ occurs to help locate and correct the problem.
 \begin{pktxdiag}[warn only]
   \AB[timed={1cm}{timer}]{DATA}
   \BA[cancel]{ACK}
+\end{pktxdiag}
+\end{codeexample}
+
+\begin{codeexample}[]
+\begin{pktxdiag}[warn only]
+  \BA[timed={2cm}{timer}]{DATA}
+  \AB[cancel]{ACK}
+  \AB[cancel]{ACK}
 \end{pktxdiag}
 \end{codeexample}
 
