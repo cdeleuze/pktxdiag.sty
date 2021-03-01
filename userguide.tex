@@ -289,7 +289,7 @@ allow switching between the two modes.
 \index{command!halfduplex}
 
 When in full duplex mode, labels are drawn close to the sender instead
-of being centered on the arrow.  See also section \ref{sec:styles} on
+of being centered on the arrow.  See also section \ref{sec:labels} on
 label styles.
 
 \begin{codeexample}[width=8cm]
@@ -368,7 +368,7 @@ cross can be added to represent their disappearing:
 The distance between the vertical time line and the timer line/text
 can be set with the environment options \texttt{timer offset} and
 \texttt{timer2 offset}.  This can be set for only A or B with
-\texttt{A timer offset}, \texttt{BB timer2 offset} etc.
+\texttt{A timer offset}, \texttt{B timer2 offset} etc.
 
 \index{env option!timer offset}
 \index{env option!timer2 offset}
@@ -454,8 +454,11 @@ environment, or in a specific frame as the example shows.
 \end{codeexample}
 
 \subsection{Labels}
+\label{sec:labels}
 
-See also section \ref{sec:styles} on styles.
+TODO: frame and env key labelstyle
+
+See also section \ref{sec:flow styles} on flow styles.
 
 % TODO env option show label2
 % env option hide label
@@ -463,7 +466,7 @@ See also section \ref{sec:styles} on styles.
 
 \subsection{Graphics attributes}
 
-Frames can be given most tikz graphics attributes to specify their
+Frames can also be given most tikz graphics attributes to specify their
 colors, line width etc.
 
 \begin{codeexample}[]
@@ -530,7 +533,8 @@ less visible to draw the attention on the other.  A flow can be made
 less visible by:
 
 \begin{itemize}
-\item \emph{fading} it, through the \texttt{fade} environment option,
+\item \emph{fading} it, through the \texttt{fade} and \texttt{fade
+    value} environment options,
 \item hiding it, through the \texttt{hide} environment option,
 \item ignore it completely, through the \texttt{ignore} environment
   option.
@@ -577,8 +581,8 @@ arguments to one of these options either repeat the option or use the
 \texttt{hide/.list=\{1,2\}}.\footnote{See pgfmanual section 82.4.6 for
   details.}
 
-\subsection{Styles}
-\label{sec:styles}
+\subsection{Flow styles}
+\label{sec:flow styles}
 
 The main usage of flows is to apply different sets of graphics
 attributes, called styles, to sequences of frames.  Styles can be
@@ -632,6 +636,7 @@ TODO interactions between styles and label styles need to be clarified
 and possibly cleaned-up
 
 \section{Multiple entities}
+\label{sec:multipleentities}
 
 All the previous examples where conversations involving only two
 entities.  Multiple (more than two) entities can be used.
@@ -725,8 +730,8 @@ Timers are supported.  Beware that the transmission time may make that
 a timer canceling frame correct in a vertical diagram may be incorrect
 in a horizontal diagram.
 
-Missing features available in vertical diagrams include : late frames,
-laters, states and actions.
+Multiple (more than two) entities are not possible.  Other missing
+features include: late frames, laters, states and actions.
 
 \index{env option!short trans}
 \index{env option!shorts}
@@ -750,7 +755,7 @@ laters, states and actions.
              \BA{I 3,4}
   \AwaitB
   \Apause
-  \AB{RR 4}
+  \AB[gray,text=green]{RR 4}
   \Apause
   \halfduplex
   \AB{DISC}
@@ -764,15 +769,14 @@ laters, states and actions.
 
 \section{Gallery}
 
-Some nice diagrams...
+%Some nice diagrams...
 
+%TODO: ensure each (diagram, source) pair is on same page
 
 \subsection{The need for the TCP \textsc{Time-Wait} state}
 
 \begin{codeexample}[width=8cm]
 \begin{pktxdiag}[state offset=5mm,timer offset=2mm,timer2 offset=3mm,width=2cm]
-
-
                       \Bactionstate{close}{LastAck}
                       \BAtimed{FIN}{3.5cm}{retrans}
   \Astate{Closed}
@@ -782,7 +786,7 @@ Some nice diagrams...
                       \Bstate{Closed}
 
 \later{2cm}
-  
+
                       \Bactionstate{passive open}{Listen}
   \Apause
   \Aactionstate{active open}{SynSent}
@@ -864,6 +868,7 @@ Some nice diagrams...
 % \end{codeexample}
 
 \subsection{Associating an IP address to its DNS resolver}
+\label{galery:dnsresolver}
 
 \begin{codeexample}[]
   \begin{pktxdiag}[prop=0mm,reply delay=1cm, width=4cm,
@@ -892,6 +897,7 @@ Some nice diagrams...
 \end{codeexample}
 
 \subsection{SIP Session}
+\label{gallery:sipsession}
 
 \begin{codeexample}[]
 \begin{pktxdiag}[width=4cm,reply delay=2mm,send delay=2mm,
@@ -990,6 +996,18 @@ TODO
 
 Here we could show the decoupling of the drawing and the protocol
 logic (but this is not completely done so far, anyway...)
+
+\section{Credits for examples}
+
+\begin{itemize}
+\item \ref{sec:multipleentities} TODO: find it
+\item \ref{galery:dnsresolver} TODO: find it
+\item \ref{gallery:sipsession} from Peterson \& Davie, ``Computer Networks: A Systems
+  Approach'' 3rd edition.  Also see current edition on
+  line\footnote{\url{https://book.systemsapproach.org/applications/multimedia.html\#session-control-and-call-control-sdp-sip-h-323}}.
+\end{itemize}
+
+
 
 \printindex
 

@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[a4paper]{article}
 \usepackage{a4wide}
 \usepackage{subfig}
 \usepackage{float}
@@ -509,6 +509,7 @@ Cancel an non running timer, but defined in a previous env
   \BA[snoteoffset=6mm,rnoteoffset=1mm,snote=less close,rnote=closer]{DATA}
 \end{hpktxdiag}
 
+
 \subsubsection*{The \texttt{reversed} key}
 
 \def\example{
@@ -631,7 +632,7 @@ Cancel an non running timer, but defined in a previous env
   \AB{ACK3}
 \end{pktxdiag}
 
-\subsubsection*{Filtering}
+\subsubsection*{Flows and filtering}
 
 \def\testfilter{
   \AB[id=1]{DATA 1 (1)}
@@ -720,11 +721,11 @@ Cancel an non running timer, but defined in a previous env
 \begin{figure}[H]
 \centering\subfloat[explicit]{\begin{pktxdiag}
 \testframelabelstyle
-\end{pktxdiag}}
+\end{pktxdiag}}\hfill
 \centering\subfloat[explicit and env label style]{
 \begin{pktxdiag}[label style={font=\it}]
   \testframelabelstyle
-\end{pktxdiag}}
+\end{pktxdiag}}\hfill
 \centering\subfloat[explicit,env, and flow label style]{
 \begin{pktxdiag}[label style={font=\it}]
   \derivestyle{ls1}{labeldefault}{blue,font=\rmfamily}

@@ -225,6 +225,10 @@
 \newif\ifpktxd@timerleftbottomup
 \newif\ifpktxd@timerleftbelow
 
+%%% in h diagrams, frames have a trans(mission) time
+
+\newlength{\pktxd@trans}\setlength{\pktxd@trans}{2cm}
+
 % by default frames whose label starts with ACK are short
 % key 'no shorts' removes this rule
 % key hdlc sets names for HDLC
@@ -402,9 +406,15 @@
 
 
 \newlength{\pktxd@prop}\setlength{\pktxd@prop}{0.5cm}
-\newlength{\pktxd@trans}\setlength{\pktxd@trans}{2cm}
 \newlength{\pktxd@latev}       %% amount of lateness if pktxd@latetrue
 
+%%%%%% drawing of a frame
+%
+% main macros are:
+% - @nodelabel: draw a frame label
+% - @arrowv: draw arrow for vertical diagram
+% - @arrowh: draw arrow for horizontal diagram
+% - @frame: main macro
 
 %% Draw a frame label: it can be made of:
 %%  - l1 label (passed as arg 2)
@@ -901,7 +911,9 @@
   \pktxd@state{\pBs-5mm}{\pktxd@pos{B}}{r}{#2}}
 
 
-%% laters -- unlimited number
+%%%%%% laters
+%
+% they are in unlimited number
 
 \newlength{\pktxd@laterdashedlen}
 \setlength{\pktxd@laterdashedlen}{1cm}
@@ -915,33 +927,11 @@
   \pktxd@addtorecv{B}{#1}
 }
 
-\newcommand{\pktxd@flushtimer}[3]{
-  \if\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/active}t
-    \pktxd@endtimer{#1}{#2}{#3}
-    \pktxd@waittimer{#1}{#2}{#3}
-  \else
-    \if\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/cancel}t
-      \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
-      \pktxd@debugtimer{flush/cancel}{#1}{#2}{#3}
-      \pktxd@debug{pos#1 = \pktxd@Tsend{#1}}
-      \pktxd@waittimer{#1}{#2}{#3}
-      \pktxd@debug{updated pos#1 = \pktxd@Tsend{#1}}
-  \fi\fi}
-
 \newcommand{\pktxd@alltimers}[1]{
   \foreach \e/\o in {A/l,B/r} {
     \foreach \n in {1,2} {
       #1{\e}{\o}{\n}
       }
-    }
-  }
-
-\newcommand{\pktxd@finishtimers}{
-  \pktxd@forallentities{
-    \pktxd@flushtimer{\e}{l}{1}
-    \pktxd@flushtimer{\e}{l}{2}
-    \pktxd@flushtimer{\e}{r}{1}
-    \pktxd@flushtimer{\e}{r}{2}
     }
   }
 
@@ -1086,12 +1076,15 @@
 }
     
 \def\pktxd@debugentities#1{
-  \pktxd@debug{entities: #1}
-  \pktxd@forallentities {
-    \edef\name{\pgfkeysvalueof{/pktxd/entities/\e}}
-    \edef\pos{\pgfkeysvalueof{/pktxd/entities/\e/pos}}
-    \pktxd@debug{entity: \e/\name/\pos}
-  }}
+  \ifpktxd@debug
+    \typeout{entities: #1}
+    \pktxd@forallentities {
+      \edef\name{\pgfkeysvalueof{/pktxd/entities/\e}}
+      \edef\pos{\pgfkeysvalueof{/pktxd/entities/\e/pos}}
+      \typeout{entity: \e/\name/\pos}
+    }
+  \fi
+}
 
 
 % compute the maximum time of all entities
@@ -1115,7 +1108,29 @@
   \pktxd@debug{final maxtime=\maxtime}
 }
 
-%%%% user environments
+\newcommand{\pktxd@flushtimer}[3]{
+  \if\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/active}t
+    \pktxd@endtimer{#1}{#2}{#3}
+    \pktxd@waittimer{#1}{#2}{#3}
+  \else
+    \if\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/cancel}t
+      \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
+      \pktxd@debugtimer{flush/cancel}{#1}{#2}{#3}
+      \pktxd@debug{pos#1 = \pktxd@Tsend{#1}}
+      \pktxd@waittimer{#1}{#2}{#3}
+      \pktxd@debug{updated pos#1 = \pktxd@Tsend{#1}}
+  \fi\fi}
+
+\newcommand{\pktxd@finishtimers}{
+  \pktxd@forallentities{
+    \pktxd@flushtimer{\e}{l}{1}
+    \pktxd@flushtimer{\e}{l}{2}
+    \pktxd@flushtimer{\e}{r}{1}
+    \pktxd@flushtimer{\e}{r}{2}
+    }
+  }
+
+%%%%%% user environments
 
 \newenvironment{pktxdiag}[1][]{
   \pktxd@debug{entering pktxdiag env}
