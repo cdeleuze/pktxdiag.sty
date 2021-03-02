@@ -125,7 +125,7 @@ will be \emph{piggybacked} on the data frame.
 \index{frame option!delayed}
 \index{frame option!stop}
 
-Currently only two timers may be run simultaneously on each side.
+Currently four timers may be run simultaneously on each side.
 This may be increased in future versions.
 
 \index{command!Awaittimer}
@@ -134,6 +134,14 @@ This may be increased in future versions.
 \index{frame option!delayed2}
 \index{frame option!stop2}
 \index{frame option!cancel2}
+\index{frame option!timed3}
+\index{frame option!delayed3}
+\index{frame option!stop3}
+\index{frame option!cancel3}
+\index{frame option!timed4}
+\index{frame option!delayed4}
+\index{frame option!stop4}
+\index{frame option!cancel4}
 
 \begin{codeexample}[width=6cm]
   \begin{pktxdiag}
@@ -367,15 +375,22 @@ cross can be added to represent their disappearing:
 
 The distance between the vertical time line and the timer line/text
 can be set with the environment options \texttt{timer offset} and
-\texttt{timer2 offset}.  This can be set for only A or B with
-\texttt{A timer offset}, \texttt{B timer2 offset} etc.
+\texttt{timerX offset} with \texttt{X} being \texttt{2}, \texttt{3},
+or \texttt{4}.  This can be set for only A or B with \texttt{A timer
+  offset}, \texttt{B timer2 offset} etc.
 
 \index{env option!timer offset}
 \index{env option!timer2 offset}
+\index{env option!timer3 offset}
+\index{env option!timer4 offset}
 \index{env option!A timer offset}
 \index{env option!A timer2 offset}
+\index{env option!A timer3 offset}
+\index{env option!A timer4 offset}
 \index{env option!B timer offset}
 \index{env option!B timer2 offset}
+\index{env option!B timer3 offset}
+\index{env option!B timer4 offset}
 
 
 % TODO also A/B specific offsets

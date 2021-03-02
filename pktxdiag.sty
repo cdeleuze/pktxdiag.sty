@@ -60,11 +60,17 @@
   %
   timer offset/.style={/pktxd/A timer offset=#1,/pktxd/B timer offset=#1},
   timer2 offset/.style={/pktxd/A timer2 offset=#1,/pktxd/B timer2 offset=#1},
+  timer3 offset/.style={/pktxd/A timer3 offset=#1,/pktxd/B timer3 offset=#1},
+  timer4 offset/.style={/pktxd/A timer4 offset=#1,/pktxd/B timer4 offset=#1},
   % this makes sense only for AB diagrams
   A timer offset/.style={/pktxd/default/timers/l/1/offset=#1},
   A timer2 offset/.style={/pktxd/default/timers/l/2/offset=#1},
+  A timer3 offset/.style={/pktxd/default/timers/l/3/offset=#1},
+  A timer4 offset/.style={/pktxd/default/timers/l/4/offset=#1},
   B timer offset/.style={/pktxd/default/timers/r/1/offset=#1},
   B timer2 offset/.style={/pktxd/default/timers/r/2/offset=#1},
+  B timer3 offset/.style={/pktxd/default/timers/r/3/offset=#1},
+  B timer4 offset/.style={/pktxd/default/timers/r/4/offset=#1},
   % 
   action time offset/.code=\setlength{\pktxd@actiontimeoffset}{#1},
   action offset/.code=\setlength{\pktxd@actionoffset}{#1},
@@ -99,17 +105,31 @@
   timed/.code 2 args=\pktxd@addtimed{1}{#1}{#2},
   timed2/.value required,
   timed2/.code 2 args=\pktxd@addtimed{2}{#1}{#2},
+  timed3/.value required,
+  timed3/.code 2 args=\pktxd@addtimed{3}{#1}{#2},
+  timed4/.value required,
+  timed4/.code 2 args=\pktxd@addtimed{4}{#1}{#2},
   cancel/.code=\pktxd@addcancel{1},
   cancel2/.code=\pktxd@addcancel{2},
+  cancel3/.code=\pktxd@addcancel{3},
+  cancel4/.code=\pktxd@addcancel{4},
   delayed/.value required,
   delayed/.code 2 args={\pktxd@delayedtrue\edef\pktxd@delayedid{1}\edef\pktxd@delayedlen{#1}\edef\pktxd@delayedlabel{#2}},
   delayed2/.value required,
   delayed2/.code 2 args={\pktxd@delayedtrue\edef\pktxd@delayedid{2}\edef\pktxd@delayedlen{#1}\edef\pktxd@delayedlabel{#2}},
+  delayed3/.value required,
+  delayed3/.code 2 args={\pktxd@delayedtrue\edef\pktxd@delayedid{3}\edef\pktxd@delayedlen{#1}\edef\pktxd@delayedlabel{#2}},
+  delayed4/.value required,
+  delayed4/.code 2 args={\pktxd@delayedtrue\edef\pktxd@delayedid{4}\edef\pktxd@delayedlen{#1}\edef\pktxd@delayedlabel{#2}},
   stop/.value required,
   stop/.code n args={3}{\pktxd@stoptrue\edef\pktxd@stopid{1}
     \edef\pktxd@stoplen{#1}\edef\pktxd@stoplabel{#2}\edef\pktxd@stopdelay{#3}},
   stop2/.value required,
   stop2/.code n args={3}{\pktxd@stoptrue\edef\pktxd@stopid{2}\edef\pktxd@stoplen{#1}\edef\pktxd@stoplabel{#2}\edef\pktxd@stopdelay{#3}},
+  stop3/.value required,
+  stop3/.code n args={3}{\pktxd@stoptrue\edef\pktxd@stopid{3}\edef\pktxd@stoplen{#1}\edef\pktxd@stoplabel{#2}\edef\pktxd@stopdelay{#3}},
+  stop4/.value required,
+  stop4/.code n args={3}{\pktxd@stoptrue\edef\pktxd@stopid{4}\edef\pktxd@stoplen{#1}\edef\pktxd@stoplabel{#2}\edef\pktxd@stopdelay{#3}},
   %
   rnote/.code={\def\pktxd@rnote{#1}\pktxd@rnotetrue},
   snote/.code={\def\pktxd@snote{#1}\pktxd@snotetrue},
@@ -365,8 +385,12 @@
   \pgfglobalkeys{/pktxd/entities/#1/Tmax/.initial=0cm}  % max time
   \pktxd@createtimer{#1}{l}{1}
   \pktxd@createtimer{#1}{l}{2}
+  \pktxd@createtimer{#1}{l}{3}
+  \pktxd@createtimer{#1}{l}{4}
   \pktxd@createtimer{#1}{r}{1}
   \pktxd@createtimer{#1}{r}{2}
+  \pktxd@createtimer{#1}{r}{3}
+  \pktxd@createtimer{#1}{r}{4}
 }
 
 \newcommand{\pktxd@createtimer}[3]{ % entity l/r id
@@ -378,8 +402,12 @@
 
 \pgfkeys{/pktxd/default/timers/l/1/offset/.initial=4mm}
 \pgfkeys{/pktxd/default/timers/l/2/offset/.initial=9mm}
+\pgfkeys{/pktxd/default/timers/l/3/offset/.initial=14mm}
+\pgfkeys{/pktxd/default/timers/l/4/offset/.initial=19mm}
 \pgfkeys{/pktxd/default/timers/r/1/offset/.initial=4mm}
 \pgfkeys{/pktxd/default/timers/r/2/offset/.initial=9mm}
+\pgfkeys{/pktxd/default/timers/r/3/offset/.initial=14mm}
+\pgfkeys{/pktxd/default/timers/r/4/offset/.initial=19mm}
 
 \newcommand{\pktxd@pos}[1]{\pgfkeysvalueof{/pktxd/entities/#1/pos}}
 \newcommand{\pktxd@Tsend}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Tsend}}
@@ -929,7 +957,7 @@
 
 \newcommand{\pktxd@alltimers}[1]{
   \foreach \e/\o in {A/l,B/r} {
-    \foreach \n in {1,2} {
+    \foreach \n in {1,2,3,4} {
       #1{\e}{\o}{\n}
       }
     }
@@ -1125,8 +1153,12 @@
   \pktxd@forallentities{
     \pktxd@flushtimer{\e}{l}{1}
     \pktxd@flushtimer{\e}{l}{2}
+    \pktxd@flushtimer{\e}{l}{3}
+    \pktxd@flushtimer{\e}{l}{4}
     \pktxd@flushtimer{\e}{r}{1}
     \pktxd@flushtimer{\e}{r}{2}
+    \pktxd@flushtimer{\e}{r}{3}
+    \pktxd@flushtimer{\e}{r}{4}
     }
   }
 
