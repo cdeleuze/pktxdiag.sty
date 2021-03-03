@@ -58,20 +58,6 @@
   ignore/.code=\pktxd@setignore{#1},
   fade/.code=\pktxd@setfade{#1},
   %
-  timer offset/.style={/pktxd/A timer offset=#1,/pktxd/B timer offset=#1},
-  timer2 offset/.style={/pktxd/A timer2 offset=#1,/pktxd/B timer2 offset=#1},
-  timer3 offset/.style={/pktxd/A timer3 offset=#1,/pktxd/B timer3 offset=#1},
-  timer4 offset/.style={/pktxd/A timer4 offset=#1,/pktxd/B timer4 offset=#1},
-  % this makes sense only for AB diagrams
-  A timer offset/.style={/pktxd/default/timers/l/1/offset=#1},
-  A timer2 offset/.style={/pktxd/default/timers/l/2/offset=#1},
-  A timer3 offset/.style={/pktxd/default/timers/l/3/offset=#1},
-  A timer4 offset/.style={/pktxd/default/timers/l/4/offset=#1},
-  B timer offset/.style={/pktxd/default/timers/r/1/offset=#1},
-  B timer2 offset/.style={/pktxd/default/timers/r/2/offset=#1},
-  B timer3 offset/.style={/pktxd/default/timers/r/3/offset=#1},
-  B timer4 offset/.style={/pktxd/default/timers/r/4/offset=#1},
-  % 
   action time offset/.code=\setlength{\pktxd@actiontimeoffset}{#1},
   action offset/.code=\setlength{\pktxd@actionoffset}{#1},
   action length/.code=\setlength{\pktxd@actionlength}{#1},
@@ -400,14 +386,70 @@
   \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/start}{0}
   \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/end}{0}}
 
-\pgfkeys{/pktxd/default/timers/l/1/offset/.initial=4mm}
-\pgfkeys{/pktxd/default/timers/l/2/offset/.initial=9mm}
-\pgfkeys{/pktxd/default/timers/l/3/offset/.initial=14mm}
-\pgfkeys{/pktxd/default/timers/l/4/offset/.initial=19mm}
-\pgfkeys{/pktxd/default/timers/r/1/offset/.initial=4mm}
-\pgfkeys{/pktxd/default/timers/r/2/offset/.initial=9mm}
-\pgfkeys{/pktxd/default/timers/r/3/offset/.initial=14mm}
-\pgfkeys{/pktxd/default/timers/r/4/offset/.initial=19mm}
+%%%% timer offsets
+
+% The horiz offset of the four timers is set to a sensible default if
+% using timer labels.
+
+% TODO: maybe these default settings should be globally configurable?
+\def\pktxd@resettimeroffsets{
+  \pgfkeys{/pktxd/default/timers/.cd,
+    l/1/offset/.initial=4mm,
+    l/2/offset/.initial=9mm,
+    l/3/offset/.initial=14mm,
+    l/4/offset/.initial=19mm,
+    r/1/offset/.initial=4mm,
+    r/2/offset/.initial=9mm,
+    r/3/offset/.initial=14mm,
+    r/4/offset/.initial=19mm}
+}
+
+% more offset is added to left timers if "normal" left timer labels are used
+% (see @drawtimer)
+
+\def\pktxd@lefttimeraddoffset{3mm}
+
+% Position for timer 1/2/3/4 can be adjusted.
+
+\pgfkeys{/pktxd/.cd,
+  timer offset/.style={/pktxd/A timer offset=#1,/pktxd/B timer offset=#1},
+  timer2 offset/.style={/pktxd/A timer2 offset=#1,/pktxd/B timer2 offset=#1},
+  timer3 offset/.style={/pktxd/A timer3 offset=#1,/pktxd/B timer3 offset=#1},
+  timer4 offset/.style={/pktxd/A timer4 offset=#1,/pktxd/B timer4 offset=#1},
+  % A and B names make sense only for AB diagrams, this is actually l/r timer
+  A timer offset/.style={/pktxd/default/timers/l/1/offset=#1},
+  A timer2 offset/.style={/pktxd/default/timers/l/2/offset=#1},
+  A timer3 offset/.style={/pktxd/default/timers/l/3/offset=#1},
+  A timer4 offset/.style={/pktxd/default/timers/l/4/offset=#1},
+  B timer offset/.style={/pktxd/default/timers/r/1/offset=#1},
+  B timer2 offset/.style={/pktxd/default/timers/r/2/offset=#1},
+  B timer3 offset/.style={/pktxd/default/timers/r/3/offset=#1},
+  B timer4 offset/.style={/pktxd/default/timers/r/4/offset=#1},
+%
+% or can be expressed as differential position
+%
+  /pktxd/timers/+offset/.code=\pktxd@settimeroffsets{#1},
+  /pktxd/timers/+offset/.value required,
+%
+% or can be set to a tight value (suitable w/o labels)
+%
+  /pktxd/timers/tight/.code=
+     \pgfkeys{/pktxd/timer offset=2mm,
+              /pktxd/timers/on arrow}  % ensures @lefttimeraddoffset not used
+     \pktxd@settimeroffsets{2mm}
+}
+
+\def\pktxd@settimeroffsets#1{
+  \foreach \s in {l,r} {
+    \def\basicoffset{\pgfkeysvalueof{/pktxd/default/timers/\s/1/offset}}
+    \foreach \n in {1,2,3,4} {
+      \pgfmathsetlengthmacro{\offset}{\basicoffset+(\n-1)*#1}
+      \global\pgfkeyslet{/pktxd/default/timers/\s/\n/offset}{\offset}
+    }
+  }
+}
+
+%%%% 
 
 \newcommand{\pktxd@pos}[1]{\pgfkeysvalueof{/pktxd/entities/#1/pos}}
 \newcommand{\pktxd@Tsend}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Tsend}}
@@ -706,10 +748,14 @@
 
 % entity, start time, end time, cancel time (or x), label, pos offset,
 % arrow style, label style
+% label not drawn if \relax!
 % TODO include cancel arrow style?
 
 \newcommand{\pktxd@drawtimer}[8]{
-  \pktxd@debug{drawtimer #1, #2/#3/#4 #5 #6}
+  \pktxd@debug{drawtimer #1, #2/#3/#4 .#5. #6}
+
+  \newif\iflabel % should draw label?
+  \if#5\relax\labelfalse\else\labeltrue\fi
 
   % @putlabelonarrow will be set if 'timer label on arrow' is set
   % and label is not too wide
@@ -738,7 +784,7 @@
                   \ifpktxd@timerleftbelow   \offset\else
                   \ifpktxd@timerleftbottomup\offset\else
                   \ifpktxd@putlabelonarrow  \offset\else
-                                            \offset-3mm
+                                            \offset-\pktxd@lefttimeraddoffset
                   \fi\fi\fi\fi
     \fi}
 
@@ -772,21 +818,20 @@
   \if x#4 % no cancel
     \ifpktxd@h
       \draw[thin,<->,#7] (#2,\pos-\timerhoffset)
-           -- (#3,\pos-\timerhoffset) node[midway,sloped,\above,#8]{#5};
+           -- (#3,\pos-\timerhoffset) \iflabel node[midway,sloped,\above,#8]{#5}\fi;
     \else
       \draw[thin,<->,#7] (\pos,-#2-\pktxd@timertoffset)
-           -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above,#8]{#5};
+           -- (\pos,-#3+\pktxd@timertoffset) \iflabel node[midway,sloped,\above,#8]{#5}\fi;
     \fi
   \else % including a cancel
     \ifpktxd@h
       \draw[thin,#7](#2,\pos-\timerhoffset) -- (#4,\pos-\timerhoffset);
       \draw[thin,dotted,<->,#7](#2,\pos-\timerhoffset)
-           -- (#3,\pos-\timerhoffset) node[midway,sloped,\above,#8]{#5};
+           -- (#3,\pos-\timerhoffset) \iflabel node[midway,sloped,\above,#8]{#5}\fi;
     \else
-      \draw[thin,#7](\pos,-#2-\pktxd@timertoffset)
-              -- (\pos,-#4);
+      \draw[thin,#7](\pos,-#2-\pktxd@timertoffset) -- (\pos,-#4);
       \draw[thin,dotted,<->,#7](\pos,-#2-\pktxd@timertoffset)
-           -- (\pos,-#3+\pktxd@timertoffset) node[midway,sloped,\above,#8]{#5};
+           -- (\pos,-#3+\pktxd@timertoffset) \iflabel node[midway,sloped,\above,#8]{#5}\fi;
     \fi
   \fi
 }
@@ -809,7 +854,7 @@
   \pktxd@debug{timerhpos #1/#2/#3}
   \def\pos{\pktxd@pos{#1}}
   \def\offset{\pktxd@getconftimer{#1}{#2}{#3}{offset}}
-  \def#4{%
+  \edef#4{%
   \ifpktxd@h-\pos+\if #2r-\offset\else\offset\fi
   \else
   \pos+\if #2r\offset\else\ifpktxd@timerleftbelow-\offset\else\ifpktxd@timerleftbottomup-\offset
@@ -822,7 +867,9 @@
   \global\pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/start}{#4}
   \pgfmathsetlengthmacro\temp{#4+#5}
   \global\pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/end}{\temp}
-  \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/label}{#6}
+  % we store the label as \relax if empty
+  \def\empty{}\edef\arg{#6}\ifx\arg\empty\edef\arg{\relax}\fi
+  \global\pgfkeyslet{/pktxd/entities/#1/timers/#2/#3/label}{\arg}
 
   \pktxd@debugtimer{starttimer}{#1}{#2}{#3}
 }
@@ -867,7 +914,7 @@
      \pktxd@drawtimer{#1}{\timerstart}{\timerend}{x}
         {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}
         {\timeroffset}{}{}
-     \pktxd@drawtimer{#1}{\timerend}{#4}{x}{}{\timeroffset}{dotted,red,->}{}
+     \pktxd@drawtimer{#1}{\timerend}{#4}{x}{\relax}{\timeroffset}{dotted,red,->}{}
   \else
      % everything is ok!
     \pktxd@drawtimer{#1}{\timerstart}{\timerend}{#4}
@@ -1174,9 +1221,11 @@
   %
   \pktxd@hfalse%
   \setlength{\pktxd@trans}{0cm}%
+  % reset to default values, env keys may then change them
+  \pktxd@resettimeroffsets%
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
   \ifpktxd@mmode\else\pktxd@initentities\fi
-  }
+}
   {
     % finish drawing all timers
     % this also moves Tsend to end of timer if needed
@@ -1216,6 +1265,7 @@
   \setlength{\pktxd@replydelay}{0cm}%
   \def\pktxd@width{1cm}%
   \setlength{\pktxd@prop}{3mm}%
+  \pktxd@resettimeroffsets%
   \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
   \ifpktxd@mmode
   \PackageError{pktxdiag}{Multi-entities mode not supported in h

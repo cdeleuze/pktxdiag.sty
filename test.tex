@@ -380,6 +380,83 @@
 
 \vfill
 
+\subsubsection*{More timers, timer offsets}
+
+\def\testalltimers{
+  \fullduplex
+  \AB{DATA 0}
+  \BwaitA
+  \BA{ACK 1}
+  \AB{DATA 1}
+  \BA{ACK 2}
+  \AB[lost,timed={5cm}{retrans 2},label style=midway]{DATA 2}
+  \AB[timed2={5cm}{retrans 3}]{DATA 3}
+  \BwaitA
+  \BA{ACK 2}
+  \AB[timed3={5cm}{retrans 4}]{DATA 4}
+  \BA{ACK 2}
+  \AB[timed4={5cm}{retrans 5}]{DATA 5}
+  \BA{ACK 2}
+  \Awaittimer[1]
+  \AB[blue]{DATA 2}
+  \BwaitA
+  \BA[cancel4]{ACK 6}
+  \Awaittimer[2]
+  \AB[blue]{DATA 3}
+  \BA{ACK 6}
+  \AB[blue]{DATA 4}
+  \BA{ACK 6}
+  \AB{DATA 6}
+  \BA{ACK 7}
+  \AB{DATA 7}
+  \BA{ACK 0}
+  \AB{DATA 0}
+  \BA{ACK 1}
+  \AB{DATA 1}
+  \BA{ACK 2}
+}
+
+\begin{pktxdiag}
+\testalltimers
+\end{pktxdiag}
+\begin{pktxdiag}[reversed]
+\testalltimers
+\end{pktxdiag}
+\begin{pktxdiag}[timer offset=3mm, timers/+offset=3mm, timers/left bottom up]
+\testalltimers
+\end{pktxdiag}
+
+\begin{hpktxdiag}
+\testalltimers
+\end{hpktxdiag}
+\begin{hpktxdiag}[timers/tight]
+\testalltimers
+\end{hpktxdiag}
+
+\begin{pktxdiag}[timers/+offset=3mm]
+  \fullduplex
+  \AB[timed={4cm}{data 0}]{DATA 0}
+  \BwaitA
+  \BA[delayed={6mm}{ack},cancel]{ACK 1}
+  \AB[timed2={4cm}{data 1}]{DATA 1}
+  \BA[delayed={6mm}{ack},cancel2]{ACK 2}
+  \AB[timed3={4cm}{data 2}]{DATA 2}
+  \BA[delayed={6mm}{ack},cancel3]{ACK 3}
+  \AB[timed4={4cm}{data 3}]{DATA 3}
+  \BA[delayed={6mm}{ack},cancel4]{ACK 4}
+\end{pktxdiag}
+\begin{pktxdiag}[timers/tight,reversed]
+  \fullduplex
+  \AB[timed={4cm}{},lost,cross for lost,label style=midway]{DATA 0}
+  \AB[timed2={4cm}{}]{DATA 1}
+  \BwaitA
+  \BA[delayed={3mm}{ack}]{ACK 0}
+  \AB[timed3={4cm}{}]{DATA 2}
+  \BA[delayed={3mm}{ack}]{ACK 0}
+  \AB[timed4={4cm}{}]{DATA 3}
+  \BA[delayed={3mm}{ack}]{ACK 0}
+\end{pktxdiag}
+
 \subsubsection*{Timers: later}
 
 \begin{pktxdiag}
