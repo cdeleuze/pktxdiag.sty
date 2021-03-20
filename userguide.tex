@@ -649,11 +649,15 @@ style of frame labels.
 \index{command!definestyle}
 \index{command!derivestyle}
 
-One can define a style with the \texttt{definestyle} command, but it
-is often more convenient to use \texttt{derivestyle}.  The new style
+One can define a style with the \texttt{definestyle} command, or
+inherit an existing style with \texttt{derivestyle}.  The new style
 adds its own attributes to those it inherits from its parent style.
-The default style for arrows is simply called \texttt{default} while
-the one for labels is called \texttt{labeldefault}.
+The default style for arrows and labels are empty.
+
+% TODO: derivestyle example
+% eg, ACKs have a smaller label, near start?
+
+% frame style spills on label style
 
 % \index{default, labeldefault} ?
 
@@ -666,10 +670,10 @@ the one for labels is called \texttt{labeldefault}.
   \AB[id=1]{DATA 2 (1)}
                       \BA[id=1]{RR 3 (1)}
 }
-\derivestyle{id1}{default}{green}
-\derivestyle{id1l}{labeldefault}{green!60}
-\derivestyle{id2}{default}{blue,dashed}
-\derivestyle{id2l}{labeldefault}{blue!60}
+\definestyle{id1}{green}
+\definestyle{id1l}{green!60}
+\definestyle{id2}{blue,dashed}
+\definestyle{id2l}{blue!60}
 \setflowstyle{1}{id1}
 \setflowlabelstyle{1}{id1l}
 \setflowstyle{2}{id2}
@@ -680,7 +684,7 @@ the one for labels is called \texttt{labeldefault}.
 \end{pktxdiag}
 
 \begin{pktxdiag}
-  \definestyle{1b}{above,draw,orange,fill=orange!20,opacity=0.5}
+  \definestyle{1b}{sloped=false,above,draw,orange,fill=orange!20,opacity=0.5}
   \setflowlabelstyle{1}{1b}
   \testfilter
 \end{pktxdiag}
@@ -719,7 +723,7 @@ receiving entities.
 \entityname{R}{Resolver\\20.0.0.1}
 \entityname{D}{DNS\\authority}
 
-\derivestyle{dns}{labeldefault}{blue}
+\definestyle{dns}{blue}
 \setflowlabelstyle{dns}{dns}
 
 \frame{C}{r}{GET image}
@@ -793,7 +797,7 @@ features include: late frames, laters, states and actions.
 \index{env option!hdlc}
 
 \begin{codeexample}[]
-\begin{hpktxdiag}[hdlc,short trans=3mm,A,B,prop=4mm]
+\begin{hpktxdiag}[hdlc,short trans=3mm,A,B,prop=4mm,label style={font=\normalfont}]
   \AB{SABM}
            \BA{UA}
   \fullduplex
@@ -958,8 +962,8 @@ features include: late frames, laters, states and actions.
   entities={A/bsd-pc.cisco.com,B/cisco.com proxy,
     C/princeton.edu proxy,D/llp-ph.cs.princeton.edu}]
 
-\derivestyle{big}{default}{latex-latex,line width=3mm}
-\derivestyle{def}{labeldefault}{sloped=false}
+\definestyle{big}{latex-latex,line width=3mm}
+\definestyle{def}{sloped=false}
 \setflowstyle{big}{big}
 \setflowlabelstyle{main}{def}
 \frame{A}{B}{invite}

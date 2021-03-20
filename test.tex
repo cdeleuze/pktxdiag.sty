@@ -530,6 +530,7 @@
  \testtimersir
 \end{pktxdiag}
 
+\newpage
 \subsubsection*{Faulty cancels}
 
 Cancel a non running timer
@@ -548,7 +549,7 @@ Cancel a running timer
   \AB[cancel]{hoooo}
 \end{pktxdiag}
 
-Cancel an non running timer, but defined in a previous env
+Cancel a non running timer, but defined in a previous env
 
 \begin{pktxdiag}[warn only]
   \AB[cancel]{hoooo}
@@ -738,11 +739,11 @@ Cancel an non running timer, but defined in a previous env
 \end{pktxdiag}}
 \end{figure}
 
-\subsubsection*{Filtering, styles, label styles}
+\subsubsection*{Filtering, flow styles}
 
-{\derivestyle{id1}{default}{green}
-\derivestyle{id1l}{labeldefault}{green!60}
-\derivestyle{id2}{default}{blue,dashed}
+{\definestyle{id1}{green}
+\definestyle{id1l}{green!60}
+\definestyle{id2}{blue,dashed}
 \definestyle{id2l}{above,blue!60}
 \setflowstyle{1}{id1}
 \setflowlabelstyle{1}{id1l}
@@ -758,11 +759,112 @@ Cancel an non running timer, but defined in a previous env
   \testfilter
 \end{pktxdiag}
 \begin{pktxdiag}[hide=2]
-  \definestyle{1b}{above,draw,orange,fill=orange!20,opacity=0.5}
+  \definestyle{1b}{sloped=false,above,draw,orange,fill=orange!20,opacity=0.5}
   \setflowlabelstyle{1}{1b}
   \testfilter
 \end{pktxdiag}
 }
+
+\subsubsection*{Changing global styles}
+
+\begin{pktxdiag}
+  \testfilter
+\end{pktxdiag}
+\begin{pktxdiag}[frame style={->,thin,dashed,blue}]
+  \testfilter
+\end{pktxdiag}
+\begin{pktxdiag}[label style={near start, below}]
+  \testfilter
+\end{pktxdiag}
+\begin{pktxdiag}[
+  frame style={->,thin,dashed,blue},
+  label style={near start,below,sloped}
+  ]
+  \definestyle{1b}{sloped=false,above,midway,solid,very thick,draw,orange,fill=orange!20,opacity=0.5}
+  \setflowlabelstyle{1}{1b}
+  \testfilter
+\end{pktxdiag}
+
+\subsubsection*{Explicit, env, and flow frame styles}
+
+\def\testframestyle{
+  \AB{env-only}
+  \BA[id=1, style=orange]{flow1, orange}
+  \AB{env-only}
+  \AB[id=1,style={dashed}]{flow1, dashed}
+  \BA[style={dotted,green}]{dotted, green}
+  \AB{env-only}}
+
+\begin{figure}[H]
+\centering\subfloat[explicit only]{\begin{pktxdiag}
+\testframestyle
+\end{pktxdiag}}\hfill
+\centering\subfloat[env += gray]{
+\begin{pktxdiag}[frame style+={gray}]
+  \testframestyle
+\end{pktxdiag}}\hfill
+\centering\subfloat[env+=gray, flow1=blue+dotted]{
+\begin{pktxdiag}[frame style+=gray]
+  \definestyle{s1}{blue,dotted}
+  \setflowstyle{1}{s1}
+  \testframestyle
+\end{pktxdiag}}
+\end{figure}
+
+\begin{hpktxdiag}
+  \testframestyle
+\end{hpktxdiag}
+
+\begin{hpktxdiag}[frame style+={gray}]
+  \testframestyle
+\end{hpktxdiag}
+
+\begin{hpktxdiag}[frame style+=gray]
+  \definestyle{s1}{blue,dotted}
+  \setflowstyle{1}{s1}
+  \testframestyle
+\end{hpktxdiag}
+
+
+\subsubsection*{Explicit, env, and flow label styles}
+
+\def\testframelabelstyle{
+  \AB{env-only}
+  \BA[id=1, label style=orange]{flow1, orange}
+  \AB{env-only}
+  \AB[id=1,label style={font=\scshape}]{flow1, scshape}
+  \BA[label style={sloped=false,draw,fill=orange!20,opacity=0.75}]{boxed}
+  \AB{env-only}}
+
+\begin{figure}[H]
+\centering\subfloat[explicit only]{\begin{pktxdiag}
+\testframelabelstyle
+\end{pktxdiag}}\hfill
+\centering\subfloat[env += itfont]{
+\begin{pktxdiag}[label style+={font=\it}]
+  \testframelabelstyle
+\end{pktxdiag}}\hfill
+\centering\subfloat[env=fontit, flow1=blue+rmfont]{
+\begin{pktxdiag}[label style={font=\it}]
+  \definestyle{ls1}{blue,font=\rmfamily}
+  \setflowlabelstyle{1}{ls1}
+  \testframelabelstyle
+\end{pktxdiag}}
+\end{figure}
+
+\begin{hpktxdiag}
+    \testframelabelstyle
+\end{hpktxdiag}
+
+\begin{hpktxdiag}[label style+={font=\it}]
+  \testframelabelstyle
+\end{hpktxdiag}
+
+\begin{hpktxdiag}[label style={font=\it}]
+  \definestyle{ls1}{blue,font=\rmfamily}
+  \setflowlabelstyle{1}{ls1}
+  \testframelabelstyle
+\end{hpktxdiag}
 
 \subsubsection*{Labels}
 
@@ -784,36 +886,6 @@ Cancel an non running timer, but defined in a previous env
 \begin{pktxdiag}[show label2,hide label]
   \testlabelii
 \end{pktxdiag}
-
-\subsubsection*{Explicit label styles}
-
-\def\testframelabelstyle{
-  \AB{toto}
-  \BA[id=1, label style=orange]{titi}
-  \AB{toto again}
-  \AB[id=1,label style={font=\scshape}]{tutu}
-  \BA[label style={sloped=false,draw,fill=orange!20,opacity=0.75}]{tata}
-  \AB{toutou}}
-
-\begin{figure}[H]
-\centering\subfloat[explicit]{\begin{pktxdiag}
-\testframelabelstyle
-\end{pktxdiag}}\hfill
-\centering\subfloat[explicit and env label style]{
-\begin{pktxdiag}[label style={font=\it}]
-  \testframelabelstyle
-\end{pktxdiag}}\hfill
-\centering\subfloat[explicit,env, and flow label style]{
-\begin{pktxdiag}[label style={font=\it}]
-  \derivestyle{ls1}{labeldefault}{blue,font=\rmfamily}
-  \setflowlabelstyle{1}{ls1}
-  \testframelabelstyle
-\end{pktxdiag}}
-\end{figure}
-
-\begin{hpktxdiag}
-    \testframelabelstyle
-\end{hpktxdiag}
 
 \subsubsection*{Multi line labels and entity names}
 
@@ -842,8 +914,8 @@ Cancel an non running timer, but defined in a previous env
 %\entityname{B}{cisco.com\\proxy}
 %\entityname{C}{princeton.edu\\proxy}
 
-\derivestyle{big}{default}{latex-latex,line width=3mm}
-\derivestyle{def}{labeldefault}{sloped=false}
+\definestyle{big}{latex-latex,line width=3mm}
+\definestyle{def}{sloped=false}
 \setflowstyle{big}{big}
 \setflowlabelstyle{main}{def}
 \frame{A}{B}{invite}

@@ -295,47 +295,58 @@
 
 %%%%%% styles
 
-%% define a style: name to set of options
-\newcommand{\definestyle}[2]{
-  \pgfkeys{/pktxd/styles/#1/.style={#2}}}
+%% define a style: name for a set of options
+\newcommand{\definestyle}[2]{\pgfkeys{/pktxd/styles/#1/.style={#2}}}
 
 %% make #1 (dynamically) inherit #2, adding #3 options
-\newcommand{\derivestyle}[3]{
-  \definestyle{#1}{/pktxd/styles/#2,#3}}
+\newcommand{\derivestyle}[3]{\definestyle{#1}{/pktxd/styles/#2,#3}}
 
 %% give a style to a flow or its labels
-\newcommand{\setflowstyle}[2]{
-  \pgfkeys{/pktxd/flows/#1/style/.initial=#2}}
+\newcommand{\setflowstyle}[2]{\pgfkeys{/pktxd/flows/#1/style/.initial=#2}}
+\newcommand{\setflowlabelstyle}[2]{\pgfkeys{/pktxd/flows/#1/labelstyle/.initial=#2}}
 
-\newcommand{\setflowlabelstyle}[2]{
-  \pgfkeys{/pktxd/flows/#1/labelstyle/.initial=#2}}
-
-%% the default styles
-%% removed the >=latex, since it does not obey opacity=...
-\definestyle{default}{/tikz/.cd,very thick, ->}
-
-\definestyle{labeldefault}{above,sloped}
-
-% the label style of the current frame is styles/current label style.
+% the frame|label style of the current frame is styles/current frame|label style.
 % This includes (in order):
-% 1. the 'label global' style (set by the labelstyle env key),
-% 2. the label style from the frame flow, if any else 'labeldefault',
-% 3. the local frame style set by the labelstyle frame key.
+% 1. the frame|label "global" style, that can be:
+%   - augmented by the 'frame|label style+' key, or
+%   - reset by the 'frame|label style' key,
+% 2. the [label] style from the frame flow if any, else the empty style,
+% 3. the local frame style set by the '[label] style' frame key.
 %
 % 1 and 3 are set by pgfkeys, 2 by pktxd@frame
 
 \pgfkeys{
-  /pktxd/styles/label this frame/.style={},
-  /pktxd/styles/label global/.style={},
-  /pktxd/styles/label this flow/.style={},
-  /pktxd/styles/current label style/.style={
+  /pktxd/styles/.cd,
+  % styles for frames
+  this frame/.style={},
+  global/.style={very thick,->},
+  this flow/.style={},
+  current frame style/.style={
+    /pktxd/styles/global,
+    /pktxd/styles/this flow,
+    /pktxd/styles/this frame},
+  % styles for frame labels
+  label this frame/.style={},
+  label global/.style={above,sloped},
+  label this flow/.style={},
+  current label style/.style={
     /pktxd/styles/label global,
     /pktxd/styles/label this flow,
-    /pktxd/styles/label this frame}
+    /pktxd/styles/label this frame},
+  %
+  .search also=/tikz
 }
 
-\pgfkeys{/pktxd/label style/.code=\pgfkeys{/pktxd/styles/label global/.style={{#1}}},
-         /pktxd/frame/label style/.code=\pgfkeys{/pktxd/styles/label this frame/.style={#1}}}
+% user keys
+\pgfkeys{
+  % env keys
+  /pktxd/frame style/.code=\pgfkeys{/pktxd/styles/global/.style={#1}},
+  /pktxd/frame style+/.code=\pgfkeys{/pktxd/styles/global/.style={very thick,->,#1}},
+  /pktxd/label style/.code=\pgfkeys{/pktxd/styles/label global/.style={#1}},
+  /pktxd/label style+/.code=\pgfkeys{/pktxd/styles/label global/.style={above,sloped,#1}},
+  % frame keys
+  /pktxd/frame/style/.code=\pgfkeys{/pktxd/styles/this frame/.style={#1}},
+  /pktxd/frame/label style/.code=\pgfkeys{/pktxd/styles/label this frame/.style={#1}}}
 
 %%%%%% various definitions
 
@@ -524,7 +535,7 @@
   \pgfmathsetlength{\pktxd@len}{#3-#2}
   \pgfmathsetmacro{\sign}{#2<#3?1:-1}
 
-  \begin{scope}[#1]
+  \begin{scope}[/pktxd/styles/.cd,current frame style,#1]
     % iflost, draw only half way
     \ifpktxd@lost\def\lost{2}\else\def\lost{1}\fi
     % ifbad, draw a zigzag
@@ -536,11 +547,11 @@
 
        \draw (#2,-#4) --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
 
-                 \ifpktxd@sync\else node[align=center,near end,\lstyle]{\pktxd@nodelabel{#5}}\fi
+                 \ifpktxd@sync\else node[align=center,near end,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}}\fi
     
                  decorate[decoration=zigzag,segment length=2mm]
                  {--++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
-                   \ifpktxd@sync node[align=center,midway,\lstyle]{\pktxd@nodelabel{#5}}\fi}
+                   \ifpktxd@sync node[align=center,midway,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}}\fi}
 
                  --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3);
                    \ifpktxd@lost\ifpktxd@crosslost \draw[-]
@@ -555,14 +566,14 @@
        \draw (#2,-#4) 
        .. controls (#2/2+#3/2,-#4-\pktxd@prop/2) and (#2/2+#3/2,-#4-\pktxd@latev)
        .. (#3, -#4-\pktxd@latev-\pktxd@prop)
-                   node[align=center,\lstyle,pos=0.1]{\pktxd@nodelabel{#5}};
+                   node[align=center,/pktxd/styles/.cd,\lstyle,pos=0.1]{\pktxd@nodelabel{#5}};
 
        \fi
     \else
     % not bad, not late
        \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
                    node[align=center,\ifpktxd@sync midway\else near
-                   start\fi,\lstyle]{\pktxd@nodelabel{#5}};
+                   start\fi,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
                    \ifpktxd@lost\ifpktxd@crosslost \draw[-]
                    (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
     \fi
@@ -578,7 +589,7 @@
   \pgfmathsetlength{\pktxd@len}{#2-#3}
   \pgfmathtruncatemacro{\sign}{#2<#3?1:-1}
 
-  \begin{scope}[#1,|-|]
+  \begin{scope}[/pktxd/styles/current frame style,#1,|-|]
   \ifnum \sign>0\def\toto{above}\else\def\toto{below}\fi
   \ifpktxd@lost\def\lost{2}\else\def\lost{1}\fi
   % first draw 'transmission time' line
@@ -631,11 +642,13 @@
   \pgfkeysifdefined{/pktxd/flows/\pktxd@id/ignore}{\pktxd@ignoretrue}{\pktxd@ignorefalse}
   \ifpktxd@ignore\else
 
-  % update '/pktxd/styles/label this flow' according to current flow
+  % update '/pktxd/styles/[label ]this flow' according to current flow
+  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/style}
+    {\pgfkeys{/pktxd/styles/this flow/.style=
+      {/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/style}}}}{}
   \pgfkeysifdefined{/pktxd/flows/\pktxd@id/labelstyle}
     {\pgfkeys{/pktxd/styles/label this flow/.style=
-      {/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/labelstyle}}}}
-    {\pgfkeys{/pktxd/styles/label this flow/.style={/pktxd/styles/labeldefault}}}
+      {/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/labelstyle}}}}{}
   
   \pktxd@settrans{#4}
 
@@ -665,27 +678,24 @@
   % timed/timed2 keys
   \@for\timed:=\pktxd@timeds\do{\expandafter\pktxd@processtimed\timed:#2}
 
-  % set styles based on id key
-  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/style}{
-    \def\thestyle{/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/style}}}{
-    \def\thestyle{/pktxd/styles/default}}
+  % set opacity based on id key
   \def\opa{\pktxd@getconf{\pktxd@id}{opacity}}
   
   % draw send note
   \ifpktxd@snote
   \ifpktxd@h
     \pktxd@drawnote{\Tsend}{#2}{s}{\pktxd@snote}
-       {\if\align l-\fi\pktxd@snoteoffset}{/pktxd/left note,\thestyle,opacity=\opa}
+       {\if\align l-\fi\pktxd@snoteoffset}{/pktxd/left note,/pktxd/styles/current frame style,opacity=\opa}
   \else
     \pktxd@drawnote{\Tsend}{#2}{s}{\pktxd@snote}
        {\if\align l-\fi\pktxd@snoteoffset}{\if\align l/pktxd/left
-        note\else/pktxd/right note\fi,\thestyle,opacity=\opa}
+        note\else/pktxd/right note\fi,/pktxd/styles/current frame style,opacity=\opa}
   \fi
   \fi
   % draw frame
   % explicit tikz keys are in /pktxd/frame/remainingkeys and may
   % override \thestyle
-  \pktxd@arrow[\thestyle,/tikz/opacity=\opa,/pktxd/frame/remainingkeys]
+  \pktxd@arrow[/tikz/opacity=\opa,/pktxd/frame/remainingkeys]
       {\sendpos}{\recvpos}{\Tsend}{#4}
 
   % update times
@@ -696,11 +706,11 @@
   \ifpktxd@rnote
   \ifpktxd@h
     \pktxd@drawnote{\Trecv-\pktxd@latev}{#3}{r}{\pktxd@rnote}
-       {\if\align r-\fi\pktxd@rnoteoffset}{/pktxd/right note,\thestyle,opacity=\opa}
+       {\if\align r-\fi\pktxd@rnoteoffset}{/pktxd/right note,/pktxd/styles/current frame style,opacity=\opa}
   \else
     \pktxd@drawnote{\Trecv-\pktxd@latev}{#3}{r}{\pktxd@rnote}
        {\if\align r-\fi\pktxd@rnoteoffset}{\if\align l/pktxd/right
-        note\else/pktxd/left note\fi,\thestyle,opacity=\opa}
+        note\else/pktxd/left note\fi,/pktxd/styles/current frame style,opacity=\opa}
   \fi
   \fi
 
