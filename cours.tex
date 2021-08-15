@@ -159,8 +159,8 @@
            \BA[id=vc1,label2={DATA 5,0 (1)}]{I 6,7}
 }
 
-{ \derivestyle{rr}{default}{orange}
-  \derivestyle{rrl}{labeldefault}{yellow}
+{ \definestyle{rr}{orange}
+  \definestyle{rrl}{yellow}
   \setflowstyle{main}{rr}
   \setflowlabelstyle{main}{rrl}
 
@@ -365,7 +365,7 @@
 %     \BA[id=a,snote=IP: 10.67.15.36]{ack id=3}}
 %   \centering\subfloat[whole traffic]{\begin{pktxdiag}[A,B]\trace\end{pktxdiag}}
 
-%   \derivestyle{hollow}{default}{color=gray!40}
+%   \definestyle{hollow}{color=gray!40}
 %   \subfloat[A parameters]{\begin{pktxdiag}[A,B]%,ignore=b]
 %       \setflowstyle{b}{hollow}\trace\end{pktxdiag}}
 %   \subfloat[B parameters]{\begin{pktxdiag}[A,B]%,ignore=a]
@@ -686,10 +686,10 @@
 }
 
 {
-\derivestyle{data}{default}{green,line width=3pt}
-\derivestyle{tcp}{default}{gray}
+\definestyle{data}{green,line width=3pt}
+\definestyle{tcp}{gray}
 \setflowstyle{data}{data}
-\derivestyle{tcplabel}{default}{above,blue,font=\footnotesize\ttfamily}
+\definestyle{tcplabel}{above,blue,font=\footnotesize\ttfamily}
 \setflowlabelstyle{tcp}{tcplabel}
 \setflowstyle{tcp}{tcp}
 
@@ -700,8 +700,8 @@
   \ftp
 \end{pktxdiag}
 \begin{pktxdiag}[prop=2mm,hide=main,hide=tcp]
-\derivestyle{data}{default}{orange,line width=1pt}
-  \ftp
+\definestyle{data}{orange,line width=1pt}
+\ftp
 \end{pktxdiag}
 }
 
@@ -799,7 +799,7 @@
 \entityname{R}{Résolveur R\\20.0.0.1}
 \entityname{D}{DNS D\\autorité}
 
-\derivestyle{dns}{default}{blue,above}
+\definestyle{dns}{blue}
 \setflowlabelstyle{dns}{dns}
 
 \frame{C}{r}{GET image}
