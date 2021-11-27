@@ -31,13 +31,13 @@
 
 \section{Using the package}
 
-Ensure the file \texttt{pktxdiag.sty} is in \LaTeX's load path.  A
-quick and easy way is to copy it in the directory from which you run
-the compilation commands.
+If you install the package manually, simply ensure the file
+\texttt{pktxdiag.sty} is in \LaTeX's load path.  A quick and easy way
+to give it a try is to copy it in the directory from which you run the
+compilation commands.  For a more robust way, copy the file to a
+proper location (see section 3.4.6 of the texlive guide for example).
 
-% or standard, or TEXINPUTS
-
-You can then simply load the package with \texttt{usepackage}:
+Load the package with \texttt{usepackage}:
 
 \begin{verbatim}
   \documentclass{article}
@@ -170,14 +170,14 @@ problem occurs to help locate and correct the problem.
 
 % TODO cancel before any timer was run raises a latex error
 
-\begin{codeexample}[]
+\begin{codeexample}[width=7cm]
 \begin{pktxdiag}[warn only]
   \AB[timed={1cm}{timer}]{DATA}
   \BA[cancel]{ACK}
 \end{pktxdiag}
 \end{codeexample}
 
-\begin{codeexample}[]
+\begin{codeexample}[width=7cm]
 \begin{pktxdiag}[warn only]
   \BA[timed={2cm}{timer}]{DATA}
   \AB[cancel]{ACK}
@@ -208,7 +208,7 @@ If several late frames are used, they can be named to be waited upon.
 The unamed late frame is actually named \texttt{\$\$lateframe}.
 \index{frame option!name}
 
-\begin{codeexample}[]
+\begin{codeexample}[width=6cm]
 \begin{pktxdiag}
   \AB{DATA1}
   \AB[late=2cm]{DATA2}
@@ -265,7 +265,7 @@ be considered a bug).
 \index{command!later}
 % TODO should have default value?
 
-\begin{codeexample}[width=6cm]
+\begin{codeexample}[width=8.5cm]
 \begin{pktxdiag}
   \AB{DATA1}
   \AB[timed={6cm}{timer}]{DATA2}
@@ -385,7 +385,7 @@ the delta for the other timers with \texttt{timers/+offset}.  The key
 no labels are put on timers).
 
 \begin{codeexample}[]
-  \begin{pktxdiag}[timer offset=3mm,timers/+offset=3mm]
+\begin{pktxdiag}[timer offset=3mm,timers/+offset=3mm]
   \fullduplex
   \AB[timed={4cm}{data 0}]{DATA 0}
   \BwaitA
@@ -523,7 +523,7 @@ See also section \ref{sec:flow styles} on flow styles.
 Frames can also be given most tikz graphics attributes to specify their
 colors, line width etc.
 
-\begin{codeexample}[]
+\begin{codeexample}[width=5cm]
   \begin{pktxdiag}
     \AB{DATA}
     \BA[dashed,blue]{ACK}
@@ -559,7 +559,7 @@ action and any frame send that occurs after it.
   offset=2mm,action offset=2mm]
   \Astate{Closed}\Bstate{Closed}
   \Apause         \Bpause
-  \Apause         \Bactionstate{passive open}{listen}
+  \Apause         \Bactionstate{passive open}{Listen}
   \Aactionstate{active open}{Syn-Sent}
   \AB{SYN}
                  \Bstate{SynRecvd}
@@ -577,8 +577,8 @@ action and any frame send that occurs after it.
 \subsection{Flows}
 
 Each frame belongs to a given \emph{flow}, as specified by the
-\texttt{id} option\index{frame option!id}.  A frame with no
-\texttt{id} option belongs to the \texttt{main} flow.
+\texttt{fid} option\index{frame option!fid}.  A frame with no
+\texttt{fid} option belongs to the \texttt{main} flow.
 
 \subsection{Filtering}
 
@@ -601,12 +601,12 @@ less visible by:
 
 \begin{codeexample}[]
 \def\testfilter{
-  \AB[id=1]{DATA 1 (1)}
-  \AB[id=2]{DATA 1 (2)}
-  \AB[id=2]{DATA 2 (2)}
-                      \BA[id=2]{RR 3 (2)}
-  \AB[id=1]{DATA 2 (1)}
-                      \BA[id=1]{RR 3 (1)}
+  \AB[fid=1]{DATA 1 (1)}
+  \AB[fid=2]{DATA 1 (2)}
+  \AB[fid=2]{DATA 2 (2)}
+                      \BA[fid=2]{RR 3 (2)}
+  \AB[fid=1]{DATA 2 (1)}
+                      \BA[fid=1]{RR 3 (1)}
 }
 \tikzset{/pktxd/width=2.15cm}
 \begin{pktxdiag}
@@ -663,12 +663,12 @@ The default style for arrows and labels are empty.
 
 \begin{codeexample}[width=4cm]
 \def\testfilter{
-  \AB[id=1]{DATA 1 (1)}
-  \AB[id=2]{DATA 1 (2)}
-  \AB[id=2]{DATA 2 (2)}
-                      \BA[id=2]{RR 3 (2)}
-  \AB[id=1]{DATA 2 (1)}
-                      \BA[id=1]{RR 3 (1)}
+  \AB[fid=1]{DATA 1 (1)}
+  \AB[fid=2]{DATA 1 (2)}
+  \AB[fid=2]{DATA 2 (2)}
+                      \BA[fid=2]{RR 3 (2)}
+  \AB[fid=1]{DATA 2 (1)}
+                      \BA[fid=1]{RR 3 (1)}
 }
 \definestyle{id1}{green}
 \definestyle{id1l}{green!60}
@@ -728,10 +728,10 @@ receiving entities.
 
 \frame{C}{r}{GET image}
 \frame{r}{C}{302 ip10.0.0.1.example.com/image}
-\frame[id=dns]{C}{R}{ip10.0.0.1.example.com A ?}
-\frame[id=dns,rnote={IP=10.0.0.1\\DNS=20.0.0.1}]{R}{D}{ip10.0.0.1.example.com A ?}
-\frame[id=dns]{D}{R}{ip10.0.0.1.example.com A S}
-\frame[id=dns]{R}{C}{ip10.0.0.1.example.com A S}
+\frame[fid=dns]{C}{R}{ip10.0.0.1.example.com A ?}
+\frame[fid=dns,rnote={IP=10.0.0.1\\DNS=20.0.0.1}]{R}{D}{ip10.0.0.1.example.com A ?}
+\frame[fid=dns]{D}{R}{ip10.0.0.1.example.com A S}
+\frame[fid=dns]{R}{C}{ip10.0.0.1.example.com A S}
 \frame{C}{S}{GET ip10.0.0.1.example.com/image}
 \frame{S}{C}{200 OK image}
 \end{pktxdiag}
@@ -840,7 +840,7 @@ features include: late frames, laters, states and actions.
   \Astate{Closed}
   \AB[late=3cm]{ACK}
                       \Bwaittimer
-                      \BA[late=6cm,rnote=teuuh !,rnoteoffset=-1mm]{FIN}
+                      \BA[late=6cm,rnote=oops!,rnoteoffset=-1mm]{FIN}
                       \Bstate{Closed}
 
 \later{2cm}
@@ -864,16 +864,16 @@ features include: late frames, laters, states and actions.
 
 \begin{codeexample}[]
 \begin{pktxdiag}[A,B,width=2.5cm, fade value=0.1, fade=b]
-  \AB[id=a,snote={IP: 0.0.0.0\\DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{req id=1}
-  \BA[id=b,snote={IP comp: VJ\\IP: 10.0.0.1}]{req id=1}
-  \AB[id=b,snote=IP comp: VJ]{rej id=1}
-  \BA[id=a,snote={DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{rej id=1}
-  \BA[id=b,snote=IP: 10.0.0.1]{req id=2}
-  \AB[id=a,snote=IP: 0.0.0.0]{req id=2}
-  \AB[id=b,snote=IP: 10.0.0.1]{ack id=2}
-  \BA[id=a,snote=IP: 10.67.15.36]{nak id=2}
-  \AB[id=a,snote=IP: 10.67.15.36]{req id=3}
-  \BA[id=a,snote=IP: 10.67.15.36]{ack id=3}
+  \AB[fid=a,snote={IP: 0.0.0.0\\DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{req id=1}
+  \BA[fid=b,snote={IP comp: VJ\\IP: 10.0.0.1}]{req id=1}
+  \AB[fid=b,snote=IP comp: VJ]{rej id=1}
+  \BA[fid=a,snote={DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{rej id=1}
+  \BA[fid=b,snote=IP: 10.0.0.1]{req id=2}
+  \AB[fid=a,snote=IP: 0.0.0.0]{req id=2}
+  \AB[fid=b,snote=IP: 10.0.0.1]{ack id=2}
+  \BA[fid=a,snote=IP: 10.67.15.36]{nak id=2}
+  \AB[fid=a,snote=IP: 10.67.15.36]{req id=3}
+  \BA[fid=a,snote=IP: 10.67.15.36]{ack id=3}
 \end{pktxdiag}
 \end{codeexample}
 
@@ -890,9 +890,9 @@ features include: late frames, laters, states and actions.
 % \setflowlabelstyle{tcp}{tcplabel}
 % \setflowstyle{tcp}{tcp}
 
-%   \AB[id=tcp]{SYN}
-%                \BA[id=tcp]{SYN-ACK}
-%   \AB[id=tcp]{ACK}
+%   \AB[fid=tcp]{SYN}
+%                \BA[fid=tcp]{SYN-ACK}
+%   \AB[fid=tcp]{ACK}
 
 %                \BA{220}
 %   \AB{USER guest}
@@ -906,22 +906,22 @@ features include: late frames, laters, states and actions.
 %    \AB{RETR toto}
 %                \BA{150}
 
-%                \BA[id=data]{SYN}
-%    \AB[id=data]{SYN-ACK}
-%                \BA[id=data]{ACK}
-%                \BA[id=data]{data}
-%                \BA[id=data]{FIN}
-%    \AB[id=data]{ACK}
-%    \AB[id=data]{FIN,ACK}
-%                \BA[id=data]{ACK}
+%                \BA[fid=data]{SYN}
+%    \AB[fid=data]{SYN-ACK}
+%                \BA[fid=data]{ACK}
+%                \BA[fid=data]{data}
+%                \BA[fid=data]{FIN}
+%    \AB[fid=data]{ACK}
+%    \AB[fid=data]{FIN,ACK}
+%                \BA[fid=data]{ACK}
 
 %                \BA{226}
 %    \AB{QUIT}
 %                \BA{221}
 
-%                \BA[id=tcp]{FIN}
-%    \AB[id=tcp]{FIN,ACK}
-%                \BA[id=tcp]{ACK}
+%                \BA[fid=tcp]{FIN}
+%    \AB[fid=tcp]{FIN,ACK}
+%                \BA[fid=tcp]{ACK}
 % \end{pktxdiag}
 % \end{codeexample}
 
@@ -982,7 +982,7 @@ features include: late frames, laters, states and actions.
 \frame{B}{A}{200 OK}
 \frame{A}{D}{ACK}
 \Xpause{D}
-\frame[id=big,prop=0cm]{D}{A}{Media}
+\frame[fid=big,prop=0cm]{D}{A}{Media}
 \Xpause{D}
 \frame{D}{A}{BYE}
 \frame{A}{D}{200 OK}

@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}[1994/06/01]
-\ProvidesPackage{pktxdiag}[2021/02/26 Tikz add-on for packet exchange diagrams]
+\ProvidesPackage{pktxdiag}[2021/08/15 Tikz add-on for packet exchange diagrams]
 
 \DeclareOption{debug}{\pktxd@debugtrue}
 \newif\ifpktxd@debug
@@ -80,7 +80,7 @@
   %
   % now the frame specific keys
   %
-  id/.code={\def\pktxd@id{#1}},
+  fid/.code=\def\pktxd@fid{#1},
   lost/.is if=pktxd@lost,
   bad/.is if=pktxd@bad,
   late/.default=4cm,
@@ -271,8 +271,8 @@
 
 %%%%%% flows
 
-%% the 'main' flowid
-\def\pktxd@id{main}
+%% the 'main' flow
+\def\pktxd@fid{main}
 \pgfkeyssetvalue{/pktxd/flows/main}{}
 
 %% default parameters for ids
@@ -300,6 +300,9 @@
 
 %% make #1 (dynamically) inherit #2, adding #3 options
 \newcommand{\derivestyle}[3]{\definestyle{#1}{/pktxd/styles/#2,#3}}
+
+%\definestyle{default}{}
+%\definestyle{labeldefault}{}
 
 %% give a style to a flow or its labels
 \newcommand{\setflowstyle}[2]{\pgfkeys{/pktxd/flows/#1/style/.initial=#2}}
@@ -532,7 +535,11 @@
   \pktxd@debug{arrowv ##1=#1}
   
   % tex does not honor arithmetic priorities... pgfmath does.
-  \pgfmathsetlength{\pktxd@len}{#3-#2}
+  % \pgfmathsetlength{\pktxd@len}{#3-#2}
+  \newdimen\pktxd@len
+  \pktxd@len=#3
+  \advance \pktxd@len by -#2
+  
   \pgfmathsetmacro{\sign}{#2<#3?1:-1}
 
   \begin{scope}[/pktxd/styles/.cd,current frame style,#1]
@@ -639,16 +646,16 @@
   \begin{scope}[/pktxd/frame/.cd, remainingkeys/.style={}, #1]
 
   % if flow has 'ignore' set, we're (almost) done
-  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/ignore}{\pktxd@ignoretrue}{\pktxd@ignorefalse}
+  \pgfkeysifdefined{/pktxd/flows/\pktxd@fid/ignore}{\pktxd@ignoretrue}{\pktxd@ignorefalse}
   \ifpktxd@ignore\else
 
   % update '/pktxd/styles/[label ]this flow' according to current flow
-  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/style}
+  \pgfkeysifdefined{/pktxd/flows/\pktxd@fid/style}
     {\pgfkeys{/pktxd/styles/this flow/.style=
-      {/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/style}}}}{}
-  \pgfkeysifdefined{/pktxd/flows/\pktxd@id/labelstyle}
+      {/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@fid/style}}}}{}
+  \pgfkeysifdefined{/pktxd/flows/\pktxd@fid/labelstyle}
     {\pgfkeys{/pktxd/styles/label this flow/.style=
-      {/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@id/labelstyle}}}}{}
+      {/pktxd/styles/\pgfkeysvalueof{/pktxd/flows/\pktxd@fid/labelstyle}}}}{}
   
   \pktxd@settrans{#4}
 
@@ -679,7 +686,7 @@
   \@for\timed:=\pktxd@timeds\do{\expandafter\pktxd@processtimed\timed:#2}
 
   % set opacity based on id key
-  \def\opa{\pktxd@getconf{\pktxd@id}{opacity}}
+  \def\opa{\pktxd@getconf{\pktxd@fid}{opacity}}
   
   % draw send note
   \ifpktxd@snote

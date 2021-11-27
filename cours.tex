@@ -149,14 +149,14 @@
 \clearpage
 
 \newcommand{\figxix}{
-           \BA[id=vc1,label2={DATA 2,0 (1)}]{I 3,6}
+           \BA[fid=vc1,label2={DATA 2,0 (1)}]{I 3,6}
 \AB{RR 4}
-           \BA[id=vc1,label2={DATA 3,0 (1)}]{I 4,6}
-\AB[id=vc1,label2=RR4 (1),trans]{I 6,5}
+           \BA[fid=vc1,label2={DATA 3,0 (1)}]{I 4,6}
+\AB[fid=vc1,label2=RR4 (1),trans]{I 6,5}
            \BA{RR7}
-           \BA[id=vc1,label2={DATA 4,0 (1)}]{I 5,7}
+           \BA[fid=vc1,label2={DATA 4,0 (1)}]{I 5,7}
 \AB{RR 6}
-           \BA[id=vc1,label2={DATA 5,0 (1)}]{I 6,7}
+           \BA[fid=vc1,label2={DATA 5,0 (1)}]{I 6,7}
 }
 
 { \definestyle{rr}{orange}
@@ -353,16 +353,16 @@
 % \begin{figure}[H]
 % \pgfkeys{/pktxd/width=2.5cm}
 % \def\trace{
-%     \AB[id=a,snote={IP: 0.0.0.0\\DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{req id=1}
-%     \BA[id=b,snote={IP comp: VJ\\IP: 10.0.0.1}]{req id=1}
-%     \AB[id=b,snote=IP comp: VJ]{rej id=1}
-%     \BA[id=a,snote={DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{rej id=1}
-%     \BA[id=b,snote=IP: 10.0.0.1]{req id=2}
-%     \AB[id=a,snote=IP: 0.0.0.0]{req id=2}
-%     \AB[id=b,snote=IP: 10.0.0.1]{ack id=2}
-%     \BA[id=a,snote=IP: 10.67.15.36]{nak id=2}
-%     \AB[id=a,snote=IP: 10.67.15.36]{req id=3}
-%     \BA[id=a,snote=IP: 10.67.15.36]{ack id=3}}
+%     \AB[fid=a,snote={IP: 0.0.0.0\\DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{req id=1}
+%     \BA[fid=b,snote={IP comp: VJ\\IP: 10.0.0.1}]{req id=1}
+%     \AB[fid=b,snote=IP comp: VJ]{rej id=1}
+%     \BA[fid=a,snote={DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{rej id=1}
+%     \BA[fid=b,snote=IP: 10.0.0.1]{req id=2}
+%     \AB[fid=a,snote=IP: 0.0.0.0]{req id=2}
+%     \AB[fid=b,snote=IP: 10.0.0.1]{ack id=2}
+%     \BA[fid=a,snote=IP: 10.67.15.36]{nak id=2}
+%     \AB[fid=a,snote=IP: 10.67.15.36]{req id=3}
+%     \BA[fid=a,snote=IP: 10.67.15.36]{ack id=3}}
 %   \centering\subfloat[whole traffic]{\begin{pktxdiag}[A,B]\trace\end{pktxdiag}}
 
 %   \definestyle{hollow}{color=gray!40}
@@ -377,16 +377,16 @@
 \begin{figure}[H]
 \pgfkeys{/pktxd/width=2.5cm, /pktxd/fade value=0.1}
 \def\trace{
-    \AB[id=a,snote={IP: 0.0.0.0\\DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{req id=1}
-    \BA[id=b,snote={IP comp: VJ\\IP: 10.0.0.1}]{req id=1}
-    \AB[id=b,snote=IP comp: VJ]{rej id=1}
-    \BA[id=a,snote={DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{rej id=1}
-    \BA[id=b,snote=IP: 10.0.0.1]{req id=2}
-    \AB[id=a,snote=IP: 0.0.0.0]{req id=2}
-    \AB[id=b,snote=IP: 10.0.0.1]{ack id=2}
-    \BA[id=a,snote=IP: 10.67.15.36]{nak id=2}
-    \AB[id=a,snote=IP: 10.67.15.36]{req id=3}
-    \BA[id=a,snote=IP: 10.67.15.36]{ack id=3}}
+    \AB[fid=a,snote={IP: 0.0.0.0\\DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{req id=1}
+    \BA[fid=b,snote={IP comp: VJ\\IP: 10.0.0.1}]{req id=1}
+    \AB[fid=b,snote=IP comp: VJ]{rej id=1}
+    \BA[fid=a,snote={DNS1: 0.0.0.0\\DNS2: 0.0.0.0}]{rej id=1}
+    \BA[fid=b,snote=IP: 10.0.0.1]{req id=2}
+    \AB[fid=a,snote=IP: 0.0.0.0]{req id=2}
+    \AB[fid=b,snote=IP: 10.0.0.1]{ack id=2}
+    \BA[fid=a,snote=IP: 10.67.15.36]{nak id=2}
+    \AB[fid=a,snote=IP: 10.67.15.36]{req id=3}
+    \BA[fid=a,snote=IP: 10.67.15.36]{ack id=3}}
   \centering\subfloat[whole traffic]{\begin{pktxdiag}[A,B]\trace\end{pktxdiag}}
 
   \subfloat[A parameters]{\begin{pktxdiag}[A,B,fade=b]\trace\end{pktxdiag}}
@@ -651,9 +651,9 @@
 \subsection{FTP}
 
 \def\ftp{
-  \AB[id=tcp]{SYN}
-               \BA[id=tcp]{SYN-ACK}
-  \AB[id=tcp]{ACK}
+  \AB[fid=tcp]{SYN}
+               \BA[fid=tcp]{SYN-ACK}
+  \AB[fid=tcp]{ACK}
 
                \BA{220}
   \AB{USER guest}
@@ -667,22 +667,22 @@
    \AB{RETR toto}
                \BA{150}
 
-               \BA[id=data]{SYN}
-   \AB[id=data]{SYN-ACK}
-               \BA[id=data]{ACK}
-               \BA[id=data]{data}
-               \BA[id=data]{FIN}
-   \AB[id=data]{ACK}
-   \AB[id=data]{FIN,ACK}
-               \BA[id=data]{ACK}
+               \BA[fid=data]{SYN}
+   \AB[fid=data]{SYN-ACK}
+               \BA[fid=data]{ACK}
+               \BA[fid=data]{data}
+               \BA[fid=data]{FIN}
+   \AB[fid=data]{ACK}
+   \AB[fid=data]{FIN,ACK}
+               \BA[fid=data]{ACK}
 
                \BA{226}
    \AB{QUIT}
                \BA{221}
 
-               \BA[id=tcp]{FIN}
-   \AB[id=tcp]{FIN,ACK}
-               \BA[id=tcp]{ACK}
+               \BA[fid=tcp]{FIN}
+   \AB[fid=tcp]{FIN,ACK}
+               \BA[fid=tcp]{ACK}
 }
 
 {
@@ -715,8 +715,8 @@
     \AB{SYN}
     \BA{SYN-ACK}
     \AB{ACK}
-    \AB[id=http]{requête 1}
-    \BA[id=http]{réponse 1}
+    \AB[fid=http]{requête 1}
+    \BA[fid=http]{réponse 1}
     \BA{FIN}
     \AB{FIN-ACK}
     \BA{ACK}
@@ -726,8 +726,8 @@
     \AB{SYN}
     \BA{SYN-ACK}
     \AB{ACK}
-    \AB[id=http]{requête 2}
-    \BA[id=http]{réponse 2}
+    \AB[fid=http]{requête 2}
+    \BA[fid=http]{réponse 2}
     \BA{FIN}
     \AB{FIN-ACK}
     \BA{ACK}
@@ -737,13 +737,13 @@
     \AB{SYN}
     \BA{SYN-ACK}
     \AB{ACK}
-    \AB[id=http]{requête 1}
-    \BA[id=http]{réponse 1}
+    \AB[fid=http]{requête 1}
+    \BA[fid=http]{réponse 1}
 
     \Apause[2.2cm]
 
-    \AB[id=http]{requête 2}
-    \BA[id=http]{réponse 2}
+    \AB[fid=http]{requête 2}
+    \BA[fid=http]{réponse 2}
   \end{pktxdiag}}
 \end{figure}
 
@@ -804,10 +804,10 @@
 
 \frame{C}{r}{GET image}
 \frame{r}{C}{302 ip10.0.0.1.example.com/image}
-\frame[id=dns]{C}{R}{ip10.0.0.1.example.com A ?}
-\frame[id=dns,rnote={IP=10.0.0.1\\DNS=20.0.0.1}]{R}{D}{ip10.0.0.1.example.com A ?}
-\frame[id=dns]{D}{R}{ip10.0.0.1.example.com A S}
-\frame[id=dns]{R}{C}{ip10.0.0.1.example.com A S}
+\frame[fid=dns]{C}{R}{ip10.0.0.1.example.com A ?}
+\frame[fid=dns,rnote={IP=10.0.0.1\\DNS=20.0.0.1}]{R}{D}{ip10.0.0.1.example.com A ?}
+\frame[fid=dns]{D}{R}{ip10.0.0.1.example.com A S}
+\frame[fid=dns]{R}{C}{ip10.0.0.1.example.com A S}
 \frame{C}{S}{GET ip10.0.0.1.example.com/image}
 \frame{S}{C}{200 image}
 \end{pktxdiag}
