@@ -7,7 +7,7 @@
 %
 % See the file doc/generic/pgf/licenses/LICENSE for more details.
 
-% $Header: /cvsroot/pgf/pgf/doc/generic/pgf/macros/pgfmanual-en-macros.tex,v 1.79 2013/12/20 15:22:35 tantau Exp $
+% $Header: /cvsroot/pgf/pgf/doc/generic/pgf/macros/pgfmanual-en-macros.tex,v 1.81 2014/03/20 10:07:44 tantau Exp $
 
 
 \providecommand\href[2]{\texttt{#1}}
@@ -198,6 +198,7 @@
 \def\parameteritem{\pgfutil@ifnextchar[\parameteritem@{}}%}
 \def\parameteritem@[#1]{\advance\parametercount by1\relax\hskip0.15em plus 1em\emph{\the\parametercount.}\kern1ex\def\test{#1}\ifx\test\pgfutil@empty\else#1\kern.5em\fi}
 
+\makeatother
 \newenvironment{commandlist}[1]{%
   \begin{pgfmanualentry}
   \foreach \xx in {#1} {%
@@ -207,6 +208,7 @@
 }{%
   \end{pgfmanualentry}
 }%
+\makeatletter
 
 % \begin{internallist}[register]{\pgf@xa}
 % \end{internallist}
@@ -240,7 +242,7 @@
 \def\extractmathfunctionname@#1(#2)#3\tmpb{\def\mathname{#1}}
 
 \makeatother
-  
+
 \newenvironment{math-function}[1]{
   \def\mathdefaultname{#1}
   \extractmathfunctionname{#1}
@@ -270,7 +272,7 @@
   \pgfmanualentryheadline{\mathexample\hfill\mathtype}%
   \def\mathtest{#1}%
   \ifx\mathtest\pgfmanualemptytext%
-    \index{#2@\protect\texttt{#2} #3 math operator}%  
+    \index{#2@\protect\texttt{#2} #3 math operator}%
     \index{Math operators!#2@\protect\texttt{#2}}%
   \fi%
   \pgfmanualbody
@@ -289,7 +291,7 @@
   \pgfmanualentryheadline{\mathexample\hfill\mathtype}%
   \def\mathtest{#1}%
   \ifx\mathtest\pgfmanualemptytext%
-    \index{#2#3@\protect\texttt{#2\protect\ #3} #4 math operators}% 
+    \index{#2#3@\protect\texttt{#2\protect\ #3} #4 math operators}%
     \index{Math operators!#2#3@\protect\texttt{#2\protect\ #3}}%
   \fi%
   \pgfmanualbody
@@ -750,7 +752,7 @@
       \decomposetoodeep#1/#2\nil%
     \else%
       \iffirsttime%
-        \begingroup%  
+        \begingroup%
           % also make a pdf link anchor with full key path.
           \def\hyperlabelwithoutslash##1/\nil{%
             \pgfmanualpdflabel{##1}{}%
@@ -931,7 +933,7 @@
       \fi%
       \textcolor{gray}{{\ttfamily\char`\\path}\
         \ \dots}
-      \declare{\texttt{#2}}#3\ \textcolor{gray}{\dots\texttt{;}}}%
+      \declare{\texttt{\noligs{#2}}}#3\ \textcolor{gray}{\dots\texttt{;}}}%
     \ifx\pgfmanualtest\@empty%
       \index{#2@\protect\texttt{#2} path operation}%
       \index{Path operations!#2@\protect\texttt{#2}}%
@@ -950,7 +952,7 @@
       \fi%
       \textcolor{gray}{{\ttfamily\char`\\datavisualization}\
         \ \dots}
-      \declare{\texttt{#2}}#3\ \textcolor{gray}{\dots\texttt{;}}}%
+      \declare{\texttt{\noligs{#2}}}#3\ \textcolor{gray}{\dots\texttt{;}}}%
     \ifx\pgfmanualtest\@empty%
       \index{#2@\protect\texttt{#2} (data visualization)}%
       \index{Data visualization!#2@\protect\texttt{#2}}%
@@ -1116,7 +1118,7 @@
     \edef\strippedtext{\stripcommand#1}%
     \expandafter\getridofats\strippedtext @\relax%
   }
-  
+
   \gdef\stripcommand#1{\expandafter\mygobble\string#1}
 }
 
@@ -1257,14 +1259,14 @@
 
 \newenvironment{arrowexamples}
 {\begin{tabbing}
-    \hbox to \dimexpr\linewidth-5.5cm\relax{\emph{Appearance of the below at line width} \hfil} \= 
+    \hbox to \dimexpr\linewidth-5.5cm\relax{\emph{Appearance of the below at line width} \hfil} \=
      \hbox to 1.9cm{\emph{0.4pt}\hfil} \= \hbox to 2cm{\emph{0.8pt}\hfil} \= \emph{1.6pt} \\
   }
 {\end{tabbing}\vskip-1em}
 
 \newenvironment{arrowcapexamples}
 {\begin{tabbing}
-    \hbox to \dimexpr\linewidth-5.5cm\relax{\emph{Appearance of the below at line width} \hfil} \= 
+    \hbox to \dimexpr\linewidth-5.5cm\relax{\emph{Appearance of the below at line width} \hfil} \=
      \hbox to 1.9cm{\emph{1ex}\hfil} \= \hbox to 2cm{\emph{1em}\hfil} \\
   }
 {\end{tabbing}\vskip-1em}
@@ -1307,7 +1309,7 @@
 \newcommand\symarrow[1]{%
   \index{#1@\protect\texttt{#1} arrow tip}%
   \index{Arrow tips!#1@\protect\texttt{#1}}%
-  \texttt{#1}& yields thick  
+  \texttt{#1}& yields thick
   \begin{tikzpicture}[arrows={#1-#1},thick,baseline]
     \useasboundingbox (-1mm,-0.5ex) rectangle (1.1cm,2ex);
     \fill [black!15] (1cm,-.5ex) rectangle (1.1cm,1.5ex) (-1mm,-.5ex) rectangle (0mm,1.5ex) ;
@@ -1322,7 +1324,7 @@
 \newcommand\symarrowdouble[1]{%
   \index{#1@\protect\texttt{#1} arrow tip}%
   \index{Arrow tips!#1@\protect\texttt{#1}}%
-  \texttt{#1}& yields thick  
+  \texttt{#1}& yields thick
   \begin{tikzpicture}[arrows={#1-#1},thick,baseline]
     \useasboundingbox (-1mm,-0.5ex) rectangle (1.1cm,2ex);
     \fill [black!15] (1cm,-.5ex) rectangle (1.1cm,1.5ex) (-1mm,-.5ex) rectangle (0mm,1.5ex) ;
@@ -1333,12 +1335,12 @@
     \useasboundingbox (-1mm,-0.5ex) rectangle (1.1cm,2ex);
     \fill [black!15] (1cm,-.5ex) rectangle (1.1cm,1.5ex) (-1mm,-.5ex) rectangle (0mm,1.5ex) ;
     \draw (0pt,.5ex) -- (1cm,.5ex);
-  \end{tikzpicture}, double 
+  \end{tikzpicture}, double
   \begin{tikzpicture}[arrows={#1-#1},thick,baseline]
     \useasboundingbox (-1mm,-0.5ex) rectangle (1.1cm,2ex);
     \fill [black!15] (1cm,-.5ex) rectangle (1.1cm,1.5ex) (-1mm,-.5ex) rectangle (0mm,1.5ex) ;
     \draw[double,double equal sign distance] (0pt,.5ex) -- (1cm,.5ex);
-  \end{tikzpicture} and 
+  \end{tikzpicture} and
   \begin{tikzpicture}[arrows={#1-#1},thin,baseline]
     \useasboundingbox (-1mm,-0.5ex) rectangle (1.1cm,2ex);
     \fill [black!15] (1cm,-.5ex) rectangle (1.1cm,1.5ex) (-1mm,-.5ex) rectangle (0mm,1.5ex) ;
@@ -1351,7 +1353,7 @@
   \index{Arrow tips!#1@\protect\texttt{#1}}%
   \index{#2@\protect\texttt{#2} arrow tip}%
   \index{Arrow tips!#2@\protect\texttt{#2}}%
-  \texttt{#1-#2}& yields thick  
+  \texttt{#1-#2}& yields thick
   \begin{tikzpicture}[arrows={#1-#2},thick,baseline]
     \useasboundingbox (-1mm,-0.5ex) rectangle (1.1cm,2ex);
     \fill [black!15] (1cm,-.5ex) rectangle (1.1cm,1.5ex) (-1mm,-.5ex) rectangle (0mm,1.5ex) ;
@@ -1369,7 +1371,7 @@
   \index{Arrow tips!#1@\protect\texttt{#1}}%
   \index{#2@\protect\texttt{#2} arrow tip}%
   \index{Arrow tips!#2@\protect\texttt{#2}}%
-  \texttt{#1-#2}& yields thick  
+  \texttt{#1-#2}& yields thick
   \begin{tikzpicture}[arrows={#1-#2},thick,baseline]
     \useasboundingbox (-1mm,-0.5ex) rectangle (1.1cm,2ex);
     \fill [black!15] (1cm,-.5ex) rectangle (1.1cm,1.5ex) (-1mm,-.5ex) rectangle (0mm,1.5ex) ;
@@ -1379,12 +1381,12 @@
     \useasboundingbox (-1mm,-0.5ex) rectangle (1.1cm,2ex);
     \fill [black!15] (1cm,-.5ex) rectangle (1.1cm,1.5ex) (-1mm,-.5ex) rectangle (0mm,1.5ex) ;
     \draw (0pt,.5ex) -- (1cm,.5ex);
-  \end{tikzpicture}, double 
+  \end{tikzpicture}, double
   \begin{tikzpicture}[arrows={#1-#2},thick,baseline]
     \useasboundingbox (-1mm,-0.5ex) rectangle (1.1cm,2ex);
     \fill [black!15] (1cm,-.5ex) rectangle (1.1cm,1.5ex) (-1mm,-.5ex) rectangle (0mm,1.5ex) ;
     \draw[double,double equal sign distance] (0pt,.5ex) -- (1cm,.5ex);
-  \end{tikzpicture} and 
+  \end{tikzpicture} and
   \begin{tikzpicture}[arrows={#1-#2},thin,baseline]
     \useasboundingbox (-1mm,-0.5ex) rectangle (1.1cm,2ex);
     \fill [black!15] (1cm,-.5ex) rectangle (1.1cm,1.5ex) (-1mm,-.5ex) rectangle (0mm,1.5ex) ;
@@ -1406,14 +1408,14 @@
 \newcommand\plotmarkentry[1]{%
   \index{#1@\protect\texttt{#1} plot mark}%
   \index{Plot marks!#1@\protect\texttt{#1}}
-  \texttt{\char`\\pgfuseplotmark\char`\{\declare{#1}\char`\}} &
+  \texttt{\char`\\pgfuseplotmark\char`\{\declare{\noligs{#1}}\char`\}} &
   \tikz\draw[color=black!25] plot[mark=#1,mark options={fill=examplefill,draw=black}] coordinates{(0,0) (.5,0.2) (1,0) (1.5,0.2)};\\
 }
 \newcommand\plotmarkentrytikz[1]{%
   \index{#1@\protect\texttt{#1} plot mark}%
   \index{Plot marks!#1@\protect\texttt{#1}}
-  \texttt{mark=\declare{#1}} & \tikz\draw[color=black!25]
-  plot[mark=#1,mark options={fill=examplefill,draw=black}] 
+  \texttt{mark=\declare{\noligs{#1}}} & \tikz\draw[color=black!25]
+  plot[mark=#1,mark options={fill=examplefill,draw=black}]
     coordinates {(0,0) (.5,0.2) (1,0) (1.5,0.2)};\\
 }
 
@@ -1492,7 +1494,7 @@
 %   \codeexample@tabinit@catcode
 % and
 %   \codeexample@tabinit@replacementchars
-% which are used inside of 
+% which are used inside of
 %\begin{codeexample}
 % ...
 %\end{codeexample}
@@ -1575,9 +1577,7 @@
   \begingroup%
   \code@executetrue
   \pgfqkeys{/codeexample}{every codeexample,#1}%
-  \ifpgfmanualtikzsyntaxhilighting%
-  \pgfkeys{/codeexample/syntax hilighting}%
-  \fi%
+  \pgfmanualswitchoncolors%
   \ifcodeexamplefromfile\begingroup\fi
   \codeexample@tabinit% assigns \codeexample@tabinit@[catcode,replacementchars]
   \parindent0pt
@@ -1650,7 +1650,7 @@
     \def\code@width{\linewidth-6pt}
     \def\code@end{}
   \fi%
-  \code@mid%  
+  \code@mid%
   \colorbox{codebackground}{%
     \pgfkeysvalueof{/codeexample/prettyprint/base color}%
     \begin{minipage}[t]{\code@width}%
@@ -1706,35 +1706,57 @@
 % Styling of the pretty printer
 \pgfkeys{
   /codeexample/syntax hilighting/.style={
-    /codeexample/prettyprint/key name/.code={\textcolor{green!50!black}{\pgfmanualpdfref{##1}{##1}}},
-    /codeexample/prettyprint/key name with handler/.code 2 args={\textcolor{green!50!black}{\pgfmanualpdfref{##1}{##1}}/\textcolor{blue!70!black}{\pgfmanualpdfref{/handlers/##2}{##2}}},
-    /codeexample/prettyprint/key value display only/.code={\textcolor{green!50!black}{{\itshape{\let\pgfmanualwordstartup\relax\pgfmanualprettyprintcode{##1}}}}},
-    /codeexample/prettyprint/cs/.code={\textcolor{blue!70!black}{\pgfmanualcslinkpreskip4.25pt\pgfmanualpdfref{##1}{##1}}},
-    /codeexample/prettyprint/cs with args/.code 2 args={\textcolor{black}{\pgfmanualcslinkpreskip4.25pt\pgfmanualpdfref{##1}{##1}}\{\textcolor{black}{\pgfmanualprettyprintcode{##2}}\pgfmanualclosebrace},
+    /codeexample/prettyprint/key name/.code={\textcolor{keycolor}{\pgfmanualpdfref{##1}{\noligs{##1}}}},
+    /codeexample/prettyprint/key name with handler/.code 2 args={\textcolor{keycolor}{\pgfmanualpdfref{##1}{\noligs{##1}}}/\textcolor{blue!70!black}{\pgfmanualpdfref{/handlers/##2}{\noligs{##2}}}},
+    /codeexample/prettyprint/key value display only/.code={\textcolor{keycolor}{{\itshape{\let\pgfmanualwordstartup\relax\pgfmanualprettyprintcode{##1}}}}},
+    /codeexample/prettyprint/cs/.code={\textcolor{cscolor}{\pgfmanualcslinkpreskip4.25pt\pgfmanualpdfref{##1}{\noligs{##1}}}},
+    /codeexample/prettyprint/cs with args/.code 2 args={\textcolor{black}{\pgfmanualcslinkpreskip4.25pt\pgfmanualpdfref{##1}{\noligs{##1}}}\{\textcolor{black}{\pgfmanualprettyprintcode{##2}}\pgfmanualclosebrace},
     /codeexample/prettyprint/cs arguments/pgfkeys/.initial=1,
-    /codeexample/prettyprint/cs/pgfkeys/.code 2 args={\textcolor{black}{\pgfmanualcslinkpreskip4.25pt\pgfmanualpdfref{##1}{##1}}\{\textcolor{black}{\pgfmanualprettyprintpgfkeys{##2}}\pgfmanualclosebrace},
+    /codeexample/prettyprint/cs/pgfkeys/.code 2 args={\textcolor{black}{\pgfmanualcslinkpreskip4.25pt\pgfmanualpdfref{##1}{\noligs{##1}}}\{\textcolor{black}{\pgfmanualprettyprintpgfkeys{##2}}\pgfmanualclosebrace},
     /codeexample/prettyprint/cs arguments/begin/.initial=1,
-    /codeexample/prettyprint/cs/begin/.code 2 args={\textcolor{black}{##1}\{\textcolor{blue!70!black}{\pgfmanualpdfref{##2}{##2}}\pgfmanualclosebrace},
+    /codeexample/prettyprint/cs/begin/.code 2 args={\textcolor{black}{##1}\{\textcolor{cscolor}{\pgfmanualpdfref{##2}{\noligs{##2}}}\pgfmanualclosebrace},
     /codeexample/prettyprint/cs arguments/end/.initial=1,
-    /codeexample/prettyprint/cs/end/.code 2 args={\textcolor{black}{##1}\{\textcolor{blue!70!black}{\pgfmanualpdfref{##2}{##2}}\pgfmanualclosebrace},
-    /codeexample/prettyprint/word/.code={\pgfmanualwordstartup{\begingroup\pgfkeyssetvalue{/pdflinks/search key prefixes in}{}\pgfmanualpdfref{##1}{##1}\endgroup}},
-    /codeexample/prettyprint/point/.code={\textcolor{violet}{##1}},%
-    /codeexample/prettyprint/point with cs/.code 2 args={\textcolor{violet}{(\pgfmanualpdfref{##1}{##1}:##2}},%
+    /codeexample/prettyprint/cs/end/.code 2 args={\textcolor{black}{##1}\{\textcolor{cscolor}{\pgfmanualpdfref{##2}{\noligs{##2}}}\pgfmanualclosebrace},
+    /codeexample/prettyprint/word/.code={\pgfmanualwordstartup{\begingroup\pgfkeyssetvalue{/pdflinks/search key prefixes in}{}\pgfmanualpdfref{##1}{\noligs{##1}}\endgroup}},
+    /codeexample/prettyprint/point/.code={\textcolor{pointcolor}{\noligs{##1}}},%
+    /codeexample/prettyprint/point with cs/.code 2 args={\textcolor{pointcolor}{(\pgfmanualpdfref{##1}{\noligs{##1}}:\noligs{##2}}},%
     /codeexample/prettyprint/comment font=\itshape,
-    /codeexample/prettyprint/base color/.initial=\color{black!55},
+    /codeexample/prettyprint/base color/.initial=\color{basecolor},
     /pdflinks/render hyperlink/.code={%
       {\setbox0=\hbox{##1}%
-        \rlap{{\color{white}\dimen0\wd0\advance\dimen0by-\pgfmanualcslinkpreskip\hskip\pgfmanualcslinkpreskip\vrule width\dimen0 height-1pt depth1.6pt}}%
+        \rlap{{\color{linkcolor}\dimen0\wd0\advance\dimen0by-\pgfmanualcslinkpreskip\hskip\pgfmanualcslinkpreskip\vrule width\dimen0 height-1pt depth1.6pt}}%
         \box0%
       }%
     }
-  }  
+  },/codeexample/syntax hilighting
 }
+
+\colorlet{keycolor}{black}
+\colorlet{cscolor}{black}
+\colorlet{pointcolor}{black}
+\colorlet{basecolor}{black}
+\colorlet{linkcolor}{black!8}
+
+\def\pgfmanualswitchoncolors{%
+  \colorlet{keycolor}{green!50!black}%
+  \colorlet{cscolor}{blue!70!black}
+  \colorlet{pointcolor}{violet}
+  \colorlet{basecolor}{black!55}
+  \colorlet{linkcolor}{white}
+}
+
+\makeatletter
 
 \def\pgfmanualwordstartup{\textcolor{black}}
 
+\def\noligs#1{\pgfmanualnoligs#1\kern0pt--\pgf@stop}%
+\def\pgfmanualnoligs#1--{%
+  \pgfutil@ifnextchar\pgf@stop{#1\pgfutil@gobble}{#1-\kern0pt-\kern0pt\pgfmanualnoligs}%
+}
+\makeatother
 
-%%% Local Variables: 
+
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "beameruserguide"
-%%% End: 
+%%% End:
