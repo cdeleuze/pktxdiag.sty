@@ -713,12 +713,12 @@ Cancel a non running timer, but defined in a previous env
 \subsubsection*{Flows and filtering}
 
 \def\testfilter{
-  \AB[id=1]{DATA 1 (1)}
-  \AB[id=2]{DATA 1 (2)}
-  \AB[id=2]{DATA 2 (2)}
-                      \BA[id=2]{RR 3 (2)}
-  \AB[id=1]{DATA 2 (1)}
-                      \BA[id=1]{RR 3 (1)}
+  \AB[fid=1]{DATA 1 (1)}
+  \AB[fid=2]{DATA 1 (2)}
+  \AB[fid=2]{DATA 2 (2)}
+                      \BA[fid=2]{RR 3 (2)}
+  \AB[fid=1]{DATA 2 (1)}
+                      \BA[fid=1]{RR 3 (1)}
 }
 
 \begin{figure}[H]\tikzset{/pktxd/width=2.15cm}
@@ -789,9 +789,9 @@ Cancel a non running timer, but defined in a previous env
 
 \def\testframestyle{
   \AB{env-only}
-  \BA[id=1, style=orange]{flow1, orange}
+  \BA[fid=1, style=orange]{flow1, orange}
   \AB{env-only}
-  \AB[id=1,style={dashed}]{flow1, dashed}
+  \AB[fid=1,style={dashed}]{flow1, dashed}
   \BA[style={dotted,green}]{dotted, green}
   \AB{env-only}}
 
@@ -830,9 +830,9 @@ Cancel a non running timer, but defined in a previous env
 
 \def\testframelabelstyle{
   \AB{env-only}
-  \BA[id=1, label style=orange]{flow1, orange}
+  \BA[fid=1, label style=orange]{flow1, orange}
   \AB{env-only}
-  \AB[id=1,label style={font=\scshape}]{flow1, scshape}
+  \AB[fid=1,label style={font=\scshape}]{flow1, scshape}
   \BA[label style={sloped=false,draw,fill=orange!20,opacity=0.75}]{boxed}
   \AB{env-only}}
 
@@ -934,7 +934,7 @@ Cancel a non running timer, but defined in a previous env
 \frame{B}{A}{200 OK}
 \frame{A}{D}{ACK}
 \Xpause{D}
-\frame[id=big,prop=0cm]{D}{A}{Media}
+\frame[fid=big,prop=0cm]{D}{A}{Media}
 \Xpause{D}
 \frame{D}{A}{BYE}
 \frame{A}{D}{200 OK}
