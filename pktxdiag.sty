@@ -82,6 +82,7 @@
   %
   fid/.code=\def\pktxd@fid{#1},
   lost/.is if=pktxd@lost,
+  born/.is if=pktxd@born,
   bad/.is if=pktxd@bad,
   late/.default=4cm,
   late/.code=\pktxd@latetrue\setlength{\pktxd@latev}{#1},
@@ -137,6 +138,7 @@
 
 \newif\ifpktxd@bad\pktxd@badfalse
 \newif\ifpktxd@lost\pktxd@lostfalse
+\newif\ifpktxd@born\pktxd@bornfalse
 \newif\ifpktxd@late\pktxd@latefalse
 \newif\ifpktxd@delayed\pktxd@delayedfalse
 \newif\ifpktxd@stop\pktxd@stopfalse
@@ -527,7 +529,10 @@
 % #1 are keys, #2 is sender pos, #3 is receiver pos
 % #4 is send time, #5 is label
 
-% uses: pktxd@lost, pktxd@bad, pktxd@late, pktxd@prop, pktxd@crosslost
+% uses: pktxd@lost, pktxd@bad, pktxd@late, pktxd@prop, pktxd@crosslost, pktxd@born
+
+% TODO: could error on born and (late or lost or bad)
+% TODO: should \newdimen's be global?
 
 \newcommand{\pktxd@arrowv}[5][]{
   \def\lstyle{/pktxd/styles/current label style}
@@ -577,12 +582,21 @@
 
        \fi
     \else
-    % not bad, not late
+    % born frame, appearing at receiver
+    \ifpktxd@born
+       \draw (#2+\pktxd@len/2,-#4-\pktxd@prop/2) -- ++(\pktxd@len/2,-\pktxd@prop/2)
+                   node[align=center,near start,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
+       \newdimen\pktxd@bornlen
+       \pgfmathsetlength{\pktxd@bornlen}{\pktxd@prop/\pktxd@len*3mm*\sign}
+       \draw [dotted,-](#2+\pktxd@len/2,-#4-\pktxd@prop/2) -- ++(-3mm*\sign,\pktxd@bornlen);
+    \else
+    % not bad, not late, nor born
        \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
                    node[align=center,\ifpktxd@sync midway\else near
                    start\fi,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
                    \ifpktxd@lost\ifpktxd@crosslost \draw[-]
                    (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
+    \fi
     \fi
     \fi
   \end{scope}
