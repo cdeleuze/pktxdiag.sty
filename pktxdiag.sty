@@ -1,11 +1,13 @@
 \NeedsTeXFormat{LaTeX2e}[1994/06/01]
-\ProvidesPackage{pktxdiag}[2021/08/15 Tikz add-on for packet exchange diagrams]
+\ProvidesPackage{pktxdiag}[2021/12/12 Tikz add-on for packet exchange diagrams]
+
+%% package setup
 
 \DeclareOption{debug}{\pktxd@debugtrue}
 \newif\ifpktxd@debug
 
 % use PackageWarning rather than PackageError when canceling expired
-% timers.  Also 'warn only' env option.
+% timers.  See also 'warn only' env option.
 \DeclareOption{warnonly}{\pktxd@warnonlytrue}
 \newif\ifpktxd@warnonly
 
@@ -42,9 +44,6 @@
   prop/.default=1cm,
   prop/.code=\setlength{\pktxd@prop}{#1},
   % 
-  trans/.default=10mm,
-  trans/.code=\ifpktxd@h\setlength{\pktxd@trans}{#1}\fi,
-  %
   cross for lost/.is if=pktxd@crosslost,
   snoteoffset/.code=\def\pktxd@snoteoffset{#1},
   snoteoffset/.default=0,
@@ -54,17 +53,75 @@
   %
   show label2/.is if=pktxd@showlabelii,
   hide label/.is if=pktxd@hidelabel,
-  hide/.code=\pktxd@sethides{#1},
-  ignore/.code=\pktxd@setignore{#1},
-  fade/.code=\pktxd@setfade{#1},
-  %
-  action time offset/.code=\setlength{\pktxd@actiontimeoffset}{#1},
-  action offset/.code=\setlength{\pktxd@actionoffset}{#1},
-  action length/.code=\setlength{\pktxd@actionlength}{#1},
-  state offset/.code=\setlength{\pktxd@stateoffset}{#1}
 }
 
-\pgfkeyssetvalue{/pktxd/fade value}{0.25}
+\pgfkeys{/pktxd/.cd,
+  entities/.code=\pktxd@initmentities{#1},
+  send delay/.code=\setlength{\pktxd@senddelay}{#1},
+  reply delay/.code=\setlength{\pktxd@replydelay}{#1},
+  full duplex/.code=\pktxd@syncfalse,
+  width/.code=\def\pktxd@width{#1},
+  pause/.code=\def\pktxd@pausedefault{#1},
+  reversed/.is if=pktxd@reversed}
+
+\newlength{\pktxd@senddelay}\setlength{\pktxd@senddelay}{1cm}
+\newlength{\pktxd@replydelay}\setlength{\pktxd@replydelay}{5mm}
+\newif\ifpktxd@sync\pktxd@synctrue
+\def\pktxd@width{2.75cm}
+\def\pktxd@pausedefault{1cm}
+\newif\ifpktxd@reversed
+
+\pgfkeys{/pktxd/.cd,
+  % in two-entities mode, these are valid options for env
+  % (we cannot create them *inside* the env...)
+  A/.code=\pgfkeyssetvalue{/pktxd/entities/A}{#1},
+  A/.default=A,
+  B/.code=\pgfkeyssetvalue{/pktxd/entities/B}{#1},
+  B/.default=B
+}
+
+%% transmission time
+
+% horizontal diagrams also show transmission time
+
+% this is set to 0cm in vertical env
+\newlength{\pktxd@trans}\setlength{\pktxd@trans}{2cm}
+
+% by default frames whose label starts with ACK are short
+% key 'no shorts' removes this rule
+% key hdlc sets names for HDLC
+% key shorts=list sets the names of short frames
+
+\pgfkeys{/pktxd/.cd,
+  trans/.default=10mm,
+  trans/.code=\ifpktxd@h\setlength{\pktxd@trans}{#1}\fi,
+  %
+  hdlc/.code=\edef\pktxd@shorts{\pktxd@shortshdlc},
+  shorts/.code=\def\pktxd@shorts{#1},
+  no shorts/.code=\def\pktxd@shorts{}
+}
+
+\def\pktxd@shorts{ACK}
+\def\pktxd@shortshdlc{RR,RNR,REJ,SREJ,SABM,DISC,UA}
+
+\pgfkeyssetvalue{/pktxd/short trans}{7mm}
+
+% sets value of \pktxd@trans based on label #1
+\newcommand{\pktxd@settrans}[1]{
+  \ifpktxd@h
+  \def\pktxd@thistrans{\pktxd@trans}
+  % command from xstring package
+  % only the first line of multi line labels is considered
+  % (otherwise, this crashes)
+  \expandarg
+  \foreach \x in \pktxd@shorts {
+    \IfBeginWith{#1}{\x}{
+      \gdef\pktxd@thistrans{\pgfkeysvalueof{/pktxd/short trans}}}
+    {}
+  }
+  \setlength{\pktxd@trans}{\pktxd@thistrans}
+  \fi
+}
 
 %% frame keys
 
@@ -143,172 +200,101 @@
 \newif\ifpktxd@delayed\pktxd@delayedfalse
 \newif\ifpktxd@stop\pktxd@stopfalse
 
-%% the list of timers started by the current frame
-%% it has a dumb last element to avoid the loop break on a final comma
-%% @processtimed is called in @frame
-\def\pktxd@timeds{0/0/0}
-\newcommand{\pktxd@addtimed}[3]{
-  \pktxd@debug{addtimed #1,#2,#3}
-  \edef\pktxd@timeds{#1/#2/{#3},\pktxd@timeds}}
-
-\def\pktxd@processtimed #1/#2/#3:#4{ % id/len/label:entity
-  \if 0#1\else
-  \pktxd@debug{timed: id #1 ~ len #2 ~ label #3}
-  \pgfmathsetlengthmacro\temp{\Tsend+\pktxd@trans}
-  \pktxd@starttimer{#4}{\align}{#1}{\temp}{#2}{#3}\fi}
-
-%% same idea for cancelled timers
-\def\pktxd@cancels{0}
-\newcommand{\pktxd@addcancel}[1]{\edef\pktxd@cancels{#1,\pktxd@cancels}}
-
 \newif\ifpktxd@crosslost
 \newif\ifpktxd@snote
 \newif\ifpktxd@rnote
 \def\pktxd@snoteoffset{3mm}
 \def\pktxd@rnoteoffset{3mm}
 
-\def\pktxd@latename{$$lateframe}
+\newlength{\pktxd@prop}\setlength{\pktxd@prop}{0.5cm}
+\newlength{\pktxd@latev}       %% amount of lateness if pktxd@latetrue
 
+\def\pktxd@latename{$$lateframe}
 
 \newif\ifpktxd@showlabelii
 \newif\ifpktxd@hidelabel
 \pgfkeyssetvalue{/pktxd/frame/label2}{}
 
+%% internal styles
+
 % .style since we fail to define several keys in a \if
-% reverse used for left timers when pktxd@bottomuptrue
+
 \pgfkeys{
+  % used for left timers when pktxd@bottomuptrue
   /pktxd/reverse/.style={/tikz/rotate=180,/tikz/above},
-%
+  % used for timer on arrow
   /pktxd/fill/.style={fill=graphicbackground},
+  % used for notes
   /pktxd/left note/.style={align=right,left},
   /pktxd/right note/.style={align=left,right}
 }
 
-%% states and actions
+%% flows
 
-\newlength{\pktxd@actiontimeoffset}\setlength{\pktxd@actiontimeoffset}{1mm}
-\newlength{\pktxd@actionoffset}\setlength{\pktxd@actionoffset}{1mm}
-\newlength{\pktxd@actionlength}\setlength{\pktxd@actionlength}{5mm}
-\newlength{\pktxd@stateoffset}\setlength{\pktxd@stateoffset}{12mm}
-
-%% environment keys
-
-\newif\ifpktxd@sync\pktxd@synctrue
-
+% env keys hide, ignore, and fade affect flows
 \pgfkeys{/pktxd/.cd,
-  entities/.code=\pktxd@initmentities{#1},
-  send delay/.code=\setlength{\pktxd@senddelay}{#1},
-  reply delay/.code=\setlength{\pktxd@replydelay}{#1},
-  full duplex/.code=\pktxd@syncfalse,
-  width/.code=\def\pktxd@width{#1},
-  pause/.code=\def\pktxd@pausedefault{#1},
-  reversed/.is if=pktxd@reversed}
-
-\newlength{\pktxd@senddelay}\setlength{\pktxd@senddelay}{1cm}
-\newlength{\pktxd@replydelay}\setlength{\pktxd@replydelay}{5mm}
-\def\pktxd@width{2.75cm}
-\def\pktxd@pausedefault{1cm}
-\newif\ifpktxd@reversed
-
-\pgfkeys{/pktxd/.cd,
-  % in two-entities mode, these are valid options for env
-  % (we cannot create them *inside* the env...)
-  A/.code=\pgfkeyssetvalue{/pktxd/entities/A}{#1},
-  A/.default=A,
-  B/.code=\pgfkeyssetvalue{/pktxd/entities/B}{#1},
-  B/.default=B,
   %
-  % TODO: merge in one key?
-  timers/.is choice,
-  timers/left bottom up/.is if=pktxd@timerleftbottomup,
-  timers/left below/.is if=pktxd@timerleftbelow,
-  timers/on arrow/.code={\pktxd@timeronarrowtrue\def\pktxd@timerlabeladd{#1}},
-  timers/on arrow/.default=5mm}
-  
-% timer label on arrow effective only if label width+this value is
-% less than the timer width
-\def\pktxd@timerlabeladd{}
-
-\newif\ifpktxd@timeronarrow
-\newif\ifpktxd@timerleftbottomup
-\newif\ifpktxd@timerleftbelow
-
-%%% in h diagrams, frames have a trans(mission) time
-
-\newlength{\pktxd@trans}\setlength{\pktxd@trans}{2cm}
-
-% by default frames whose label starts with ACK are short
-% key 'no shorts' removes this rule
-% key hdlc sets names for HDLC
-% key shorts=list sets the names of short frames
-
-\pgfkeys{/pktxd/.cd,
-  hdlc/.code=\edef\pktxd@shorts{\pktxd@shortshdlc},
-  shorts/.code=\def\pktxd@shorts{#1},
-  no shorts/.code=\def\pktxd@shorts{}
+  hide/.code=\pktxd@sethide{#1},
+  ignore/.code=\pktxd@setignore{#1},
+  fade/.code=\pktxd@setfade{#1},
 }
 
-\def\pktxd@shorts{ACK}
-\def\pktxd@shortshdlc{RR,RNR,REJ,SREJ,SABM,DISC,UA}
-
-\pgfkeyssetvalue{/pktxd/short trans}{7mm}
-
-% sets value of \pktxd@trans based on label #1
-\newcommand{\pktxd@settrans}[1]{
-  \ifpktxd@h
-  \def\pktxd@thistrans{\pktxd@trans}
-  % command from xstring package
-  % only the first line of multi line labels is considered
-  % (otherwise, this crashes)
-  \expandarg
-  \foreach \x in \pktxd@shorts {
-    \IfBeginWith{#1}{\x}{
-      \gdef\pktxd@thistrans{\pgfkeysvalueof{/pktxd/short trans}}}
-    {}
-  }
-  \setlength{\pktxd@trans}{\pktxd@thistrans}
-  \fi
-}
-
-
-%%%%%% flows
-
-%% the 'main' flow
-\def\pktxd@fid{main}
-\pgfkeyssetvalue{/pktxd/flows/main}{}
-
-%% default parameters for ids
-\pgfkeyssetvalue{/pktxd/default}{}
-\pgfkeyssetvalue{/pktxd/default/opacity}{1}
-
-%% can not use \foreach since it creates a local scope! :-(
-\newcommand{\pktxd@sethides}[1]{
-  \pgfkeyssetvalue{/pktxd/flows/#1/opacity}{0}
-%  \foreach \x in { #1 } {
-%    \pgfkeyssetvalue{/pktxd/flows/\x/opacity}{0}
-%  }
-}
+\newcommand{\pktxd@sethide}[1]{
+  \pgfkeyssetvalue{/pktxd/flows/#1/opacity}{0}}
 
 \newcommand{\pktxd@setignore}[1]{\pgfkeyssetvalue{/pktxd/flows/#1/ignore}{1}}
 \newif\ifpktxd@ignore
 
 \newcommand{\pktxd@setfade}[1]{
   \pgfkeyssetvalue{/pktxd/flows/#1/opacity}{\pgfkeysvalueof{/pktxd/fade value}}}
+\pgfkeyssetvalue{/pktxd/fade value}{0.25}
 
-%%%%%% styles
 
-%% define a style: name for a set of options
+% the 'main' flow
+\def\pktxd@fid{main}
+\pgfkeyssetvalue{/pktxd/flows/main}{}
+
+% default parameters for flows
+\pgfkeyssetvalue{/pktxd/default}{}
+\pgfkeyssetvalue{/pktxd/default/opacity}{1}
+
+
+% get specific parameter #2 for flow #1, or default value
+% this is currently only used for opacity
+\newcommand{\pktxd@getflowconf}[2]{
+  \pgfkeysifdefined{/pktxd/flows/#1/#2}
+  {\pgfkeysvalueof{/pktxd/flows/#1/#2}}
+  {\pgfkeysvalueof{/pktxd/default/#2}}}
+
+%% styles
+%%%% commands
+
+% define a style: name for a set of options
 \newcommand{\definestyle}[2]{\pgfkeys{/pktxd/styles/#1/.style={#2}}}
 
-%% make #1 (dynamically) inherit #2, adding #3 options
+% make #1 (dynamically) inherit #2, adding #3 options
 \newcommand{\derivestyle}[3]{\definestyle{#1}{/pktxd/styles/#2,#3}}
 
 %\definestyle{default}{}
 %\definestyle{labeldefault}{}
 
-%% give a style to a flow or its labels
+% give a style to a flow or its labels
 \newcommand{\setflowstyle}[2]{\pgfkeys{/pktxd/flows/#1/style/.initial=#2}}
 \newcommand{\setflowlabelstyle}[2]{\pgfkeys{/pktxd/flows/#1/labelstyle/.initial=#2}}
+
+%%%% user keys
+
+\pgfkeys{
+  % env keys
+  /pktxd/frame style/.code=\pgfkeys{/pktxd/styles/global/.style={#1}},
+  /pktxd/frame style+/.code=\pgfkeys{/pktxd/styles/global/.style={very thick,->,#1}},
+  /pktxd/label style/.code=\pgfkeys{/pktxd/styles/label global/.style={#1}},
+  /pktxd/label style+/.code=\pgfkeys{/pktxd/styles/label global/.style={above,sloped,#1}},
+  % frame keys
+  /pktxd/frame/style/.code=\pgfkeys{/pktxd/styles/this frame/.style={#1}},
+  /pktxd/frame/label style/.code=\pgfkeys{/pktxd/styles/label this frame/.style={#1}}}
+
+%%%% hierarchy of styles
 
 % the frame|label style of the current frame is styles/current frame|label style.
 % This includes (in order):
@@ -342,18 +328,7 @@
   .search also=/tikz
 }
 
-% user keys
-\pgfkeys{
-  % env keys
-  /pktxd/frame style/.code=\pgfkeys{/pktxd/styles/global/.style={#1}},
-  /pktxd/frame style+/.code=\pgfkeys{/pktxd/styles/global/.style={very thick,->,#1}},
-  /pktxd/label style/.code=\pgfkeys{/pktxd/styles/label global/.style={#1}},
-  /pktxd/label style+/.code=\pgfkeys{/pktxd/styles/label global/.style={above,sloped,#1}},
-  % frame keys
-  /pktxd/frame/style/.code=\pgfkeys{/pktxd/styles/this frame/.style={#1}},
-  /pktxd/frame/label style/.code=\pgfkeys{/pktxd/styles/label this frame/.style={#1}}}
-
-%%%%%% various definitions
+%% various definitions
 
 % The state of the diagram (current send and receive times of each
 % entity, running timers...) is changed when processing a frame but
@@ -395,91 +370,31 @@
   \pktxd@createtimer{#1}{r}{4}
 }
 
-\newcommand{\pktxd@createtimer}[3]{ % entity l/r id
-  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/active}{0}
-  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/cancel}{0}
-  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/label}{0}
-  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/start}{0}
-  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/end}{0}}
-
-%%%% timer offsets
-
-% The horiz offset of the four timers is set to a sensible default if
-% using timer labels.
-
-% TODO: maybe these default settings should be globally configurable?
-\def\pktxd@resettimeroffsets{
-  \pgfkeys{/pktxd/default/timers/.cd,
-    l/1/offset/.initial=4mm,
-    l/2/offset/.initial=9mm,
-    l/3/offset/.initial=14mm,
-    l/4/offset/.initial=19mm,
-    r/1/offset/.initial=4mm,
-    r/2/offset/.initial=9mm,
-    r/3/offset/.initial=14mm,
-    r/4/offset/.initial=19mm}
-}
-
-% more offset is added to left timers if "normal" left timer labels are used
-% (see @drawtimer)
-
-\def\pktxd@lefttimeraddoffset{3mm}
-
-% Position for timer 1/2/3/4 can be adjusted.
-
-\pgfkeys{/pktxd/.cd,
-  timer offset/.style={/pktxd/A timer offset=#1,/pktxd/B timer offset=#1},
-  timer2 offset/.style={/pktxd/A timer2 offset=#1,/pktxd/B timer2 offset=#1},
-  timer3 offset/.style={/pktxd/A timer3 offset=#1,/pktxd/B timer3 offset=#1},
-  timer4 offset/.style={/pktxd/A timer4 offset=#1,/pktxd/B timer4 offset=#1},
-  % A and B names make sense only for AB diagrams, this is actually l/r timer
-  A timer offset/.style={/pktxd/default/timers/l/1/offset=#1},
-  A timer2 offset/.style={/pktxd/default/timers/l/2/offset=#1},
-  A timer3 offset/.style={/pktxd/default/timers/l/3/offset=#1},
-  A timer4 offset/.style={/pktxd/default/timers/l/4/offset=#1},
-  B timer offset/.style={/pktxd/default/timers/r/1/offset=#1},
-  B timer2 offset/.style={/pktxd/default/timers/r/2/offset=#1},
-  B timer3 offset/.style={/pktxd/default/timers/r/3/offset=#1},
-  B timer4 offset/.style={/pktxd/default/timers/r/4/offset=#1},
-%
-% or can be expressed as differential position
-%
-  /pktxd/timers/+offset/.code=\pktxd@settimeroffsets{#1},
-  /pktxd/timers/+offset/.value required,
-%
-% or can be set to a tight value (suitable w/o labels)
-%
-  /pktxd/timers/tight/.code=
-     \pgfkeys{/pktxd/timer offset=2mm,
-              /pktxd/timers/on arrow}  % ensures @lefttimeraddoffset not used
-     \pktxd@settimeroffsets{2mm}
-}
-
-\def\pktxd@settimeroffsets#1{
-  \foreach \s in {l,r} {
-    \def\basicoffset{\pgfkeysvalueof{/pktxd/default/timers/\s/1/offset}}
-    \foreach \n in {1,2,3,4} {
-      \pgfmathsetlengthmacro{\offset}{\basicoffset+(\n-1)*#1}
-      \global\pgfkeyslet{/pktxd/default/timers/\s/\n/offset}{\offset}
-    }
-  }
-}
-
-%%%% 
+%% getting/setting state
 
 \newcommand{\pktxd@pos}[1]{\pgfkeysvalueof{/pktxd/entities/#1/pos}}
 \newcommand{\pktxd@Tsend}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Tsend}}
 \newcommand{\pktxd@Trecv}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Trecv}}
 
-%% beware of 'macro sharing': we use setvalue here!
-%% (note how we use pgfkeyslet in \pktxd@frame)
+% beware of 'macro sharing': we use setvalue here!
+% (note how we use pgfkeyslet in \pktxd@frame)
+% TODO why g for Tsend, not for Trecv???
 \newcommand{\pktxd@setTsend}[2]{\pgfkeyssetvalue{/pktxd/entities/#1/Tsend}{#2}}
 \newcommand{\pktxd@setTrecv}[2]{\pgfkeysgsetvalue{/pktxd/entities/#1/Trecv}{#2}}
 \newcommand{\pktxd@letTsend}[2]{\global\pgfkeyslet{/pktxd/entities/#1/Tsend}{#2}}
 
-%% if the pgfkey is defined in entity dir, use it
-%% otherwise use value in default dir
+\newcommand{\pktxd@addtosend}[2]{
+  \pgfmathsetlengthmacro\temp{\pktxd@Tsend{#1}+#2}
+  \global\pgfkeyslet{/pktxd/entities/#1/Tsend}{\temp}}
 
+\newcommand{\pktxd@addtorecv}[2]{
+  \pgfmathsetlengthmacro\temp{\pktxd@Trecv{#1}+#2}
+  \global\pgfkeyslet{/pktxd/entities/#1/Trecv}{\temp}}
+
+% if the pgfkey is defined in entity dir, use it
+% otherwise use value in default dir
+% TODO: currently only default entries are used (no key to set timer
+% offsets on specific entities)
 \newcommand{\pktxd@getconftimer}[4]{
   \pgfkeysifdefined{/pktxd/entities/#1/timers/#2/#3/#4}
   {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/#4}}
@@ -487,14 +402,11 @@
 
 \newcommand{\pktxd@gettimerstart}[3]{
   \pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/start}}
+
 \newcommand{\pktxd@gettimerend}[3]{
   \pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/end}}
 
-
-\newlength{\pktxd@prop}\setlength{\pktxd@prop}{0.5cm}
-\newlength{\pktxd@latev}       %% amount of lateness if pktxd@latetrue
-
-%%%%%% drawing of a frame
+%% drawing a frame
 %
 % main macros are:
 % - @nodelabel: draw a frame label
@@ -502,10 +414,10 @@
 % - @arrowh: draw arrow for horizontal diagram
 % - @frame: main macro
 
-%% Draw a frame label: it can be made of:
-%%  - l1 label (passed as arg 2)
-%%  - the l2 label (passed as label2 option key)
-%%  - both
+%%%% Draw a frame label: it can be made of:
+%  - l1 label (passed as arg 2)
+%  - the l2 label (passed as label2 option key)
+%  - both
 
 \newcommand{\pktxd@nodelabel}[2][1]{ % 1/-1, l1 label
   \ifpktxd@showlabelii\ifpktxd@hidelabel\itshape \pgfkeysvalueof{/pktxd/frame/label2}\else
@@ -524,12 +436,17 @@
 
 \newlength{\pktxd@len}
 
-%% the draw arrow macro for vertical packet exchange diagram
+%%%% the draw arrow macro for vertical packet exchange diagram
 
-% #1 are keys, #2 is sender pos, #3 is receiver pos
+% #1 are remaining keys (not handled by @frame) plus opacity,
+% #2 is sender pos, #3 is receiver pos
 % #4 is send time, #5 is label
 
-% uses: pktxd@lost, pktxd@bad, pktxd@late, pktxd@prop, pktxd@crosslost, pktxd@born
+% other inputs are:
+% - kind of frame: pktxd@lost, pktxd@bad, pktxd@late, pktxd@born
+% - parameters:    pktxd@prop, pktxd@crosslost, pktxd@latev
+%    plus /pktxd/styles/current label style
+%    and  /pktxd/styles/current frame style
 
 % TODO: could error on born and (late or lost or bad)
 % TODO: should \newdimen's be global?
@@ -592,9 +509,9 @@
     \else
     % not bad, not late, nor born
        \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
-                   node[align=center,\ifpktxd@sync midway\else near
-                   start\fi,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
-                   \ifpktxd@lost\ifpktxd@crosslost \draw[-]
+               node[align=center,\ifpktxd@sync midway\else near start\fi,
+               /pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
+       \ifpktxd@lost\ifpktxd@crosslost \draw[-]
                    (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
     \fi
     \fi
@@ -602,7 +519,8 @@
   \end{scope}
 }
 
-%% the draw arrow macro for horizontal packet exchange diagram
+%%%% the draw arrow macro for horizontal packet exchange diagram
+%   TODO: doesn't need the /pktxd/styles/.cd?
 
 \newcommand{\pktxd@arrowh}[5][]{
   \def\lstyle{/pktxd/styles/current label style}
@@ -632,21 +550,12 @@
 }
 
 
-\newcommand{\pktxd@addtosend}[2]{
-  \pgfmathsetlengthmacro\temp{\pktxd@Tsend{#1}+#2}
-  \global\pgfkeyslet{/pktxd/entities/#1/Tsend}{\temp}}
-
-\newcommand{\pktxd@addtorecv}[2]{
-  \pgfmathsetlengthmacro\temp{\pktxd@Trecv{#1}+#2}
-  \global\pgfkeyslet{/pktxd/entities/#1/Trecv}{\temp}}
-
-
-%% the main macro for processing a frame command:
-%% - handle all frame keys (prop, trans, delayed, late...)
-%% - draw frame by calling @arrow, passing it style and remaining tikz keys
-%% - setup timers
-%% - draw notes
-%% - udpate time positions
+%%%% the main macro for processing a frame command:
+% - handle all frame keys (prop, trans, delayed, late...)
+% - draw frame by calling @arrow, passing it style and remaining tikz keys
+% - setup timers
+% - draw notes
+% - udpate time positions
 
 \newcommand{\pktxd@frame}[4][]{ % [#1 keys], #2 sender, #3 receiver #4 label
   \edef\sendpos{\pgfkeysvalueof{/pktxd/entities/#2/pos}}
@@ -656,7 +565,7 @@
   % which side are timers and send notes on?
   \edef\align{\ifdim\sendpos<\recvpos l\else r\fi}
   
-  % apply frame settings in local scope
+  % process keys: apply settings in local scope
   \begin{scope}[/pktxd/frame/.cd, remainingkeys/.style={}, #1]
 
   % if flow has 'ignore' set, we're (almost) done
@@ -673,7 +582,7 @@
   
   \pktxd@settrans{#4}
 
-  % delayed key: fully process the timer
+  % delayed(i) key: fully process the timer
   \ifpktxd@delayed
     \pktxd@debug{delayed: len \pktxd@delayedlen ~ label \pktxd@delayedlabel ~ id \pktxd@delayedid}
     \edef\Trecv{\pgfkeysvalueof{/pktxd/entities/#2/Trecv}}
@@ -685,7 +594,7 @@
     \pktxd@endtimer{#2}{\align}{\pktxd@delayedid}
   \fi
 
-  % stop key: fully process the timer
+  % stop(i) key: fully process the timer
   \ifpktxd@stop
     \pktxd@debug{stop: len \pktxd@stoplen ~ label \pktxd@stoplabel ~delay \pktxd@stopdelay ~ id \pktxd@stopid}
     \edef\Trecv{\pgfkeysvalueof{/pktxd/entities/#2/Trecv}}
@@ -696,11 +605,11 @@
     \pktxd@canceltimer{#2}{\align}{\pktxd@stopid}{\Tsend}
   \fi
 
-  % timed/timed2 keys
+  % timed[i] keys have populated @timeds
   \@for\timed:=\pktxd@timeds\do{\expandafter\pktxd@processtimed\timed:#2}
 
-  % set opacity based on id key
-  \def\opa{\pktxd@getconf{\pktxd@fid}{opacity}}
+  % set opacity based on fid key
+  \def\opa{\pktxd@getflowconf{\pktxd@fid}{opacity}}
   
   % draw send note
   \ifpktxd@snote
@@ -759,7 +668,7 @@
     \global\pgfkeyslet{/pktxd/entities/#3/Tsend}{\Tsndr}
   \fi
 
-  % cancel key
+  % cancel[i] keys have populated @cancels
   \@for\id:=\pktxd@cancels\do{
     \if 0\id\else
     \pktxd@debug{cancel \id}
@@ -771,7 +680,144 @@
 }
 
 
-%%%%%% handling of timers
+%% handling of timers
+%%%% visual settings
+
+% env keys and corresponding state
+\pgfkeys{/pktxd/.cd,
+  % TODO: merge in one key?
+  timers/.is choice,
+  timers/left bottom up/.is if=pktxd@timerleftbottomup,
+  timers/left below/.is if=pktxd@timerleftbelow,
+  timers/on arrow/.code={\pktxd@timeronarrowtrue\def\pktxd@timerlabeladd{#1}},
+  timers/on arrow/.default=5mm
+}
+\newif\ifpktxd@timerleftbottomup
+\newif\ifpktxd@timerleftbelow
+\newif\ifpktxd@timeronarrow
+% timer label on arrow effective only if label width+this value is
+% less than the timer width
+\def\pktxd@timerlabeladd{}
+
+% so that arrows of consecutive timers are spaced a very little bit
+\pgfkeys{/pktxd/timer time offset/.code=
+               \setlength{\pktxd@timertoffset}{#1}}
+\newlength{\pktxd@timertoffset}\setlength{\pktxd@timertoffset}{0.2mm}
+
+%%%% timer state
+
+% a timer belongs to an entity, is leftist or rightist and is timer n
+% on its side
+
+% active: 0 or t if the timer is currently running
+% cancel: 0 or t if the timer has just been cancelled
+% label : timer label
+% start time
+% end time
+
+\newcommand{\pktxd@createtimer}[3]{ % entity l/r id
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/active}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/cancel}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/label}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/start}{0}
+  \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/end}{0}}
+
+%%%% current frame timers
+
+% @timeds is the list of timers started by current frame
+% it has a dumb last element to avoid the loop break on a final comma
+% - initialized here (global scope)
+% - elements are added by timed[i] key frames, calling @addtimed
+%   (in @frame scope, no need to reset)
+% - @processtimed is called in @frame
+
+\def\pktxd@timeds{0/0/0}
+
+\newcommand{\pktxd@addtimed}[3]{
+  \pktxd@debug{addtimed #1,#2,#3}
+  \edef\pktxd@timeds{#1/#2/{#3},\pktxd@timeds}}
+
+\def\pktxd@processtimed #1/#2/#3:#4{ % id/len/label:entity
+  \if 0#1\else
+  \pktxd@debug{timed: id #1 ~ len #2 ~ label #3}
+  \pgfmathsetlengthmacro\temp{\Tsend+\pktxd@trans}
+  \pktxd@starttimer{#4}{\align}{#1}{\temp}{#2}{#3}\fi}
+
+% @cancels is the list of timers cancelled by current frame
+% similar to @timeds
+
+\def\pktxd@cancels{0}
+
+\newcommand{\pktxd@addcancel}[1]{
+        \edef\pktxd@cancels{#1,\pktxd@cancels}}
+
+%%%% timer offsets
+
+% The (horizontal) offset of the four timers is set to a default
+% that is sensible if using timer labels.
+
+% TODO: maybe these default settings should be globally configurable?
+\def\pktxd@resettimeroffsets{
+  \pgfkeys{/pktxd/default/timers/.cd,
+    l/1/offset/.initial=4mm,
+    l/2/offset/.initial=9mm,
+    l/3/offset/.initial=14mm,
+    l/4/offset/.initial=19mm,
+    r/1/offset/.initial=4mm,
+    r/2/offset/.initial=9mm,
+    r/3/offset/.initial=14mm,
+    r/4/offset/.initial=19mm}
+}
+
+% keys to adjust offsets for timer 1/2/3/4
+
+\pgfkeys{/pktxd/.cd,
+  %
+  % set offset for pairs of 1/2/3/4 timers
+  timer offset/.style={/pktxd/A timer offset=#1,/pktxd/B timer offset=#1},
+  timer2 offset/.style={/pktxd/A timer2 offset=#1,/pktxd/B timer2 offset=#1},
+  timer3 offset/.style={/pktxd/A timer3 offset=#1,/pktxd/B timer3 offset=#1},
+  timer4 offset/.style={/pktxd/A timer4 offset=#1,/pktxd/B timer4 offset=#1},
+  %
+  % set offset for a single timer
+  % A and B names make sense only for AB diagrams, this is actually l/r timer
+  A timer offset/.style={/pktxd/default/timers/l/1/offset=#1},
+  A timer2 offset/.style={/pktxd/default/timers/l/2/offset=#1},
+  A timer3 offset/.style={/pktxd/default/timers/l/3/offset=#1},
+  A timer4 offset/.style={/pktxd/default/timers/l/4/offset=#1},
+  B timer offset/.style={/pktxd/default/timers/r/1/offset=#1},
+  B timer2 offset/.style={/pktxd/default/timers/r/2/offset=#1},
+  B timer3 offset/.style={/pktxd/default/timers/r/3/offset=#1},
+  B timer4 offset/.style={/pktxd/default/timers/r/4/offset=#1},
+  %
+  % set offsets of 2/3/4 as increment of #1 on timer 1 offset
+  /pktxd/timers/+offset/.code=\pktxd@settimeroffsets{#1},
+  /pktxd/timers/+offset/.value required,
+  %
+  % set them all to a tight value (suitable w/o labels)
+  /pktxd/timers/tight/.code=
+     \pgfkeys{/pktxd/timer offset=2mm,
+              /pktxd/timers/on arrow}  % ensures @lefttimeraddoffset not used
+     \pktxd@settimeroffsets{2mm}
+}
+
+% only used by keys above
+% set all timer offsets: timer_i set to timer_1 offset + (i-1) * #1
+\def\pktxd@settimeroffsets#1{
+  \foreach \s in {l,r} {
+    \def\basicoffset{\pgfkeysvalueof{/pktxd/default/timers/\s/1/offset}}
+    \foreach \n in {1,2,3,4} {
+      \pgfmathsetlengthmacro{\offset}{\basicoffset+(\n-1)*#1}
+      \global\pgfkeyslet{/pktxd/default/timers/\s/\n/offset}{\offset}
+    }
+  }
+}
+
+% more offset is added to left timers if "normal" left timer labels are used
+% (see @drawtimer)
+\def\pktxd@lefttimeraddoffset{3mm}
+
+%%%% timer processing and drawing
 
 \newif\ifpktxd@putlabelonarrow
 \newlength{\pktxd@labellength}
@@ -867,19 +913,14 @@
   \fi
 }
 
-
-%% so that arrows of consecutive timers are spaced a very little bit
-\newlength{\pktxd@timertoffset}\setlength{\pktxd@timertoffset}{0.2mm}
-\pgfkeys{/pktxd/timer time offset/.code=\setlength{\pktxd@timertoffset}{#1}}
-
 \newcommand{\pktxd@endtimerifactive}[3]{
   \if\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/active}t
   \pktxd@endtimer{#1}{#2}{#3}\fi}
 
-%% timer h position: based on hpos, l/r alignment and offset
-%% in horizontal, hpos is negated (left/- is up/+)
-%% in vertical, remove 3mm to l timers if neither @timerleftbelow nor
-%% @timerleftbottomup is set
+% timer h position: based on hpos, l/r alignment and offset
+% in horizontal, hpos is negated (left/- is up/+)
+% in vertical, remove 3mm to l timers if neither @timerleftbelow nor
+% @timerleftbottomup is set
 
 \newcommand{\pktxd@settimerhpos}[4]{ % entity/lr/id macro
   \pktxd@debug{timerhpos #1/#2/#3}
@@ -954,7 +995,7 @@
   \fi
 }
 
-%% finish drawing a timer
+% finish drawing a timer
 \newcommand{\pktxd@endtimer}[3]{
   \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/active}{0}
   \pgfkeysgsetvalue{/pktxd/entities/#1/timers/#2/#3/cancel}{0}
@@ -966,14 +1007,13 @@
     {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/label}}{\timeroffset}{}{}
 }
 
-\newcommand{\pktxd@getconf}[2]{
-  \pgfkeysifdefined{/pktxd/flows/#1/#2}
-  {\pgfkeysvalueof{/pktxd/flows/#1/#2}}
-  {\pgfkeysvalueof{/pktxd/default/#2}}}
+%% notes
 
 \newcommand{\pktxd@drawnote}[6]{ % timepos, entity, s/r, note, offset, style
-  \pktxd@debug{note: #1 #2 #3 [hide note label] #5 #6 } % #4 fails if multi-line
+  \pktxd@debug{note: #1 #2 #3 [note text] #5 #6 } % #4 fails if multi-line
   \edef\pos{\pgfkeysvalueof{/pktxd/entities/#2/pos}}
+
+  % horizontal diagram
   \ifpktxd@h
   % is the note going up or down?
   \edef\orient{\if#3s\ifdim#5>0pt u\else d\fi\else\ifdim#5>0pt d\else u\fi\fi}
@@ -984,12 +1024,26 @@
   \else          % up
     \node[rotate=90,#6] at (#1+\dpos, -\pos\if#3r+\else-\fi 10mm) { #4 };
   \fi
-  \else % vertical diagram
-    \node[#6] at (\pos+#5, -#1) { #4 };
+  \else
+
+  % vertical diagram
+  \node[#6] at (\pos+#5, -#1) { #4 };
   \fi}
 
+%% side decorations (eg for TCP)
 
-%%%%%% side decorations (eg for TCP)
+\pgfkeys{/pktxd/.cd,
+  %
+  action time offset/.code=\setlength{\pktxd@actiontimeoffset}{#1},
+  action offset/.code=\setlength{\pktxd@actionoffset}{#1},
+  action length/.code=\setlength{\pktxd@actionlength}{#1},
+  state offset/.code=\setlength{\pktxd@stateoffset}{#1}
+}
+
+\newlength{\pktxd@actiontimeoffset}\setlength{\pktxd@actiontimeoffset}{1mm}
+\newlength{\pktxd@actionoffset}\setlength{\pktxd@actionoffset}{1mm}
+\newlength{\pktxd@actionlength}\setlength{\pktxd@actionlength}{5mm}
+\newlength{\pktxd@stateoffset}\setlength{\pktxd@stateoffset}{12mm}
 
 \newcommand{\pktxd@action}[4]{ % timepos, hpos, l/r, text
   \ifpktxd@h\else
@@ -1017,7 +1071,7 @@
   \pktxd@state{\pBs-5mm}{\pktxd@pos{B}}{r}{#2}}
 
 
-%%%%%% laters
+%% laters
 %
 % they are in unlimited number
 
@@ -1070,7 +1124,7 @@
 
 \newcommand{\Xpause}[2][\pktxd@pausedefault]{\pktxd@addtosend{#2}{#1}}
 
-%%: X waits for Y, Y waits for X (usefull only in fullduplex mode)
+% X waits for Y, Y waits for X (usefull only in fullduplex mode)
 
 \newcommand{\XwaitY}[2]{
   \edef\temp{\pktxd@Trecv{#1}}
@@ -1078,7 +1132,7 @@
   \pktxd@debug{Xwait temp=\temp Tsend=\pktxd@Tsend{#1}}
   \pktxd@addtosend{#1}{\pktxd@replydelay}}
 
-%% set Tsend to end of the timer if it's later
+% set Tsend to end of the timer if it's later
 \newcommand{\pktxd@waittimer}[3]{
   \edef\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
   \edef\Tsend{\pktxd@Tsend{#1}}
@@ -1086,7 +1140,7 @@
 }
 
 
-%%% specialized code for two entities diagrams
+%% specialized code for two entities diagrams
 
 \newcommand{\AB}[2][]{\pktxd@frame[#1]{A}{B}{#2}}
 \newcommand{\BA}[2][]{\pktxd@frame[#1]{B}{A}{#2}}
@@ -1097,7 +1151,7 @@
 \newcommand{\AwaitB}{\XwaitY{A}{B}}
 \newcommand{\BwaitA}{\XwaitY{B}{A}}
 
-%%: arg is name set in the late frame ('name' key, defaults to $$lateframe)
+% arg is name set in the late frame ('name' key, defaults to $$lateframe)
 \newcommand{\Awaitlate}[1][$$lateframe]{
   \pktxd@setTrecv{A}{\pgfkeysvalueof{/pktxd/values/A/#1}}
   \AwaitB}
@@ -1106,12 +1160,11 @@
   \pktxd@setTrecv{B}{\pgfkeysvalueof{/pktxd/values/B/#1}}
   \BwaitA}
   
-%%: A,B waits for its current timer to expire
-
+% A,B waits for its current timer to expire
 \newcommand{\Awaittimer}[1][1]{\pktxd@waittimer{A}{l}{#1}}
 \newcommand{\Bwaittimer}[1][1]{\pktxd@waittimer{B}{r}{#1}}
 
-%%: A sends a timed frame to B
+% A sends a timed frame to B
 % [keys], flabel, len, tlabel
 
 \newcommand{\ABtimed} [4][]{\AB[#1,timed={#3}{#4}]{#2}}
@@ -1119,32 +1172,32 @@
 \newcommand{\BAtimed} [4][]{\BA[#1,timed={#3}{#4}]{#2}}
 \newcommand{\BAtimedi}[4][]{\BA[#1,timed2={#3}{#4}]{#2}}
 
-%%: A sends a frame that cancels B's timer
+% A sends a frame that cancels B's timer
 
 \newcommand{\ABcancel} [2][]{\AB[cancel,#1]{#2}}
 \newcommand{\ABcanceli}[2][]{\AB[cancel2,#1]{#2}}
 \newcommand{\BAcancel} [2][]{\BA[cancel,#1]{#2}}
 \newcommand{\BAcanceli}[2][]{\BA[cancel2,#1]{#2}}
 
-%%: A sets a timer and sends a frame when it expires
-%%  [keys], len, tlabel, flabel
+% A sets a timer and sends a frame when it expires
+% [keys], len, tlabel, flabel
 \newcommand{\ABdelayed}[4][]{\AB[#1,delayed={#2}{#3}]{#4}}
 \newcommand{\BAdelayed}[4][]{\BA[#1,delayed={#2}{#3}]{#4}}
 
-%%: A sets a timer and after a delay sends a frame that cancels it
-%%: typical use: ACK timer cancelled by sending of DATA
-%%  [keys], len, tlabel, delay, flabel
+% A sets a timer and after a delay sends a frame that cancels it
+% typical use: ACK timer cancelled by sending of DATA
+% [keys], len, tlabel, delay, flabel
 \newcommand{\ABstop}[5][]{\AB[#1,stop={#2}{#3}{#4}]{#5}}
 \newcommand{\BAstop}[5][]{\BA[#1,stop={#2}{#3}{#4}]{#5}}
 
-%% shortcuts
+% shortcuts
 \def\pAs{\pktxd@Tsend{A}}
 \def\pBs{\pktxd@Tsend{B}}
 \def\pAr{\pktxd@Trecv{A}}
 \def\pBr{\pktxd@Trecv{B}}
 
 
-%%%% intialize entities
+%% intialize entities
 
 \newcommand{\pktxd@entityname}[2]{\pgfkeysgsetvalue{/pktxd/entities/#1}{#2}}
 
@@ -1193,7 +1246,7 @@
 }
 
 
-% compute the maximum time of all entities
+% compute the maximum time of all entities, in \maxtime
 % arg is added offset to Trecv
 
 \newcommand{\pktxd@computemaxtime}[1]{
@@ -1240,7 +1293,7 @@
     }
   }
 
-%%%%%% user environments
+%% user environments
 
 \newenvironment{pktxdiag}[1][]{
   \pktxd@debug{entering pktxdiag env}
