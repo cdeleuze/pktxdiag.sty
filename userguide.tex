@@ -521,15 +521,16 @@ See also section \ref{sec:flow styles} on flow styles.
 \subsection{Graphics attributes}
 
 Frames can also be given most tikz graphics attributes to specify their
-colors, line width etc.
+colors, line width, arrow tip shape etc.
 
 \begin{codeexample}[width=5cm]
   \begin{pktxdiag}
-    \AB{DATA}
-    \BA[dashed,blue]{ACK}
-    \AB[line width=3pt,dotted,yellow,text=red]{OK !}
+    \AB[thin]{DATA}
+    \BA[dashed,blue,-Latex]{ACK}
+    \AB[ultra thick,yellow,text=red,
+        -{Stealth[length=2.5mm,inset=0pt]}]{OK !}
   \end{pktxdiag}
-  \end{codeexample}
+\end{codeexample}
 
 % TODO: how to change label graphics attributes?
 
