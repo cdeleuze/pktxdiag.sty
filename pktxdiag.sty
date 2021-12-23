@@ -59,6 +59,8 @@
 
 \pgfkeys{/pktxd/.cd,
   entities/.code=\pktxd@initmentities{#1},
+  initial delay/.code=\setlength{\pktxd@initialdelay}{#1},
+  final delay/.code=\setlength{\pktxd@finaldelay}{#1},
   send delay/.code=\setlength{\pktxd@senddelay}{#1},
   reply delay/.code=\setlength{\pktxd@replydelay}{#1},
   full duplex/.code=\pktxd@syncfalse,
@@ -66,6 +68,8 @@
   pause/.code=\def\pktxd@pausedefault{#1},
   reversed/.is if=pktxd@reversed}
 
+\newlength{\pktxd@initialdelay}\setlength{\pktxd@initialdelay}{5mm}
+\newlength{\pktxd@finaldelay}\setlength{\pktxd@finaldelay}{5mm}
 \newlength{\pktxd@senddelay}\setlength{\pktxd@senddelay}{1cm}
 \newlength{\pktxd@replydelay}\setlength{\pktxd@replydelay}{5mm}
 \newif\ifpktxd@sync\pktxd@synctrue
@@ -359,8 +363,8 @@
 
 \newcommand{\pktxd@createentity}[1]{
   \xdef\pktxd@entities{#1,\pktxd@entities}
-  \pgfglobalkeys{/pktxd/entities/#1/Tsend/.initial=0cm} % send time
-  \pgfglobalkeys{/pktxd/entities/#1/Trecv/.initial=0cm} % recv time
+  \pgfglobalkeys{/pktxd/entities/#1/Tsend/.initial=0cm} % next send time
+  \pgfglobalkeys{/pktxd/entities/#1/Trecv/.initial=0cm} % last recv time
   \pgfglobalkeys{/pktxd/entities/#1/Tmax/.initial=0cm}  % max time
   \pktxd@createtimer{#1}{l}{1}
   \pktxd@createtimer{#1}{l}{2}
@@ -374,9 +378,10 @@
 
 %% getting/setting state
 
-\newcommand{\pktxd@pos}[1]{\pgfkeysvalueof{/pktxd/entities/#1/pos}}
+\newcommand{\pktxd@pos}  [1]{\pgfkeysvalueof{/pktxd/entities/#1/pos}}
 \newcommand{\pktxd@Tsend}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Tsend}}
 \newcommand{\pktxd@Trecv}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Trecv}}
+\newcommand{\pktxd@Tmax} [1]{\pgfkeysvalueof{/pktxd/entities/#1/Tmax}}
 
 % beware of 'macro sharing': we use setvalue here!
 % (note how we use pgfkeyslet in \pktxd@frame)
@@ -384,6 +389,7 @@
 \newcommand{\pktxd@setTsend}[2]{\pgfkeyssetvalue{/pktxd/entities/#1/Tsend}{#2}}
 \newcommand{\pktxd@setTrecv}[2]{\pgfkeysgsetvalue{/pktxd/entities/#1/Trecv}{#2}}
 \newcommand{\pktxd@letTsend}[2]{\global\pgfkeyslet{/pktxd/entities/#1/Tsend}{#2}}
+\newcommand{\pktxd@letTmax} [2]{\global\pgfkeyslet{/pktxd/entities/#1/Tmax}{#2}}
 
 \newcommand{\pktxd@addtosend}[2]{
   \pgfmathsetlengthmacro\temp{\pktxd@Tsend{#1}+#2}
@@ -564,6 +570,11 @@
   \edef\recvpos{\pgfkeysvalueof{/pktxd/entities/#3/pos}}
   \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
 
+  % update Tmax at sender
+  \ifdim\Tsend>\pgfkeysvalueof{/pktxd/entities/#2/Tmax}
+  \global\pgfkeyslet{/pktxd/entities/#2/Tmax}{\Tsend}
+  \fi
+
   % which side are timers and send notes on?
   \edef\align{\ifdim\sendpos<\recvpos l\else r\fi}
   
@@ -659,7 +670,7 @@
   \global\pgfkeyslet{/pktxd/entities/#2/Tsend}{\Tsend}
   \global\pgfkeyslet{/pktxd/entities/#3/Trecv}{\Trecv}
 
-  % update Tmax (Tcancel set above to Trecv + pktxd@latev)
+  % update Tmax at receiver (Tcancel set above to Trecv + pktxd@latev)
   \ifdim\Tcancel>\pgfkeysvalueof{/pktxd/entities/#3/Tmax}
   \global\pgfkeyslet{/pktxd/entities/#3/Tmax}{\Tcancel}
   \fi
@@ -1135,10 +1146,15 @@
   \pktxd@addtosend{#1}{\pktxd@replydelay}}
 
 % set Tsend to end of the timer if it's later
+% also set Tmax to endtimer - finaldelay
+% (to not extend Tmax below a last timer)
 \newcommand{\pktxd@waittimer}[3]{
   \edef\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
   \edef\Tsend{\pktxd@Tsend{#1}}
+  \edef\Tmax{\pktxd@Tmax{#1}}
   \ifdim \Tsend<\timerend\pktxd@letTsend{#1}{\timerend}\fi
+  \pgfmathsetlengthmacro\timerbis{\timerend-\pktxd@finaldelay}
+  \ifdim \Tmax<\timerbis\pktxd@letTmax{#1}{\timerbis}\fi
 }
 
 
@@ -1254,16 +1270,7 @@
 \newcommand{\pktxd@computemaxtime}[1]{
   \def\maxtime{0pt}
   \pktxd@forallentities{
-    % if full-duplex we consider the Tsend, else Trecv+#1 (@replydelay
-    % for v diags)
-    \ifpktxd@sync\edef\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Tsend}}
-    \else\pgfmathsetlengthmacro\tsnd{\pgfkeysvalueof{/pktxd/entities/\e/Trecv}+#1}
-    \fi
-    % Tmax may still be below (late frames)
-    \pgfmathsetlengthmacro\tmax{
-      \pgfkeysvalueof{/pktxd/entities/\e/Tmax}+#1}
-    \pktxd@debug{e=\e ~ maxtime=\maxtime ~ tsnd=\tsnd ~ tmax=\tmax}
-    \ifdim \maxtime<\tsnd \edef\maxtime{\tsnd}\fi
+    \edef\tmax{\pgfkeysvalueof{/pktxd/entities/\e/Tmax}}
     \ifdim \maxtime<\tmax \edef\maxtime{\tmax}\fi
   }
   \pktxd@debug{final maxtime=\maxtime}
@@ -1319,8 +1326,15 @@
 
     % draw vertical lines and labels
     \pktxd@computemaxtime{\pktxd@replydelay}
+    \pktxd@len=\maxtime
+    \advance \pktxd@len by \pktxd@finaldelay
+    
     \pktxd@forallentities {
-    \draw[thin](\pktxd@pos{\e},\pktxd@senddelay/2) node[align=center,above]{\pgfkeysvalueof{/pktxd/entities/\e}} -- (\pktxd@pos{\e},-\maxtime);
+      \draw[thin]
+           (\pktxd@pos{\e},\pktxd@initialdelay)
+       node[align=center,above]
+           {\pgfkeysvalueof{/pktxd/entities/\e}}
+        -- (\pktxd@pos{\e},-\pktxd@len);
     }
 
     % draw later(s)
