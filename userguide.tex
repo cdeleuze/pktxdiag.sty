@@ -116,7 +116,7 @@ The purpose of \emph{delayed ACKs} is that sending of a dedicated ACK
 frame can be cancelled if a DATA frame is to be sent shortly: the ACK
 will be \emph{piggybacked} on the data frame.
 \begin{codeexample}[width=6cm]
-  \begin{pktxdiag}
+ \begin{pktxdiag}
    \AB{DATA 2,x}
    \BA[stop={1cm}{ack}{3mm}]{DATA y,3}
  \end{pktxdiag}
@@ -144,7 +144,7 @@ This may be increased in future versions.
 \index{frame option!cancel4}
 
 \begin{codeexample}[width=6cm]
-  \begin{pktxdiag}
+ \begin{pktxdiag}
    \AB[timed={3cm}{1st timer}]{DATA 1}
    \BA[stop2={1cm}{ack}{5mm},timed={3cm}{timed},cancel]{DATA}
    \AB[timed2={2cm}{2nd timer},lost]{DATA 2}
@@ -436,6 +436,8 @@ no labels are put on timers).
 
 % TODO can be used for a specific frame? maybe not
 
+% TODO timer time offset (space arrows of consecutive timers)
+
 \subsubsection{Timer label on arrow}
 
 By default, timer labels are written ``above'' the arrow, but can be
@@ -633,8 +635,8 @@ The environment option \texttt{fade value} sets how much the flow
 remains visible (default is 0.25).  If you need to provide several
 arguments to one of these options either repeat the option or use the
 \texttt{/.list} key handler as in
-\texttt{hide/.list=\{1,2\}}.\footnote{See pgfmanual section 82.4.6 for
-  details.}
+\texttt{hide/.list=\{1,2\}}.\footnote{See TikZ \& PGF manual section
+  86.4.6 for details.}
 
 \subsection{Flow styles}
 \label{sec:flow styles}
@@ -778,16 +780,17 @@ in vertical diagrams).
 
 \item[\texttt{no shorts}] no frames are considered shorts.
 
-\item[\texttt{hdlc}] specifies the list of label for short frames in
-  the HDLC protocol. These are RR, RNR, REJ, SREJ, SABM, DISC, UA.
+\item[\texttt{hdlc}] specifies the list of labels for short frames in
+  the HDLC protocol\footnote{What do you mean ``WTF HDLC, OMFG!!''
+    ?}. These are RR, RNR, REJ, SREJ, SABM, DISC, UA.
 
 % TODO: replace with shorts=hdlc ?
 
 \end{description}
 
 Timers are supported.  Beware that the transmission time may make that
-a timer canceling frame correct in a vertical diagram may be incorrect
-in a horizontal diagram.
+a timer canceling frame correct in a vertical diagram is incorrect in
+a horizontal diagram.
 
 Multiple (more than two) entities are not possible.  Other missing
 features include: late frames, laters, states and actions.

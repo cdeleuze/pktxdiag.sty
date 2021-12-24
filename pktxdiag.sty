@@ -66,10 +66,11 @@
   full duplex/.code=\pktxd@syncfalse,
   width/.code=\def\pktxd@width{#1},
   pause/.code=\def\pktxd@pausedefault{#1},
-  reversed/.is if=pktxd@reversed}
+  reversed/.is if=pktxd@reversed
+}
 
 \newlength{\pktxd@initialdelay}\setlength{\pktxd@initialdelay}{5mm}
-\newlength{\pktxd@finaldelay}\setlength{\pktxd@finaldelay}{5mm}
+\newlength{\pktxd@finaldelay}\setlength{\pktxd@finaldelay}{4mm}
 \newlength{\pktxd@senddelay}\setlength{\pktxd@senddelay}{1cm}
 \newlength{\pktxd@replydelay}\setlength{\pktxd@replydelay}{5mm}
 \newif\ifpktxd@sync\pktxd@synctrue
@@ -383,12 +384,10 @@
 \newcommand{\pktxd@Trecv}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Trecv}}
 \newcommand{\pktxd@Tmax} [1]{\pgfkeysvalueof{/pktxd/entities/#1/Tmax}}
 
-% beware of 'macro sharing': we use setvalue here!
-% (note how we use pgfkeyslet in \pktxd@frame)
-% TODO why g for Tsend, not for Trecv???
-\newcommand{\pktxd@setTsend}[2]{\pgfkeyssetvalue{/pktxd/entities/#1/Tsend}{#2}}
+% TODO: need to clean up usage of setvalue vs let
 \newcommand{\pktxd@setTrecv}[2]{\pgfkeysgsetvalue{/pktxd/entities/#1/Trecv}{#2}}
 \newcommand{\pktxd@letTsend}[2]{\global\pgfkeyslet{/pktxd/entities/#1/Tsend}{#2}}
+\newcommand{\pktxd@letTrecv}[2]{\global\pgfkeyslet{/pktxd/entities/#1/Trecv}{#2}}
 \newcommand{\pktxd@letTmax} [2]{\global\pgfkeyslet{/pktxd/entities/#1/Tmax}{#2}}
 
 \newcommand{\pktxd@addtosend}[2]{
@@ -566,13 +565,13 @@
 % - udpate time positions
 
 \newcommand{\pktxd@frame}[4][]{ % [#1 keys], #2 sender, #3 receiver #4 label
-  \edef\sendpos{\pgfkeysvalueof{/pktxd/entities/#2/pos}}
-  \edef\recvpos{\pgfkeysvalueof{/pktxd/entities/#3/pos}}
-  \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
+  \edef\sendpos{\pktxd@pos{#2}}
+  \edef\recvpos{\pktxd@pos{#3}}
+  \edef\Tsend{\pktxd@Tsend{#2}}
 
   % update Tmax at sender
-  \ifdim\Tsend>\pgfkeysvalueof{/pktxd/entities/#2/Tmax}
-  \global\pgfkeyslet{/pktxd/entities/#2/Tmax}{\Tsend}
+  \ifdim\Tsend>\pktxd@Tmax{#2}
+  \pktxd@letTmax{#2}{\Tsend}
   \fi
 
   % which side are timers and send notes on?
@@ -598,23 +597,20 @@
   % delayed(i) key: fully process the timer
   \ifpktxd@delayed
     \pktxd@debug{delayed: len \pktxd@delayedlen ~ label \pktxd@delayedlabel ~ id \pktxd@delayedid}
-    \edef\Trecv{\pgfkeysvalueof{/pktxd/entities/#2/Trecv}}
-
-    \pktxd@starttimer{#2}{\align}{\pktxd@delayedid}{\Trecv}{\pktxd@delayedlen}{\pktxd@delayedlabel}
-    \pktxd@setTsend{#2}{\Trecv}%%%
+    \edef\sTrecv{\pktxd@Trecv{#2}} % sender Trecv
+    \pktxd@starttimer{#2}{\align}{\pktxd@delayedid}{\sTrecv}{\pktxd@delayedlen}{\pktxd@delayedlabel}
+    \pktxd@letTsend{#2}{\sTrecv}%%%
     \pktxd@addtosend{#2}{\pktxd@delayedlen}
-    \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
     \pktxd@endtimer{#2}{\align}{\pktxd@delayedid}
   \fi
 
   % stop(i) key: fully process the timer
   \ifpktxd@stop
     \pktxd@debug{stop: len \pktxd@stoplen ~ label \pktxd@stoplabel ~delay \pktxd@stopdelay ~ id \pktxd@stopid}
-    \edef\Trecv{\pgfkeysvalueof{/pktxd/entities/#2/Trecv}}
-    \pktxd@starttimer{#2}{\align}{\pktxd@stopid}{\Trecv}{\pktxd@stoplen}{\pktxd@stoplabel}
-    \pktxd@setTsend{#2}{\pktxd@Trecv{#2}}
+    \edef\sTrecv{\pktxd@Trecv{#2}} % sender Trecv
+    \pktxd@starttimer{#2}{\align}{\pktxd@stopid}{\sTrecv}{\pktxd@stoplen}{\pktxd@stoplabel}
+    \pktxd@letTsend{#2}{\sTrecv}
     \pktxd@addtosend{#2}{\pktxd@stopdelay}
-    \edef\Tsend{\pgfkeysvalueof{/pktxd/entities/#2/Tsend}}
     \pktxd@canceltimer{#2}{\align}{\pktxd@stopid}{\Tsend}
   \fi
 
@@ -641,9 +637,8 @@
   \pktxd@arrow[/tikz/opacity=\opa,/pktxd/frame/remainingkeys]
       {\sendpos}{\recvpos}{\Tsend}{#4}
 
-  % update times
+  % Trecv is frame reception time at receiver
   \pgfmathsetlengthmacro\Trecv{\Tsend+\pktxd@prop+\pktxd@trans}
-  \pgfmathsetlengthmacro\Tsend{\Tsend+\pktxd@trans+\pktxd@senddelay}
 
   % draw receive note
   \ifpktxd@rnote
@@ -660,25 +655,27 @@
   % late key
   \edef\Tcancel{\Trecv}
   \ifpktxd@late
-    % no simpler way to _copy_ the length value?
+    % no simpler way to do that?
     \pgfmathsetlengthmacro\Tcancel{\Trecv+\pktxd@latev}
     \global\pgfkeyslet{/pktxd/values/#3/\pktxd@latename}{\Tcancel}
     \setlength\pktxd@latev{0mm}
   \fi
 
   % commit time updates
-  \global\pgfkeyslet{/pktxd/entities/#2/Tsend}{\Tsend}
-  \global\pgfkeyslet{/pktxd/entities/#3/Trecv}{\Trecv}
+  \pgfmathsetlengthmacro\Tsend{\Tsend+\pktxd@trans+\pktxd@senddelay}
+  \pktxd@letTsend{#2}{\Tsend}
+  \pktxd@letTrecv{#3}{\Trecv}
 
-  % update Tmax at receiver (Tcancel set above to Trecv + pktxd@latev)
-  \ifdim\Tcancel>\pgfkeysvalueof{/pktxd/entities/#3/Tmax}
-  \global\pgfkeyslet{/pktxd/entities/#3/Tmax}{\Tcancel}
+  % update Tmax at receiver
+  % (Tcancel set above to Trecv + pktxd@latev if late)
+  \ifdim\Tcancel>\pktxd@Tmax{#3}
+  \pktxd@letTmax{#3}{\Tcancel}
   \fi
 
   % if not full duplex, update Tsend at receiver
   \ifpktxd@sync
     \pgfmathsetlengthmacro\Tsndr{\Trecv+\pktxd@replydelay}
-    \global\pgfkeyslet{/pktxd/entities/#3/Tsend}{\Tsndr}
+    \pktxd@letTsend{#3}{\Tsndr}
   \fi
 
   % cancel[i] keys have populated @cancels
@@ -720,7 +717,7 @@
 %%%% timer state
 
 % a timer belongs to an entity, is leftist or rightist and is timer n
-% on its side
+% on its side (n=1..4)
 
 % active: 0 or t if the timer is currently running
 % cancel: 0 or t if the timer has just been cancelled
@@ -762,7 +759,7 @@
 \def\pktxd@cancels{0}
 
 \newcommand{\pktxd@addcancel}[1]{
-        \edef\pktxd@cancels{#1,\pktxd@cancels}}
+  \edef\pktxd@cancels{#1,\pktxd@cancels}}
 
 %%%% timer offsets
 
@@ -1029,7 +1026,11 @@
   % horizontal diagram
   \ifpktxd@h
   % is the note going up or down?
-  \edef\orient{\if#3s\ifdim#5>0pt u\else d\fi\else\ifdim#5>0pt d\else u\fi\fi}
+  % here we decide that notes sent by A/received by B go down, and others up
+  % we could also make all notes go down (but need to be consistent
+  % with style set by @frame)
+  \edef\orient{\if#3s\ifdim\pos<0pt d\else u\fi\else\ifdim\pos>0pt d\else u\fi\fi}
+  % to account for trans time,
   % a sent if offset to the right, a recv to the left
   \edef\dpos{\if#3s 4mm\else-4mm\fi}
   \if\orient d   % down
