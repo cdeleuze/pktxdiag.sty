@@ -18,6 +18,9 @@
 \usetikzlibrary{decorations.pathmorphing} % for drawing zigzag
 \usetikzlibrary{arrows.meta}              % for arrow styles
 
+% entities have to be drawn below all other elements
+\pgfdeclarelayer{entities}
+\pgfsetlayers{entities,main}
 
 \newcommand{\pktxd@error}[2]{
   \ifpktxd@warnonly\PackageWarning{pktxdiag}{#1}
@@ -233,7 +236,9 @@
   /pktxd/fill/.style={fill=graphicbackground},
   % used for notes
   /pktxd/left note/.style={align=right,left},
-  /pktxd/right note/.style={align=left,right}
+  /pktxd/right note/.style={align=left,right},
+  /pktxd/entities/style/.style={/tikz/.cd,thin},
+  /pktxd/entities/label style/.style={/tikz/.cd,above,align=center}
 }
 
 %% flows
@@ -367,6 +372,8 @@
   \pgfglobalkeys{/pktxd/entities/#1/Tsend/.initial=0cm} % next send time
   \pgfglobalkeys{/pktxd/entities/#1/Trecv/.initial=0cm} % last recv time
   \pgfglobalkeys{/pktxd/entities/#1/Tmax/.initial=0cm}  % max time
+  \pgfglobalkeys{/pktxd/entities/#1/style/.style={/pktxd/entities/style}}
+  \pgfglobalkeys{/pktxd/entities/#1/label style/.style={/pktxd/entities/label style}}
   \pktxd@createtimer{#1}{l}{1}
   \pktxd@createtimer{#1}{l}{2}
   \pktxd@createtimer{#1}{l}{3}
@@ -1332,13 +1339,15 @@
     \pktxd@len=\maxtime
     \advance \pktxd@len by \pktxd@finaldelay
     
+    \begin{pgfonlayer}{entities}
     \pktxd@forallentities {
-      \draw[thin]
+      \draw[/pktxd/entities/\e/style]
            (\pktxd@pos{\e},\pktxd@initialdelay)
-       node[align=center,above]
+       node[/pktxd/entities/\e/label style]
            {\pgfkeysvalueof{/pktxd/entities/\e}}
         -- (\pktxd@pos{\e},-\pktxd@len);
     }
+    \end{pgfonlayer}
 
     % draw later(s)
     \pgfkeys{/pktxd/laters/.get=\laters}
