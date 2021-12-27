@@ -608,6 +608,7 @@
     \pktxd@starttimer{#2}{\align}{\pktxd@delayedid}{\sTrecv}{\pktxd@delayedlen}{\pktxd@delayedlabel}
     \pktxd@letTsend{#2}{\sTrecv}%%%
     \pktxd@addtosend{#2}{\pktxd@delayedlen}
+    \edef\Tsend{\pktxd@Tsend{#2}}
     \pktxd@endtimer{#2}{\align}{\pktxd@delayedid}
   \fi
 
@@ -618,6 +619,7 @@
     \pktxd@starttimer{#2}{\align}{\pktxd@stopid}{\sTrecv}{\pktxd@stoplen}{\pktxd@stoplabel}
     \pktxd@letTsend{#2}{\sTrecv}
     \pktxd@addtosend{#2}{\pktxd@stopdelay}
+    \edef\Tsend{\pktxd@Tsend{#2}}
     \pktxd@canceltimer{#2}{\align}{\pktxd@stopid}{\Tsend}
   \fi
 
