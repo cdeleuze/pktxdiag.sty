@@ -86,9 +86,16 @@
   % (we cannot create them *inside* the env...)
   A/.code=\pgfkeyssetvalue{/pktxd/entities/A}{#1},
   A/.default=A,
+  Apic/.code 2 args={\pgfkeyssetvalue{/pktxd/entities/A/pic}{\includegraphics[#2]{#1}}},
   B/.code=\pgfkeyssetvalue{/pktxd/entities/B}{#1},
-  B/.default=B
+  B/.default=B,
+  Bpic/.code 2 args={\pgfkeyssetvalue{/pktxd/entities/B/pic}{\includegraphics[#2]{#1}}},
+  pic on top/.is if=pktxd@picontop,
+  pic offset/.code=\def\pktxd@picoffset{#1}
 }
+
+\newif\ifpktxd@picontop
+\def\pktxd@picoffset{0mm}
 
 %% transmission time
 
@@ -1230,6 +1237,7 @@
 %% intialize entities
 
 \newcommand{\pktxd@entityname}[2]{\pgfkeysgsetvalue{/pktxd/entities/#1}{#2}}
+\newcommand{\pktxd@entitysetpic}[3]{\pgfkeysgsetvalue{/pktxd/entities/#1/pic}{\includegraphics[#3]{#2}}}
 
 % in two entities mode
 \def\pktxd@initentities{
@@ -1323,6 +1331,7 @@
   \def\frame{\pktxd@frame}%
   \def\pktxd@arrow{\pktxd@arrowv}%
   \def\entityname{\pktxd@entityname}%
+  \def\entitypic{\pktxd@entitysetpic}%
   %
   \pktxd@hfalse%
   \setlength{\pktxd@trans}{0cm}%
@@ -1340,13 +1349,28 @@
     \pktxd@computemaxtime{\pktxd@replydelay}
     \pktxd@len=\maxtime
     \advance \pktxd@len by \pktxd@finaldelay
+
+    \newif\ifpktxd@picdefined
     
     \begin{pgfonlayer}{entities}
     \pktxd@forallentities {
-      \draw[/pktxd/entities/\e/style]
-           (\pktxd@pos{\e},\pktxd@initialdelay)
-       node[/pktxd/entities/\e/label style]
-           {\pgfkeysvalueof{/pktxd/entities/\e}}
+      % not reset to \relax accross envs?
+      \def\myname{\pgfkeysvalueof{/pktxd/entities/\e}}
+      \def\mypic{\pgfkeysvalueof{/pktxd/entities/\e/pic}}
+      \pgfkeysifdefined{/pktxd/entities/\e/pic}
+         {\pktxd@picdefinedtrue}{\pktxd@picdefinedfalse}
+      \def\mylabel{
+        \ifpktxd@picdefined
+        \ifpktxd@picontop  % pic on top of label
+        \mypic\\[\pktxd@picoffset]\myname
+        \else              % label on top of pic
+        \myname\\[\pktxd@picoffset]\mypic
+        \fi
+        \else              % just the label
+        \myname
+        \fi}
+      \draw[/pktxd/entities/\e/style] (\pktxd@pos{\e},\pktxd@initialdelay)
+       node[/pktxd/entities/\e/label style] {\mylabel}
         -- (\pktxd@pos{\e},-\pktxd@len);
     }
     \end{pgfonlayer}
