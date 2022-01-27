@@ -376,9 +376,9 @@
 
 \newcommand{\pktxd@createentity}[1]{
   \xdef\pktxd@entities{#1,\pktxd@entities}
-  \pgfglobalkeys{/pktxd/entities/#1/Tsend/.initial=0cm} % next send time
-  \pgfglobalkeys{/pktxd/entities/#1/Trecv/.initial=0cm} % last recv time
-  \pgfglobalkeys{/pktxd/entities/#1/Tmax/.initial=0cm}  % max time
+  \pgfglobalkeys{/pktxd/entities/#1/ist/next-send/.initial=0cm} % next send time
+  \pgfglobalkeys{/pktxd/entities/#1/ist/last-recv/.initial=0cm} % last recv time
+  \pgfglobalkeys{/pktxd/entities/#1/ist/max/.initial=0cm}  % max time
   \pgfglobalkeys{/pktxd/entities/#1/style/.style={/pktxd/entities/style}}
   \pgfglobalkeys{/pktxd/entities/#1/label style/.style={/pktxd/entities/label style}}
   \pktxd@createtimer{#1}{l}{1}
@@ -393,24 +393,29 @@
 
 %% getting/setting state
 
-\newcommand{\pktxd@pos}  [1]{\pgfkeysvalueof{/pktxd/entities/#1/pos}}
-\newcommand{\pktxd@Tsend}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Tsend}}
-\newcommand{\pktxd@Trecv}[1]{\pgfkeysvalueof{/pktxd/entities/#1/Trecv}}
-\newcommand{\pktxd@Tmax} [1]{\pgfkeysvalueof{/pktxd/entities/#1/Tmax}}
+% where is the entity drawn
+\newcommand{\pktxd@pos}[1]{\pgfkeysvalueof{/pktxd/entities/#1/pos}}
 
-% TODO: need to clean up usage of setvalue vs let
-\newcommand{\pktxd@setTrecv}[2]{\pgfkeysgsetvalue{/pktxd/entities/#1/Trecv}{#2}}
-\newcommand{\pktxd@letTsend}[2]{\global\pgfkeyslet{/pktxd/entities/#1/Tsend}{#2}}
-\newcommand{\pktxd@letTrecv}[2]{\global\pgfkeyslet{/pktxd/entities/#1/Trecv}{#2}}
-\newcommand{\pktxd@letTmax} [2]{\global\pgfkeyslet{/pktxd/entities/#1/Tmax}{#2}}
+% instants are names for time value, stored in an entity
+\newcommand{\pktxd@ist}[2]{\pgfkeysvalueof{/pktxd/entities/#1/ist/#2}}
+\newcommand{\pktxd@sist}[3]{\global\pgfkeyslet{/pktxd/entities/#1/ist/#2}{#3}}
+
+% these defined instants have set/get macros
+\newcommand{\pktxd@Tsend}[1]{\pktxd@ist{#1}{next-send}}
+\newcommand{\pktxd@Trecv}[1]{\pktxd@ist{#1}{last-recv}}
+\newcommand{\pktxd@Tmax} [1]{\pktxd@ist{#1}{max}}
+
+\newcommand{\pktxd@setTsend}[2]{\pktxd@sist{#1}{next-send}{#2}}
+\newcommand{\pktxd@setTrecv}[2]{\pktxd@sist{#1}{last-recv}{#2}}
+\newcommand{\pktxd@setTmax} [2]{\pktxd@sist{#1}{max}{#2}}
 
 \newcommand{\pktxd@addtosend}[2]{
   \pgfmathsetlengthmacro\temp{\pktxd@Tsend{#1}+#2}
-  \global\pgfkeyslet{/pktxd/entities/#1/Tsend}{\temp}}
+  \pktxd@setTsend{#1}{\temp}}
 
 \newcommand{\pktxd@addtorecv}[2]{
   \pgfmathsetlengthmacro\temp{\pktxd@Trecv{#1}+#2}
-  \global\pgfkeyslet{/pktxd/entities/#1/Trecv}{\temp}}
+  \pktxd@setTrecv{#1}{\temp}}
 
 % if the pgfkey is defined in entity dir, use it
 % otherwise use value in default dir
@@ -585,7 +590,7 @@
 
   % update Tmax at sender
   \ifdim\Tsend>\pktxd@Tmax{#2}
-  \pktxd@letTmax{#2}{\Tsend}
+  \pktxd@setTmax{#2}{\Tsend}
   \fi
 
   % which side are timers and send notes on?
@@ -613,7 +618,7 @@
     \pktxd@debug{delayed: len \pktxd@delayedlen ~ label \pktxd@delayedlabel ~ id \pktxd@delayedid}
     \edef\sTrecv{\pktxd@Trecv{#2}} % sender Trecv
     \pktxd@starttimer{#2}{\align}{\pktxd@delayedid}{\sTrecv}{\pktxd@delayedlen}{\pktxd@delayedlabel}
-    \pktxd@letTsend{#2}{\sTrecv}%%%
+    \pktxd@setTsend{#2}{\sTrecv}%%%
     \pktxd@addtosend{#2}{\pktxd@delayedlen}
     \edef\Tsend{\pktxd@Tsend{#2}}
     \pktxd@endtimer{#2}{\align}{\pktxd@delayedid}
@@ -624,7 +629,7 @@
     \pktxd@debug{stop: len \pktxd@stoplen ~ label \pktxd@stoplabel ~delay \pktxd@stopdelay ~ id \pktxd@stopid}
     \edef\sTrecv{\pktxd@Trecv{#2}} % sender Trecv
     \pktxd@starttimer{#2}{\align}{\pktxd@stopid}{\sTrecv}{\pktxd@stoplen}{\pktxd@stoplabel}
-    \pktxd@letTsend{#2}{\sTrecv}
+    \pktxd@setTsend{#2}{\sTrecv}
     \pktxd@addtosend{#2}{\pktxd@stopdelay}
     \edef\Tsend{\pktxd@Tsend{#2}}
     \pktxd@canceltimer{#2}{\align}{\pktxd@stopid}{\Tsend}
@@ -681,19 +686,19 @@
 
   % commit time updates
   \pgfmathsetlengthmacro\Tsend{\Tsend+\pktxd@trans+\pktxd@senddelay}
-  \pktxd@letTsend{#2}{\Tsend}
-  \pktxd@letTrecv{#3}{\Trecv}
-
+  \pktxd@setTsend{#2}{\Tsend}
+  \pktxd@setTrecv{#3}{\Trecv}
+  
   % update Tmax at receiver
   % (Tcancel set above to Trecv + pktxd@latev if late)
   \ifdim\Tcancel>\pktxd@Tmax{#3}
-  \pktxd@letTmax{#3}{\Tcancel}
+  \pktxd@setTmax{#3}{\Tcancel}
   \fi
 
   % if not full duplex, update Tsend at receiver
   \ifpktxd@sync
     \pgfmathsetlengthmacro\Tsndr{\Trecv+\pktxd@replydelay}
-    \pktxd@letTsend{#3}{\Tsndr}
+    \pktxd@setTsend{#3}{\Tsndr}
   \fi
 
   % cancel[i] keys have populated @cancels
@@ -1160,7 +1165,7 @@
 
 \newcommand{\XwaitY}[2]{
   \edef\temp{\pktxd@Trecv{#1}}
-  \pktxd@letTsend{#1}{\temp}
+  \pktxd@setTsend{#1}{\temp}
   \pktxd@debug{Xwait temp=\temp Tsend=\pktxd@Tsend{#1}}
   \pktxd@addtosend{#1}{\pktxd@replydelay}}
 
@@ -1171,9 +1176,9 @@
   \edef\timerend{\pktxd@gettimerend{#1}{#2}{#3}}
   \edef\Tsend{\pktxd@Tsend{#1}}
   \edef\Tmax{\pktxd@Tmax{#1}}
-  \ifdim \Tsend<\timerend\pktxd@letTsend{#1}{\timerend}\fi
+  \ifdim \Tsend<\timerend\pktxd@setTsend{#1}{\timerend}\fi
   \pgfmathsetlengthmacro\timerbis{\timerend-\pktxd@finaldelay}
-  \ifdim \Tmax<\timerbis\pktxd@letTmax{#1}{\timerbis}\fi
+  \ifdim \Tmax<\timerbis\pktxd@setTmax{#1}{\timerbis}\fi
 }
 
 
@@ -1190,11 +1195,13 @@
 
 % arg is name set in the late frame ('name' key, defaults to $$lateframe)
 \newcommand{\Awaitlate}[1][$$lateframe]{
-  \pktxd@setTrecv{A}{\pgfkeysvalueof{/pktxd/values/A/#1}}
+  \edef\pktxd@trecv{\pgfkeysvalueof{/pktxd/values/A/#1}}
+  \pktxd@setTrecv{A}{\pktxd@trecv}
   \AwaitB}
 
 \newcommand{\Bwaitlate}[1][$$lateframe]{
-  \pktxd@setTrecv{B}{\pgfkeysvalueof{/pktxd/values/B/#1}}
+  \edef\pktxd@trecv{\pgfkeysvalueof{/pktxd/values/B/#1}}
+  \pktxd@setTrecv{B}{\pktxd@trecv}
   \BwaitA}
   
 % A,B waits for its current timer to expire
@@ -1290,7 +1297,7 @@
 \newcommand{\pktxd@computemaxtime}[1]{
   \def\maxtime{0pt}
   \pktxd@forallentities{
-    \edef\tmax{\pgfkeysvalueof{/pktxd/entities/\e/Tmax}}
+    \edef\tmax{\pktxd@Tmax{\e}}
     \ifdim \maxtime<\tmax \edef\maxtime{\tmax}\fi
   }
   \pktxd@debug{final maxtime=\maxtime}
