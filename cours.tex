@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[a4paper]{article}
 \usepackage[]{pktxdiag}
 \usepackage[francais]{babel}
 \usepackage[T1]{fontenc}
@@ -421,7 +421,7 @@
 \subsection{TFTP}
 
 \begin{figure}[H]
-\pgfkeys{/pktxd/A=C,/pktxd/B=S,/pktxd/width=2.7cm}
+\pgfkeys{/pktxd/A=C,/pktxd/B=S,/pktxd/width=2.6cm}
 \subfloat[Tentative de chargement d'un fichier inexistant]{
 \begin{pktxdiag}[]
   \AB{RRQ(fichier)}
@@ -435,7 +435,7 @@
   \AB{ACK1}
                      \BA{DATA2 (512)}
   \AB{ACK2}
-                     \BA[snote={< 512 octets}]{DATA3 (60)}
+                     \BA[snote={\footnotesize < 512 octets}]{DATA3 (60)}
   \AB{ACK3}
 \end{pktxdiag}}
 \hfill

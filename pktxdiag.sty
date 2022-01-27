@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}[1994/06/01]
-\ProvidesPackage{pktxdiag}[2021/12/12 Tikz add-on for packet exchange diagrams]
+\ProvidesPackage{pktxdiag}[2022/01/27 Tikz add-on for packet exchange diagrams]
 
 %% package setup
 
@@ -237,8 +237,8 @@
 % .style since we fail to define several keys in a \if
 
 \pgfkeys{
-  % used for left timers when pktxd@bottomuptrue
-  /pktxd/reverse/.style={/tikz/rotate=180,/tikz/above},
+  % used internally for left timers when pktxd@bottomuptrue
+  /pktxd/x/reverse/.style={/tikz/rotate=180,/tikz/above},
   % used for timer on arrow
   /pktxd/fill/.style={fill=graphicbackground},
   % used for notes
@@ -476,6 +476,7 @@
 
 % TODO: could error on born and (late or lost or bad)
 % TODO: should \newdimen's be global?
+\newdimen\pktxd@len
 
 \newcommand{\pktxd@arrowv}[5][]{
   \def\lstyle{/pktxd/styles/current label style}
@@ -484,7 +485,6 @@
   
   % tex does not honor arithmetic priorities... pgfmath does.
   % \pgfmathsetlength{\pktxd@len}{#3-#2}
-  \newdimen\pktxd@len
   \pktxd@len=#3
   \advance \pktxd@len by -#2
   
@@ -906,11 +906,11 @@
     %% the timer label is placed above except if:
     %% - it's a left timer and @timerleftbelow is set (placed below)
     %% - it's a left timer and @timerleftbottomup is set (placed above +
-    %% rotate).  We use /pktxd/reverse in this case cause we don't know
+    %% rotate).  We use /pktxd/x/reverse in this case cause we don't know
     %% how to pass two keys in a single macro... -> expandafter?
     \if\side r\def\above{above}\else
     \ifpktxd@timerleftbelow\def\above{below}\else
-    \ifpktxd@timerleftbottomup\def\above{/pktxd/reverse}\else
+    \ifpktxd@timerleftbottomup\def\above{/pktxd/x/reverse}\else
     \def\above{above}\fi
     \fi\fi
   \fi\fi
@@ -1326,8 +1326,9 @@
     \pktxd@flushtimer{\e}{r}{2}
     \pktxd@flushtimer{\e}{r}{3}
     \pktxd@flushtimer{\e}{r}{4}
-    }
   }
+}
+
 
 %% user environments
 
@@ -1435,3 +1436,9 @@
   % no need to remove names : /pktxd/A|B/.code sets them in env scope
   % (contrary to @initmentities)
 \end{tikzpicture}}
+
+\pktxd@resettimeroffsets
+
+% Local Variables:
+% outline-regexp: "%%+"
+% End:
