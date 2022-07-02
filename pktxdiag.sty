@@ -412,7 +412,11 @@
 
 \newcommand{\pktxd@addtosend}[2]{
   \pgfmathsetlengthmacro\temp{\pktxd@Tsend{#1}+#2}
-  \pktxd@setTsend{#1}{\temp}}
+  \pktxd@setTsend{#1}{\temp}
+  \ifdim\temp>\pktxd@Tmax{#1}
+  \pktxd@setTmax{#1}{\temp}
+  \fi
+}
 
 \newcommand{\pktxd@addtorecv}[2]{
   \pgfmathsetlengthmacro\temp{\pktxd@Trecv{#1}+#2}
