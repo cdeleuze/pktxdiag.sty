@@ -377,6 +377,7 @@
 \newcommand{\pktxd@createentity}[1]{
   \xdef\pktxd@entities{#1,\pktxd@entities}
   \pgfglobalkeys{/pktxd/entities/#1/ist/next-send/.initial=0cm} % next send time
+  \pgfglobalkeys{/pktxd/entities/#1/ist/last-send/.initial=0cm} % last send time
   \pgfglobalkeys{/pktxd/entities/#1/ist/last-recv/.initial=0cm} % last recv time
   \pgfglobalkeys{/pktxd/entities/#1/ist/max/.initial=0cm}  % max time
   \pgfglobalkeys{/pktxd/entities/#1/style/.style={/pktxd/entities/style}}
@@ -685,6 +686,7 @@
   \fi
 
   % commit time updates
+  \pktxd@sist{#2}{last-send}{\Tsend}
   \pgfmathsetlengthmacro\Tsend{\Tsend+\pktxd@trans+\pktxd@senddelay}
   \pktxd@setTsend{#2}{\Tsend}
   \pktxd@setTrecv{#3}{\Trecv}
