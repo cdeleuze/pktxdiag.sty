@@ -1265,8 +1265,8 @@
 
 %% intialize entities
 
-\newcommand{\pktxd@entityname}[2]{\pgfkeysgsetvalue{/pktxd/entities/#1}{#2}}
-\newcommand{\pktxd@entitysetpic}[3]{\pgfkeysgsetvalue{/pktxd/entities/#1/pic}{\includegraphics[#3]{#2}}}
+\newcommand{\pktxd@entityname}[2]{\pgfkeyssetvalue{/pktxd/entities/#1}{#2}}
+\newcommand{\pktxd@entitysetpic}[3]{\pgfkeyssetvalue{/pktxd/entities/#1/pic}{\includegraphics[#3]{#2}}}
 
 % in two entities mode
 \def\pktxd@initentities{
