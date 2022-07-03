@@ -128,8 +128,6 @@ will be \emph{piggybacked} on the data frame.
 Currently four timers may be run simultaneously on each side.
 This may be increased in future versions.
 
-\index{command!Awaittimer}
-\index{command!Bwaittimer}
 \index{frame option!timed2}
 \index{frame option!delayed2}
 \index{frame option!stop2}
@@ -277,6 +275,7 @@ be considered a bug).
 \end{codeexample}
 
 \subsection{Full duplex exchanges}
+\label{sec:full-duplex}
 
 By default, exchanges are in half duplex mode.  When a frame is sent,
 the next sending time is advanced by \texttt{send delay}.  If a frame
@@ -324,12 +323,15 @@ label styles.
 
 \section{Decorations}
 
-\subsection{Entities names}
+\subsection{Entities names and pictures}
+
+Entities names can be provided with the \texttt{A} and \texttt{B}
+keys.
 
 \index{env option!A}
 \index{env option!B}
 
-\begin{minipage}{.6\linewidth}
+\begin{minipage}{.5\linewidth}
 \begin{codeexample}[]
   \begin{pktxdiag}[A,B]
     \AB{to B}
@@ -337,9 +339,46 @@ label styles.
   \end{pktxdiag}
 \end{codeexample}
 \end{minipage}
-\begin{minipage}{.4\linewidth}
+\begin{minipage}{.5\linewidth}
 \begin{codeexample}[]
   \begin{pktxdiag}[A=client,B=server]
+    \AB{request}
+    \BA{reply}
+  \end{pktxdiag}
+\end{codeexample}
+\end{minipage}
+
+A picture can also be set with \texttt{Apic}/\texttt{Bpic}.  It uses
+the \texttt{graphicx} package.  Arguments will be provided to
+\verb+\includegraphics+ (first argument is the file name, second is
+the list of options).
+
+By default, the name (if provided) is above the picture, key
+\texttt{pic on top} reverses that. \texttt{pic offset} sets the
+vertical space between name and picture.
+
+\index{env option!Apic}
+\index{env option!Bpic}
+\index{env option!pic on top}
+\index{env option!pic offset}
+
+\begin{minipage}{.5\linewidth}
+\begin{codeexample}[]
+\begin{pktxdiag}[
+  A=laptop, Apic={laptop}{height=1cm},
+  B=fileserver, Bpic={fileserver}{height=1cm},
+  pic offset=2mm]
+    \AB{request}
+    \BA{reply}
+  \end{pktxdiag}
+\end{codeexample}
+\end{minipage}
+\begin{minipage}{.5\linewidth}
+\begin{codeexample}[]
+\begin{pktxdiag}[
+  A=laptop, Apic={laptop}{height=1cm},
+  B=fileserver, Bpic={fileserver}{height=1cm},
+  pic on top]
     \AB{request}
     \BA{reply}
   \end{pktxdiag}
@@ -575,7 +614,7 @@ action and any frame send that occurs after it.
 
 % TODO - show action time offset
 
-\section{Flows, styles, and filtering}
+\section{Flows}
 
 \subsection{Flows}
 
@@ -696,11 +735,48 @@ The default style for arrows and labels are empty.
 TODO interactions between styles and label styles need to be clarified
 and possibly cleaned-up
 
+\section{Styles}
+
+\subsection{Frame styles}
+
+\subsection{Note styles}
+
+\subsection{Entity styles}
+
+Entities are graphically represented as a vertical time line
+surrounded by a text label, whose styles are set by \texttt{.style}
+environment keys \texttt{entities/style} and \texttt{entities/label
+  style}.
+
+\begin{codeexample}[width=5cm]
+\begin{pktxdiag}[A,B,
+  entities/style/.style={ultra thick, dashed},
+  entities/label style/.append style={scale=1.5,orange}]
+
+  \AB{DATA 0}
+  \BA{ACK 1}
+\end{pktxdiag}
+\end{codeexample}
+
+Each entity actually has a style key that initially points to these
+keys (which can thus be used to change the default styles), but they
+can be redefined to change the style of a given entity.  This can be usefull in diagrams with multiple entities, see section \ref{sec:multipleentities}.
+
+\index{env option!entities/style}
+\index{env option!entities/label style}
+
+\section{Local and global settings}
+
+TODO
+
+% \pgfkeys{/pktxd/state offset=5mm,/pktxd/timer offset=2mm}
+
+
 \section{Multiple entities}
 \label{sec:multipleentities}
 
-All the previous examples where conversations involving only two
-entities.  Multiple (more than two) entities can be used.
+All the previous examples involved only two entities.  Multiple (ie
+more than two) entities can be used.
 
 The \texttt{entities} environment key \index{env option!entities}
 gives the list of entities, each possibly along with its full name and
@@ -754,6 +830,45 @@ versions of a more general command:
 \index{command!XwaitY}
 \index{command!Xpause}
 
+Entity pictures can be defined by the \texttt{entitypic}
+command. \index{command!entitypic} The following figures also shows
+the use of a per entity style.  Note that the per entity style keys
+must occur after the \texttt{entities} key (so that the entities exist
+at the time the key is processed).
+
+\begin{codeexample}[]
+\begin{pktxdiag}[
+  entities={L/laptop,R/router,F/firewall,S/fileserver},
+  pic offset=1mm,
+  reply delay=0mm,
+  entities/F/style/.append style={decorate,decoration=zigzag}
+  ]
+  
+  \entitypic{L}{laptop}{height=1cm}
+  \entitypic{R}{router}{height=1cm}
+  \entitypic{F}{firewall}{height=1cm}
+  \entitypic{S}{fileserver}{height=1cm}
+
+  \frame{L}{F}{request file access}
+  \frame[dotted,prop=2.5mm]{F}{S}{}
+  \frame{F}{L}{reject (unauth)}
+\end{pktxdiag}
+\end{codeexample}
+
+
+\begin{codeexample}[]
+\begin{pktxdiag}[width=4cm, entities={C/Client, P/Proxy, S/Server},
+  % set the default style for entities
+  entities/style/.style={ultra thick,blue},
+  entities/label style/.append style={scale=1.1,above=2mm,black},
+  % set the style for the Proxy entity
+  entities/P/style/.style={thin,dashed,dash pattern=on 5pt off 4pt},
+  entities/P/label style/.style={scale=0.8, above=0mm,gray}]
+  
+  \frame{C}{P}{GET index.html}
+  \frame{P}{S}{GET index.html}
+\end{pktxdiag}
+\end{codeexample}
 
 \section{Horizontal diagrams}
 
@@ -962,14 +1077,15 @@ features include: late frames, laters, states and actions.
 \label{gallery:sipsession}
 
 \begin{codeexample}[]
+
 \begin{pktxdiag}[width=4cm,reply delay=2mm,send delay=2mm,
   entities={A/bsd-pc.cisco.com,B/cisco.com proxy,
-    C/princeton.edu proxy,D/llp-ph.cs.princeton.edu}]
+    C/princeton.edu proxy,D/llp-ph.cs.princeton.edu},
+  label style+={sloped=false}]
 
 \definestyle{big}{latex-latex,line width=3mm}
-\definestyle{def}{sloped=false}
 \setflowstyle{big}{big}
-\setflowlabelstyle{main}{def}
+
 \frame{A}{B}{invite}
    \frame{B}{C}{invite}
       \frame{C}{D}{invite}
