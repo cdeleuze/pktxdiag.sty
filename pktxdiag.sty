@@ -482,6 +482,7 @@
 % TODO: could error on born and (late or lost or bad)
 % TODO: should \newdimen's be global?
 \newdimen\pktxd@len
+\newif\ifpktxd@centerlabel
 
 \newcommand{\pktxd@arrowv}[5][]{
   \def\lstyle{/pktxd/styles/current label style}
@@ -495,29 +496,39 @@
   
   \pgfmathsetmacro{\sign}{#2<#3?1:-1}
 
+  % we put label at center of arrow if in full duplex or lost frame
+  \pktxd@centerlabelfalse
+  \ifpktxd@sync\pktxd@centerlabeltrue\else
+  \ifpktxd@lost\pktxd@centerlabeltrue\fi\fi
+
   \begin{scope}[/pktxd/styles/.cd,current frame style,#1]
     % iflost, draw only half way
     \ifpktxd@lost\def\lost{2}\else\def\lost{1}\fi
+
     % ifbad, draw a zigzag
     \ifpktxd@bad
        % can't be both bad and late
        \ifpktxd@late \pktxd@error{Frame both bad and late}
                                  {Sorry, a frame currently can't be both bad and late.}
-       \else
+       \else % @late
 
+       % first segment, straight
        \draw (#2,-#4) --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
+       \ifpktxd@centerlabel\else
+       node[align=center,near end,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}}\fi
+       % second segment, zigzag
+       decorate[decoration=zigzag,segment length=2mm]
+       {--++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
+         \ifpktxd@centerlabel
+         node[align=center,midway,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}}\fi}
+       % third segment, straight
+       --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3);
+       \ifpktxd@lost\ifpktxd@crosslost \draw[-]
+       (\sign*2mm,-#4-\pktxd@prop/\lost)node{\Large $\times$}\fi\fi;
+       \fi % @late
 
-                 \ifpktxd@sync\else node[align=center,near end,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}}\fi
-    
-                 decorate[decoration=zigzag,segment length=2mm]
-                 {--++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3)
-                   \ifpktxd@sync node[align=center,midway,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}}\fi}
+    \else % @bad
 
-                 --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3);
-                   \ifpktxd@lost\ifpktxd@crosslost \draw[-]
-                   (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
-       \fi
-    \else
     % iflate, use control points (lost not accepted)
     \ifpktxd@late
        \ifpktxd@lost \pktxd@error{Frame both late and lost}
@@ -528,8 +539,10 @@
        .. (#3, -#4-\pktxd@latev-\pktxd@prop)
                    node[align=center,/pktxd/styles/.cd,\lstyle,pos=0.1]{\pktxd@nodelabel{#5}};
 
-       \fi
-    \else
+       \fi % @lost
+
+    \else % @late
+
     % born frame, appearing at receiver
     \ifpktxd@born
        \draw (#2+\pktxd@len/2,-#4-\pktxd@prop/2) -- ++(\pktxd@len/2,-\pktxd@prop/2)
@@ -537,16 +550,19 @@
        \newdimen\pktxd@bornlen
        \pgfmathsetlength{\pktxd@bornlen}{\pktxd@prop/\pktxd@len*3mm*\sign}
        \draw [dotted,-](#2+\pktxd@len/2,-#4-\pktxd@prop/2) -- ++(-3mm*\sign,\pktxd@bornlen);
-    \else
+
+    \else % @born
+
     % not bad, not late, nor born
-       \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
-               node[align=center,\ifpktxd@sync midway\else near start\fi,
+    \def\pktxd@align{\ifpktxd@centerlabel midway\else near start\fi}
+    \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
+               node[align=center,\pktxd@align,
                /pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
        \ifpktxd@lost\ifpktxd@crosslost \draw[-]
-                   (\sign*2mm,-#4-\pktxd@prop/2)node{\Large $\times$}\fi\fi;
-    \fi
-    \fi
-    \fi
+                   (\sign*2mm,-#4-\pktxd@prop/\lost)node{\Large $\times$}\fi\fi;
+    \fi % @born
+    \fi % @late
+    \fi % @bad
   \end{scope}
 }
 
