@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}[1994/06/01]
-\ProvidesPackage{pktxdiag}[2022/01/27 Tikz add-on for packet exchange diagrams]
+\ProvidesPackage{pktxdiag}[2024/03/30 Drawing packet exchange diagrams]
 
 %% package setup
 
@@ -17,10 +17,11 @@
 \RequirePackage{tikz}
 \usetikzlibrary{decorations.pathmorphing} % for drawing zigzag
 \usetikzlibrary{arrows.meta}              % for arrow styles
+\usetikzlibrary{backgrounds}
 
 % entities have to be drawn below all other elements
 \pgfdeclarelayer{entities}
-\pgfsetlayers{entities,main}
+\pgfsetlayers{background,entities,main}
 
 \newcommand{\pktxd@error}[2]{
   \ifpktxd@warnonly\PackageWarning{pktxdiag}{#1}
@@ -30,8 +31,7 @@
 \newcommand{\pktxd@debug}[1]{
   \ifpktxd@debug\typeout{pktxd@debug: #1}\fi}
 
-\ifpktxd@debug\colorlet{graphicbackground}{orange}
-\else\colorlet{graphicbackground}{white}\fi
+\def\pktxd@bgcolor{white}
 
 % multiple entities mode?
 % false globaly, set to true in env scope by 'entities' key
@@ -45,10 +45,11 @@
   %
   debug/.is if=pktxd@debug,
   warn only/.is if=pktxd@warnonly,
+  background/.code=\def\pktxd@bgcolor{#1},
   %
   prop/.default=1cm,
   prop/.code=\setlength{\pktxd@prop}{#1},
-  % 
+  %
   cross for lost/.is if=pktxd@crosslost,
   snoteoffset/.code=\def\pktxd@snoteoffset{#1},
   snoteoffset/.default=0,
@@ -240,7 +241,7 @@
   % used internally for left timers when pktxd@bottomuptrue
   /pktxd/x/reverse/.style={/tikz/rotate=180,/tikz/above},
   % used for timer on arrow
-  /pktxd/fill/.style={fill=graphicbackground},
+  /pktxd/fill/.style={fill=\pktxd@bgcolor},
   % used for notes
   /pktxd/left note/.style={align=right,left},
   /pktxd/right note/.style={align=left,right},
@@ -1157,7 +1158,7 @@
 % warning: uses \tpos (dynamic scope?)
 \newcommand{\pktxd@drawlateronetimer}[3]{
   \pktxd@settimerhpos{#1}{#2}{#3}{\hpos}
-  \draw[graphicbackground,dashed] (\hpos,\tpos) -- ++(0,\pktxd@laterdashedlen);}
+  \draw[\pktxd@bgcolor,dashed] (\hpos,\tpos) -- ++(0,\pktxd@laterdashedlen);}
 
 % draw one later: erase part of the vertical lines
 % starttime len
@@ -1166,8 +1167,8 @@
 
   % vertical lines
   \ifpktxd@h\else
-  \draw[graphicbackground,dashed](\pktxd@pos{A},\tpos) -- ++(0,\pktxd@laterdashedlen);
-  \draw[graphicbackground,dashed](\pktxd@pos{B},\tpos) -- ++(0,\pktxd@laterdashedlen);
+  \draw[\pktxd@bgcolor,dashed](\pktxd@pos{A},\tpos) -- ++(0,\pktxd@laterdashedlen);
+  \draw[\pktxd@bgcolor,dashed](\pktxd@pos{B},\tpos) -- ++(0,\pktxd@laterdashedlen);
   \fi
 
   % timer lines
@@ -1367,9 +1368,12 @@
   \setlength{\pktxd@trans}{0cm}%
   % reset to default values, env keys may then change them
   \pktxd@resettimeroffsets%
-  \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
-  \ifpktxd@mmode\else\pktxd@initentities\fi
-}
+  \begin{tikzpicture}[tight background,
+    background rectangle/.style={fill=\pktxd@bgcolor},
+    show background rectangle,
+    /pktxd/.cd,#1]\sffamily
+    \ifpktxd@mmode\else\pktxd@initentities\fi
+  }
   {
     % finish drawing all timers
     % this also moves Tsend to end of timer if needed
@@ -1434,7 +1438,10 @@
   \def\pktxd@width{1cm}%
   \setlength{\pktxd@prop}{3mm}%
   \pktxd@resettimeroffsets%
-  \begin{tikzpicture}[/pktxd/.cd,#1]\sffamily
+  \begin{tikzpicture}[tight background,
+    background rectangle/.style={fill=\pktxd@bgcolor},
+    show background rectangle,
+    /pktxd/.cd,#1]\sffamily
   \ifpktxd@mmode
   \PackageError{pktxdiag}{Multi-entities mode not supported in h
     diagrams}{Multi-entities mode was triggered by use of 'entities'

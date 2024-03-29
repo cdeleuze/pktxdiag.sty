@@ -7,6 +7,7 @@
 \usepackage{subfig}
 \input{pgfmanual-en-macros}
 \usepackage{makeidx}
+\usepackage{hyperref}
 
 \title{\texttt{pktxdiag.sty}\\ A TikZ-based \LaTeX{} package\\ for
   drawing packet exchange diagrams}
@@ -21,6 +22,9 @@
 \newpage
 \setlength{\parindent}{0mm}
 \setlength{\parskip}{1mm}
+
+% for pgfmanual-en-macros
+\pgfkeys{/pktxd/background=graphicbackground}
 
 %\newcommand{\options}[1][options]{\opt{\oarg{#1}}}
 
@@ -606,6 +610,22 @@ colors, line width, arrow tip shape etc.
 
 % TODO: how to change label graphics attributes?
 
+The background color (default \texttt{white}, but not in this very
+document) can be set with the \texttt{background} env
+option.\index{env option!background}
+
+\begin{codeexample}[width=5cm]
+  \begin{pktxdiag}[background=green!15]
+    \AB[thin]{DATA}
+    \BA[dashed,blue,-Latex]{ACK}
+    \AB[ultra thick,yellow,text=red,
+        -{Stealth[length=2.5mm,inset=0pt]}]{OK !}
+  \end{pktxdiag}
+\end{codeexample}
+
+
+
+
 \subsection{Actions and states}
 
 Actions and states are another kind of annotations, not directly
@@ -1165,7 +1185,11 @@ document class.  If this is the content of file \texttt{example1.tex}:
 create \texttt{example1.png}.  The conversion to PNG is done with
 ImageMagick's \texttt{convert} tool.  Other conversions can be
 performed, see the documentation of the \texttt{standalone} document
-class.
+class.\footnote{Please note that on modern systems, you often need to
+  allow for such conversion by editing
+  \texttt{/etc/Image-Magick-6/policy.xml} to change
+  \verb|<policy domain="coder" rights="none" pattern="PDF" />| to
+  \verb|<policy domain="coder" rights="read" pattern="PDF" />|.}
 
 Several pictures can be produced by giving the \texttt{multi} option
 to \texttt{standalone}.  File \texttt{example2.tex} below will create
@@ -1185,12 +1209,6 @@ files \texttt{example2-0.png} and \texttt{example2-1.png}.
    \end{pktxdiag}
  \end{document}
 \end{verbatim}
-
-%TODO: also need -alpha off
-% convert={density=100,command=\unexpanded{{\convertexe\space -density \density\space \infile\space -alpha off \outfile}}}
-%do convert manually
-
-%convert -alpha off -density 100 file.pdf file.png
 
 \section{Debugging}
 
