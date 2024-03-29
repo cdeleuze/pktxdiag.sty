@@ -21,7 +21,7 @@
 \pgfkeys{/pktxd/timers=left bottom up}
 
 
-\section{NE321/324}
+\section{NE321/324/424}
 
 \subsection{Stop and wait}
 
@@ -329,9 +329,9 @@
 
 \begin{figure}[H]
   \centering
-  \begin{pktxdiag}[prop=15mm,width=4cm]
+  \begin{pktxdiag}[prop=15mm,width=4cm,full duplex]
     \AB{D0}
-    \fullduplex
+    \BwaitA
     \BA{A1}
     \AB{D1}
     \BA{A2}
@@ -705,6 +705,80 @@
 \end{pktxdiag}
 }
 
+\section{NE323}
+
+\def\capturev{
+  \NoAutoSpaceBeforeFDP
+  \AB[fid=o,snote={\footnotesize 1}]{SYN seq=0}
+  \BA[fid=o,snote={\footnotesize 2}]{SYN-ACK seq=0 ack=1}
+  \AB[fid=o,snote={\footnotesize 3}]{ACK ack=1}
+  \AB[fid=t1,snote={\footnotesize 4}]{DATA(22) seq=1}
+  \BA[fid=t1,snote={\footnotesize 5}]{ACK ack=23}
+  \BA[fid=t2,snote={\footnotesize 6}]{DATA(12) seq=1}
+  \AB[fid=t2,snote={\footnotesize 7}]{ACK ack=13}
+  \AB[fid=c,snote={\footnotesize 8}]{FIN seq=23}
+  \BA[fid=c,snote={\footnotesize 9}]{FIN-ACK seq=13 ack=24}
+  \AB[fid=c,snote={\footnotesize 10}]{ACK ack=14}
+}
+
+\begin{figure}[H]  \begin{pktxdiag}[width=5cm,prop=3mm,A=192.168.0.1:1234,B=192.168.3.129:6666,snoteoffset=0.2mm]
+    \capturev
+\end{pktxdiag}
+\end{figure}
+
+\begin{figure}[H]  \begin{pktxdiag}[fade=t1,fade=t2,fade=c,width=5cm,prop=3mm,A=192.168.0.1:1234,B=192.168.3.129:6666,snoteoffset=0.2mm]
+    \capturev
+\end{pktxdiag}
+\end{figure}
+
+% échange
+\begin{figure}[H]  \begin{pktxdiag}[fade=o,fade=c,width=5cm,prop=3mm,A=192.168.0.1:1234,B=192.168.3.129:6666,snoteoffset=0.2mm]
+    \capturev
+\end{pktxdiag}
+\end{figure}
+
+% fermeture
+\begin{figure}[H]  \begin{pktxdiag}[fade=o,fade=t1,fade=t2,width=5cm,prop=3mm,A=192.168.0.1:1234,B=192.168.3.129:6666,snoteoffset=0.2mm]
+    \capturev
+\end{pktxdiag}
+\end{figure}
+
+% détails : l'ouverture
+\begin{figure}[H]
+  \begin{pktxdiag}[ignore=t1,ignore=t2,ignore=c,width=5cm,prop=3mm,A=192.168.0.1:1234,B=192.168.3.129:6666,snoteoffset=0.2mm]
+    \capturev
+\end{pktxdiag}
+\end{figure}
+
+% détails : l'échange de données
+\begin{figure}[H]
+  \begin{pktxdiag}[ignore=o,ignore=c,width=5cm,prop=3mm,A=192.168.0.1:1234,B=192.168.3.129:6666,snoteoffset=0.2mm]
+    \capturev
+\end{pktxdiag}
+\end{figure}
+
+% l'échange de données, partie 1
+\begin{figure}[H]
+  \begin{pktxdiag}[ignore=o,ignore=c,fade=t2,width=5cm,prop=3mm,A=192.168.0.1:1234,B=192.168.3.129:6666,snoteoffset=0.2mm]
+    \capturev
+\end{pktxdiag}
+\end{figure}
+
+% l'échange de données, partie 2
+\begin{figure}[H]
+  \begin{pktxdiag}[ignore=o,ignore=c,fade=t1,width=5cm,prop=3mm,A=192.168.0.1:1234,B=192.168.3.129:6666,snoteoffset=0.2mm]
+    \capturev
+\end{pktxdiag}
+\end{figure}
+
+% détails la fermeture
+\begin{figure}[H]
+  \begin{pktxdiag}[ignore=o,ignore=t1,ignore=t2,width=5cm,prop=3mm,A=192.168.0.1:1234,B=192.168.3.129:6666,snoteoffset=0.2mm]
+    \capturev
+\end{pktxdiag}
+\end{figure}
+
+
 \section{NE571}
 
 \subsection{HTTP}
@@ -811,6 +885,89 @@
 \frame{C}{S}{GET ip10.0.0.1.example.com/image}
 \frame{S}{C}{200 image}
 \end{pktxdiag}
+
+
+\subsection{Ouverture de connexion TCP}
+
+TODO
+
+\subsection{SYN flooding}
+
+TODO
+
+
+\subsection{Protection des serveurs}
+
+\begin{figure}[H]
+  \begin{pktxdiag}[width=4cm,entities={C,Sw,S},reply delay=2mm,prop=4mm]
+    \frame{C}{Sw}{SYN}
+    \frame{Sw}{C}{spoofed SYN-ACK}
+    \frame{C}{Sw}{ACK}
+    \frame{Sw}{S}{spoofed SYN}
+    \frame{S}{Sw}{SYN-ACK}
+    \frame{Sw}{S}{spoofed ACK}
+    \Xpause[1.5cm]{C}
+    \frame{C}{Sw}{}
+    \frame{Sw}{S}{}
+\end{pktxdiag}
+\caption{SYN-ACK spoofing}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{pktxdiag}[width=4cm,entities={C,Sw,S},reply delay=0mm,prop=4mm]
+    \definestyle{st}{midway}
+    \setflowlabelstyle{main}{st}
+    \fullduplex
+    \frame{C}{Sw}{SYN}
+    \XwaitY{Sw}{}
+    \frame{Sw}{S}{}
+    \XwaitY{S}{}
+    \Xpause[1mm]{S}
+    \frame{S}{Sw}{}
+    \XwaitY{Sw}{}
+    \frame{Sw}{C}{SYN-ACK}
+    \XwaitY{Sw}{}
+    \Xpause[1mm]{Sw}
+    \frame{Sw}{S}{spoofed ACK}
+    \XwaitY{C}{}
+    \Xpause[1mm]{C}
+    \frame{C}{Sw}{ACK}
+    \XwaitY{Sw}{}
+    \frame{Sw}{S}{}
+\end{pktxdiag}
+\caption{ACK spoofing -- légitime}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{pktxdiag}[width=4cm,entities={C,Sw,S},reply delay=0mm,prop=4mm]
+    \frame{C}{Sw}{SYN}
+    \frame{Sw}{S}{}
+    \frame{S}{Sw}{}
+    \frame{Sw}{C}{SYN-ACK}
+    \frame{Sw}{S}{spoofed ACK}
+    \frame{C}{Sw}{ACK}
+    \frame{Sw}{S}{}
+\end{pktxdiag}
+\caption{ACK spoofing -- légitime}
+\end{figure}
+
+TODO ACK spoofing (two diagrams)
+
+\subsection{Démarrage lent TCP}
+
+\begin{figure}[H]
+\begin{pktxdiag}[A=C,B=S,reply delay=2mm,send delay=4mm]
+  \AB{SYN}
+  \BA{SYN-ACK}
+  \AB{ACK + req1}
+  \BA{ACK}
+  \AB{req2}
+  \BA{ACK + rep1}
+  \AB{ACK}
+  \BA{req2}
+  \BA{rep3}
+\end{pktxdiag}
+\end{figure}
 
 \end{document}
 

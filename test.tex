@@ -5,8 +5,11 @@
 \usepackage[warnonly]{pktxdiag}
 
 \begin{document}
+\tableofcontents
 
 \def\rotate{\pgfkeys{/tikz/rotate=90,/tikz/transform shape}}
+
+\section{Nawak}
 
 \def\test{
   \AB{DATA1}
@@ -242,7 +245,8 @@
 \end{hpktxdiag}
 \vfill
 
-\subsubsection*{ACK timers}
+\section{Timers}
+\subsection{ACK timers}
 
 \begin{pktxdiag}[A,B]
   \testacktimer
@@ -284,7 +288,7 @@
 \end{hpktxdiag}
 %\vfill
 
-\subsubsection*{Timers}
+\subsection{Timers}
 
 \begin{pktxdiag}[]
 \testx
@@ -305,7 +309,7 @@
 \end{hpktxdiag}
 \vfill
 
-\subsubsection*{Timers: timerleftbelow}
+\subsection{Timers: timerleftbelow}
 
 {\pgfkeys{/pktxd/timers=left below}
 \begin{pktxdiag}[]
@@ -327,7 +331,7 @@
 \end{hpktxdiag}
 }
 
-\subsubsection*{Timers: timerleftbottomup}
+\subsection{Timers: timerleftbottomup}
 
 {\pgfkeys{/pktxd/timers=left bottom up}
 \begin{pktxdiag}[]
@@ -350,7 +354,7 @@
 }
 \vfill
 
-\subsubsection*{Timers: timer label on arrow}
+\subsection{Timers: timer label on arrow}
 
 {\pgfkeys{/pktxd/timers=on arrow}
 \begin{pktxdiag}[]
@@ -380,7 +384,7 @@
 
 \vfill
 
-\subsubsection*{More timers, timer offsets}
+\subsection{More timers, timer offsets}
 
 \def\testalltimers{
   \fullduplex
@@ -457,7 +461,7 @@
   \BA[delayed={3mm}{ack}]{ACK 0}
 \end{pktxdiag}
 
-\subsubsection*{Timers: later}
+\subsection{Timers: later}
 
 \begin{pktxdiag}
   \testlatertimer
@@ -480,7 +484,7 @@
 
 %\hspace{-2cm}
 
-\subsubsection*{Timers: timed, delayed, stop, late, cancel}
+\subsection{Timers: timed, delayed, stop, late, cancel}
 
 \def\testtimers{
   \AB[timed={3cm}{toto}]{timed}
@@ -531,7 +535,7 @@
 \end{pktxdiag}
 
 \newpage
-\subsubsection*{Faulty cancels}
+\subsection{Faulty cancels}
 
 Cancel a non running timer
 
@@ -574,8 +578,8 @@ Cancel a non running timer, but defined in a previous env
   \testtimercancel
 \end{hpktxdiag}
 
-
-\subsubsection*{Send and receive notes}
+\section{Boah}
+\subsection{Send and receive notes}
 
 \begin{pktxdiag}
   \AB[snote=send note,rnote=receive note]{DATA}
@@ -588,7 +592,7 @@ Cancel a non running timer, but defined in a previous env
 \end{hpktxdiag}
 
 
-\subsubsection*{The \texttt{reversed} key}
+\subsection{The \texttt{reversed} key}
 
 \def\example{
   \fullduplex
@@ -615,8 +619,24 @@ Cancel a non running timer, but defined in a previous env
   \example
 \end{hpktxdiag}
 
+\subsection{The \texttt{pause} env option}
 
-\subsubsection*{States and actions}
+\begin{pktxdiag}[send delay=0mm,pause=3cm]
+\AB{DATA}
+\Apause
+\AB{DATA}
+\Apause[5mm]
+\AB{DATA}
+\end{pktxdiag}
+\begin{pktxdiag}[send delay=0mm]
+\AB{DATA}
+\Apause
+\AB{DATA}
+\Apause[5mm]
+\AB{DATA}
+\end{pktxdiag}
+
+\subsection{States and actions}
 
 \begin{pktxdiag}[prop=7mm,A=client,B=serveur,action time
   offset=0mm,action offset=2mm]
@@ -643,7 +663,7 @@ Cancel a non running timer, but defined in a previous env
 \testxiv
 \end{hpktxdiag}
 
-\subsubsection*{Laters}
+\subsection{Laters}
 
 \def\testlater{
   \AB{DATA1}
@@ -680,7 +700,7 @@ Cancel a non running timer, but defined in a previous env
 \end{pktxdiag}
 
 
-\subsubsection*{Late frames, named positions}
+\subsection{Late frames, named positions}
 
 \begin{pktxdiag}
   \AB{DATA1}
@@ -710,7 +730,8 @@ Cancel a non running timer, but defined in a previous env
   \AB{ACK3}
 \end{pktxdiag}
 
-\subsubsection*{Flows and filtering}
+\section{Flows, styles}
+\subsection{Flows and filtering}
 
 \def\testfilter{
   \AB[fid=1]{DATA 1 (1)}
@@ -739,7 +760,7 @@ Cancel a non running timer, but defined in a previous env
 \end{pktxdiag}}
 \end{figure}
 
-\subsubsection*{Filtering, flow styles}
+\subsection{Filtering, flow styles}
 
 {\definestyle{id1}{green}
 \definestyle{id1l}{green!60}
@@ -765,7 +786,7 @@ Cancel a non running timer, but defined in a previous env
 \end{pktxdiag}
 }
 
-\subsubsection*{Changing global styles}
+\subsection{Changing global styles}
 
 \begin{pktxdiag}
   \testfilter
@@ -785,7 +806,7 @@ Cancel a non running timer, but defined in a previous env
   \testfilter
 \end{pktxdiag}
 
-\subsubsection*{Explicit, env, and flow frame styles}
+\subsection{Explicit, env, and flow frame styles}
 
 \def\testframestyle{
   \AB{env-only}
@@ -826,7 +847,7 @@ Cancel a non running timer, but defined in a previous env
 \end{hpktxdiag}
 
 
-\subsubsection*{Explicit, env, and flow label styles}
+\subsection{Explicit, env, and flow label styles}
 
 \def\testframelabelstyle{
   \AB{env-only}
@@ -866,7 +887,8 @@ Cancel a non running timer, but defined in a previous env
   \testframelabelstyle
 \end{hpktxdiag}
 
-\subsubsection*{Labels}
+\section{Labels}
+\subsection{Labels}
 
 \def\testlabelii{
   \AB[label2=Yoooo !]{DATA 1}
@@ -887,7 +909,7 @@ Cancel a non running timer, but defined in a previous env
   \testlabelii
 \end{pktxdiag}
 
-\subsubsection*{Multi line labels and entity names}
+\subsection{Multi line labels and entity names}
 
 \begin{pktxdiag}[B=this is ``B'']
   \entityname{A}{this is the\\``A'' entity}
@@ -905,7 +927,8 @@ Cancel a non running timer, but defined in a previous env
   \BA{ACK\\Going back}
 \end{hpktxdiag}
 
-\subsubsection*{Multiple entities}
+\section{Multiple entities}
+\subsection{Multiple entities}
 
 % possible mistake: A/name/  -> no trailing slash if width not given
 
@@ -973,24 +996,7 @@ Cancel a non running timer, but defined in a previous env
 \frame{A}{D}{OK}
 \end{pktxdiag}
 
-\subsubsection*{The \texttt{pause} env option}
-
-\begin{pktxdiag}[send delay=0mm,pause=3cm]
-\AB{DATA}
-\Apause
-\AB{DATA}
-\Apause[5mm]
-\AB{DATA}  
-\end{pktxdiag}
-\begin{pktxdiag}[send delay=0mm]
-\AB{DATA}
-\Apause
-\AB{DATA}
-\Apause[5mm]
-\AB{DATA}  
-\end{pktxdiag}
-
-\subsubsection*{XwaitY for multiple entities}
+\subsection{XwaitY for multiple entities}
 
 does not work! is actually XwaitAny
 
@@ -1006,7 +1012,7 @@ does not work! is actually XwaitAny
   \frame{A}{C}{ok C}
 \end{pktxdiag}
 
-\subsubsection*{timers for multiple entities}
+\subsection{timers for multiple entities}
 
 \begin{pktxdiag}[entities={A,B,C,D}]
   \AB[timed={4cm}{timer for AB}]{A to B}
@@ -1023,5 +1029,61 @@ does not work! is actually XwaitAny
   \Xpause[2cm]{D}
   \frame[cancel]{D}{C}{gnargD}
 \end{pktxdiag}
+
+
+\section{Entity pics}
+
+\begin{pktxdiag}[B]
+  \AB{a name, no pics}
+\end{pktxdiag}
+\begin{pktxdiag}[
+  A=Client, Apic={laptop.png}{height=1cm},
+  B=Server,
+  ]
+
+  \AB{a pic with name}
+\end{pktxdiag}
+\begin{pktxdiag}[
+  A=Client, Apic={laptop.png}{height=1cm},
+  B=Server,
+  pic on top]
+
+  \AB{a pic with name, pic on top}
+\end{pktxdiag}
+\begin{pktxdiag}[
+  A=Client, Apic={laptop.png}{height=1cm},
+  Bpic={fileserver.png}{height=1cm},
+  pic on top]
+
+  \AB{A name, pic on top}
+\end{pktxdiag}
+\begin{pktxdiag}[
+  A=Client, Apic={laptop.png}{height=1cm},
+  B=Server, Bpic={fileserver.png}{height=1cm},
+  pic on top]
+
+  \AB{names, pic on top}
+\end{pktxdiag}
+\begin{pktxdiag}[
+  Apic={laptop.png}{height=1cm},
+  Bpic={fileserver.png}{height=1cm},
+  pic on top]
+
+  \AB{no names, pic on top}
+\end{pktxdiag}
+\begin{pktxdiag}[
+  Apic={laptop.png}{height=1cm},
+  Bpic={fileserver.png}{height=1cm}
+  ]
+
+  \AB{no names, pics}
+\end{pktxdiag}
+\begin{pktxdiag}
+  \AB{no names, no pics}
+\end{pktxdiag}
+\begin{pktxdiag}[A=Client,B=Server]
+  \AB{names, no pics}
+\end{pktxdiag}
+
 
 \end{document}

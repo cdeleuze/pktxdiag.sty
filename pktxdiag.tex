@@ -16,6 +16,7 @@
 \makeindex
 \begin{document}
 \maketitle
+\hypersetup{colorlinks=true, linkcolor=black}
 \tableofcontents
 \newpage
 \setlength{\parindent}{0mm}
@@ -51,7 +52,9 @@ Load the package with \texttt{usepackage}:
 
 \subsection{Simple exchanges}
 
-A single DATA frame, acknowledged by an ACK frame.
+A single DATA frame, acknowledged by an ACK frame.  A and B stand for
+the left and right \emph{entities} (ie what sends and receives
+frames).
 \begin{codeexample}[width=6cm]
   \begin{pktxdiag}
     \AB{DATA}
@@ -555,6 +558,34 @@ TODO: frame and env key labelstyle
 
 See also section \ref{sec:flow styles} on flow styles.
 
+In the figure in section \ref{sec:full-duplex} the first few frame
+labels where centered (because of half-duplex mode) and the following
+ones where near the start of the frame (because of full-duplex mode).
+This can be fixed by adding \texttt{near start} to the label style
+through the \texttt{label style+} key.
+
+\begin{codeexample}[width=8cm]
+  \begin{pktxdiag}[width=5cm,
+                   label style+=near start]]
+    \BA{ACK 0}
+    \AB[timed={2cm}{retrans}]{DATA 0}
+    \BA[late=1cm]{ACK 1}
+    \Awaittimer\AB{DATA 0}
+    \fullduplex
+                \BA{ACK 1}
+    \Awaitlate
+    \AB{DATA 1}
+                \BA{ACK 0}
+    \AB{DATA 1}
+                \BA{ACK 0}
+    \AB{DATA 0}
+                \BA{ACK 1}
+    \AB{DATA 0}
+                \BA{ACK 1}
+  \end{pktxdiag}
+\end{codeexample}
+
+
 % TODO env option show label2
 % env option hide label
 % frame option label2
@@ -641,6 +672,7 @@ less visible by:
 \index{env option!ignore}
 \index{env option!fade value}
 
+% TODO: ho my, an X25 example, really nothing more current?
 \begin{codeexample}[]
 \def\testfilter{
   \AB[fid=1]{DATA 1 (1)}
@@ -1140,7 +1172,7 @@ to \texttt{standalone}.  File \texttt{example2.tex} below will create
 files \texttt{example2-0.png} and \texttt{example2-1.png}.
 
 \begin{verbatim}
-\documentclass[convert={density=100,outext=.png},multi={pktxdiag}]{standalone}
+\documentclass[convert={density=100},multi={pktxdiag}]{standalone}
 \usepackage{pktxdiag}
 \begin{document}
    \begin{pktxdiag} % picture 0
@@ -1154,10 +1186,11 @@ files \texttt{example2-0.png} and \texttt{example2-1.png}.
  \end{document}
 \end{verbatim}
 
-%TODO: also need -alpha remove
+%TODO: also need -alpha off
+% convert={density=100,command=\unexpanded{{\convertexe\space -density \density\space \infile\space -alpha off \outfile}}}
 %do convert manually
 
-%convert -alpha remove -density 100 file.pdf file.png
+%convert -alpha off -density 100 file.pdf file.png
 
 \section{Debugging}
 
@@ -1185,6 +1218,9 @@ logic (but this is not completely done so far, anyway...)
   line\footnote{\url{https://book.systemsapproach.org/applications/multimedia.html\#session-control-and-call-control-sdp-sip-h-323}}.
 \end{itemize}
 
+\section{Bibliography}
+
+TikZ \& PGF manual
 
 
 \printindex
