@@ -225,6 +225,19 @@ The unamed late frame is actually named \texttt{\$\$lateframe}.
 \end{pktxdiag}
 \end{codeexample}
 
+\subsection{Gone and plop frames}
+
+A lost frame will never arrive.  We define \emph{gone} frames as just disappearing: they're sent and we don't know (or care) what happens next.  A \emph{plop} frame is the reverse: a frame appears and is received, but we don't know when/if it was sent.
+
+\index{frame option!gone}\index{frame option!plop}
+
+\begin{codeexample}[width=6cm]
+\begin{pktxdiag}
+  \BA[gone]{ACK}
+  \BA[plop]{ACK}
+\end{pktxdiag}
+\end{codeexample}
+
 \subsection{Time is passing}
 
 \begin{description}
@@ -444,7 +457,7 @@ no labels are put on timers).
   \BA[delayed={6mm}{ack},cancel4]{ACK 4}
 \end{pktxdiag}
 
-\begin{pktxdiag}[debug,timers/tight,reversed]
+\begin{pktxdiag}[timers/tight,reversed]
   \fullduplex
   \AB[timed={4cm}{},lost,cross for lost,label style=midway]{DATA 0}
   \AB[timed2={4cm}{}]{DATA 1}
@@ -960,7 +973,8 @@ a timer canceling frame correct in a vertical diagram is incorrect in
 a horizontal diagram.
 
 Multiple (more than two) entities are not possible.  Other missing
-features include: late frames, laters, states and actions.
+features include: late frames, laters, gone and plop frames, states,
+and actions.
 
 \index{env option!short trans}
 \index{env option!shorts}
@@ -1095,6 +1109,37 @@ features include: late frames, laters, states and actions.
 %                \BA[fid=tcp]{ACK}
 % \end{pktxdiag}
 % \end{codeexample}
+
+\subsection{Time Wait Assassination}
+\label{galery:twa}
+
+From rfc1337.
+
+\begin{codeexample}[]
+\begin{pktxdiag}[width=6cm]
+  \Astate{Established}    \Bstate{Established}
+  \Apause
+  \Aactionstate{Close}{Fin-Wait-1}
+  \AB{seq=100, ack=300, FIN, ACK}
+                         \Bstate{Close-Wait}
+                         \BA{seq=300, ack=101, ACK}
+  \Astate{Fin-Wait-2}
+                         \Bpause
+                         \Bactionstate{Close}{Last-Ack}
+                         \BA{seq=300, ack=101, FIN, ACK}
+  \Astate{Time-Wait}
+  \AB{seq=101, ack=301, ACK}
+                         \Bstate{Closed}
+
+  \later{1cm}
+                         \BA[plop,snote=old duplicate]{seq=255, ack=33}
+  \AB{seq=101, ack=301, ACK}
+                         \BA{seq=301, RST}
+
+  \Astate{Closed}
+\end{pktxdiag}
+\end{codeexample}
+
 
 \subsection{Associating an IP address to its DNS resolver}
 \label{galery:dnsresolver}

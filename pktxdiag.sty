@@ -157,7 +157,8 @@
   %
   fid/.code=\def\pktxd@fid{#1},
   lost/.is if=pktxd@lost,
-  born/.is if=pktxd@born,
+  plop/.is if=pktxd@plop,
+  gone/.is if=pktxd@gone,
   bad/.is if=pktxd@bad,
   late/.default=4cm,
   late/.code=\pktxd@latetrue\setlength{\pktxd@latev}{#1},
@@ -213,7 +214,8 @@
 
 \newif\ifpktxd@bad\pktxd@badfalse
 \newif\ifpktxd@lost\pktxd@lostfalse
-\newif\ifpktxd@born\pktxd@bornfalse
+\newif\ifpktxd@plop\pktxd@plopfalse
+\newif\ifpktxd@gone\pktxd@gonefalse
 \newif\ifpktxd@late\pktxd@latefalse
 \newif\ifpktxd@delayed\pktxd@delayedfalse
 \newif\ifpktxd@stop\pktxd@stopfalse
@@ -475,12 +477,12 @@
 % #4 is send time, #5 is label
 
 % other inputs are:
-% - kind of frame: pktxd@lost, pktxd@bad, pktxd@late, pktxd@born
+% - kind of frame: pktxd@lost, pktxd@bad, pktxd@late, pktxd@plop
 % - parameters:    pktxd@prop, pktxd@crosslost, pktxd@latev
 %    plus /pktxd/styles/current label style
 %    and  /pktxd/styles/current frame style
 
-% TODO: could error on born and (late or lost or bad)
+% TODO: could error on plop and (late or lost or bad)
 % TODO: should \newdimen's be global?
 \newdimen\pktxd@len
 \newif\ifpktxd@centerlabel
@@ -497,7 +499,7 @@
   
   \pgfmathsetmacro{\sign}{#2<#3?1:-1}
 
-  % we put label at center of arrow if in full duplex or lost frame
+  % we put label at center of arrow if not in full duplex or lost frame
   \pktxd@centerlabelfalse
   \ifpktxd@sync\pktxd@centerlabeltrue\else
   \ifpktxd@lost\pktxd@centerlabeltrue\fi\fi
@@ -538,30 +540,40 @@
        \draw (#2,-#4) 
        .. controls (#2/2+#3/2,-#4-\pktxd@prop/2) and (#2/2+#3/2,-#4-\pktxd@latev)
        .. (#3, -#4-\pktxd@latev-\pktxd@prop)
-                   node[align=center,/pktxd/styles/.cd,\lstyle,pos=0.1]{\pktxd@nodelabel{#5}};
+                   node[align=center,/pktxd/styles/.cd,pos=0.1,\lstyle]{\pktxd@nodelabel{#5}};
 
        \fi % @lost
 
     \else % @late
 
-    % born frame, appearing at receiver
-    \ifpktxd@born
+    % plop frame, appearing at receiver
+    \ifpktxd@plop
        \draw (#2+\pktxd@len/2,-#4-\pktxd@prop/2) -- ++(\pktxd@len/2,-\pktxd@prop/2)
-                   node[align=center,near start,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
-       \newdimen\pktxd@bornlen
-       \pgfmathsetlength{\pktxd@bornlen}{\pktxd@prop/\pktxd@len*3mm*\sign}
-       \draw [dotted,-](#2+\pktxd@len/2,-#4-\pktxd@prop/2) -- ++(-3mm*\sign,\pktxd@bornlen);
+                   node[align=center,midway,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
+       \newdimen\pktxd@ploplen
+       \pgfmathsetlength{\pktxd@ploplen}{\pktxd@prop/\pktxd@len*3mm*\sign}
+       \draw [dotted,-](#2+\pktxd@len/2,-#4-\pktxd@prop/2) -- ++(-3mm*\sign,\pktxd@ploplen);
 
-    \else % @born
+    \else % @plop
+    \ifpktxd@gone
+      \draw[-] (#2,-#4) -- ++(\pktxd@len/2,-\pktxd@prop/2)
+      node[align=center,midway,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
 
-    % not bad, not late, nor born
+      \newdimen\pktxd@ploplen
+      \pgfmathsetlength{\pktxd@ploplen}{\pktxd@prop/\pktxd@len*3mm*\sign}
+      \draw [dotted,-](#2+\pktxd@len/2,-#4-\pktxd@prop/2) -- ++(3mm*\sign,-\pktxd@ploplen);
+    \else % @gone
+
+    % not bad, late, gone, plop
     \def\pktxd@align{\ifpktxd@centerlabel midway\else near start\fi}
     \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
                node[align=center,\pktxd@align,
                /pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
        \ifpktxd@lost\ifpktxd@crosslost \draw[-]
                    (\sign*2mm,-#4-\pktxd@prop/\lost)node{\Large $\times$}\fi\fi;
-    \fi % @born
+
+    \fi % @gone
+    \fi % @plop
     \fi % @late
     \fi % @bad
   \end{scope}
