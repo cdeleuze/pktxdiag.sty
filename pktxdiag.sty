@@ -50,7 +50,7 @@
   prop/.default=1cm,
   prop/.code=\setlength{\pktxd@prop}{#1},
   %
-  cross for lost/.is if=pktxd@crosslost,
+  no cross/.is if=pktxd@nocross,
   snoteoffset/.code=\def\pktxd@snoteoffset{#1},
   snoteoffset/.default=0,
   rnoteoffset/.code=\def\pktxd@rnoteoffset{#1},
@@ -149,7 +149,7 @@
   %
   prop/.style={/pktxd/prop=#1},
   trans/.style={/pktxd/trans=#1},
-  cross for lost/.style={/pktxd/cross for lost=#1},
+  no cross/.style={/pktxd/no cross=#1},
   snoteoffset/.style={/pktxd/snoteoffset=#1},
   rnoteoffset/.style={/pktxd/rnoteoffset=#1},
   %
@@ -220,7 +220,7 @@
 \newif\ifpktxd@delayed\pktxd@delayedfalse
 \newif\ifpktxd@stop\pktxd@stopfalse
 
-\newif\ifpktxd@crosslost
+\newif\ifpktxd@nocross
 \newif\ifpktxd@snote
 \newif\ifpktxd@rnote
 \def\pktxd@snoteoffset{3mm}
@@ -478,7 +478,7 @@
 
 % other inputs are:
 % - kind of frame: pktxd@lost, pktxd@bad, pktxd@late, pktxd@plop
-% - parameters:    pktxd@prop, pktxd@crosslost, pktxd@latev
+% - parameters:    pktxd@prop, pktxd@nocross, pktxd@latev
 %    plus /pktxd/styles/current label style
 %    and  /pktxd/styles/current frame style
 
@@ -526,7 +526,7 @@
          node[align=center,midway,/pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}}\fi}
        % third segment, straight
        --++(\pktxd@len/\lost/3,-\pktxd@prop/\lost/3);
-       \ifpktxd@lost\ifpktxd@crosslost \draw[-]
+       \ifpktxd@lost\ifpktxd@nocross\else \draw[-]
        (\sign*2mm,-#4-\pktxd@prop/\lost)node{\Large $\times$}\fi\fi;
        \fi % @late
 
@@ -569,7 +569,7 @@
     \draw (#2,-#4) -- ++(\pktxd@len/\lost,-\pktxd@prop/\lost)
                node[align=center,\pktxd@align,
                /pktxd/styles/.cd,\lstyle]{\pktxd@nodelabel{#5}};
-       \ifpktxd@lost\ifpktxd@crosslost \draw[-]
+       \ifpktxd@lost\ifpktxd@nocross\else \draw[-]
                    (\sign*2mm,-#4-\pktxd@prop/\lost)node{\Large $\times$}\fi\fi;
 
     \fi % @gone
@@ -604,7 +604,7 @@
   \fi
   % then draw 'propagation time' arrow
   \draw[thin,->] (#4+\pktxd@trans,#3) -- ++ (\pktxd@prop/\lost,\pktxd@len/\lost);
-  \ifpktxd@lost\ifpktxd@crosslost \draw[-]
+  \ifpktxd@lost\ifpktxd@nocross\else \draw[-]
         (#4+\pktxd@trans+\pktxd@prop/2,\sign*-2mm) node{\Large $\times$}\fi\fi;
   \end{scope}
 }

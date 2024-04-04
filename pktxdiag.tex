@@ -407,24 +407,23 @@ vertical space between name and picture.
 
 \subsection{Lost frames}
 
-By default lost frames are simply shown disappearing in transit.  A
-cross can be added to represent their disappearing: 
+A cross marks the disappearing of lost frames.  The cross can be removed.
 
 \index{frame option!lost}
-\index{frame option!cross for lost}
-\index{env option!cross for lost}
+\index{frame option!no cross}
+\index{env option!no cross}
 
 \begin{codeexample}[]
   \begin{pktxdiag}
     \AB[lost]{DATA 0} \AB[lost]{DATA 1}
   \end{pktxdiag}
 ~~~~~~~~
-  \begin{pktxdiag}[cross for lost]
-    \AB[lost]{DATA 0} \AB[lost,cross for lost=false]{DATA 1}
+  \begin{pktxdiag}[]
+    \AB[lost]{DATA 0} \AB[lost,no cross]{DATA 1}
   \end{pktxdiag}
 ~~~~~~~~
-  \begin{pktxdiag}
-    \AB[lost]{DATA 0} \AB[lost,cross for lost]{DATA 1}
+  \begin{pktxdiag}[no cross]
+    \AB[lost]{DATA 0} \AB[lost,no cross=false]{DATA 1}
   \end{pktxdiag}
 \end{codeexample}
 
@@ -459,7 +458,7 @@ no labels are put on timers).
 
 \begin{pktxdiag}[timers/tight,reversed]
   \fullduplex
-  \AB[timed={4cm}{},lost,cross for lost,label style=midway]{DATA 0}
+  \AB[timed={4cm}{},lost,label style=midway]{DATA 0}
   \AB[timed2={4cm}{}]{DATA 1}
   \BwaitA
   \BA[delayed={3mm}{ack}]{ACK 0}

@@ -204,11 +204,11 @@
   \Astate{Closed}
 }
 
-\begin{pktxdiag}[cross for lost]
+\begin{pktxdiag}
   \test
 \end{pktxdiag}
 \hfill
-\begin{hpktxdiag}[cross for lost,trans=1.5cm]
+\begin{hpktxdiag}[trans=1.5cm]
 \rotate
   \test
 \end{hpktxdiag}
@@ -451,7 +451,7 @@
 \end{pktxdiag}
 \begin{pktxdiag}[timers/tight,reversed]
   \fullduplex
-  \AB[timed={4cm}{},lost,cross for lost,label style=midway]{DATA 0}
+  \AB[timed={4cm}{},lost,label style=midway]{DATA 0}
   \AB[timed2={4cm}{}]{DATA 1}
   \BwaitA
   \BA[delayed={3mm}{ack}]{ACK 0}
