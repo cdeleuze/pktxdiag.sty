@@ -824,9 +824,7 @@
 % The (horizontal) offset of the four timers is set to a default
 % that is sensible if using timer labels.
 
-% TODO: maybe these default settings should be globally configurable?
-\def\pktxd@resettimeroffsets{
-  \pgfkeys{/pktxd/default/timers/.cd,
+\pgfkeys{/pktxd/default/timers/.cd,
     l/1/offset/.initial=4mm,
     l/2/offset/.initial=9mm,
     l/3/offset/.initial=14mm,
@@ -834,8 +832,8 @@
     r/1/offset/.initial=4mm,
     r/2/offset/.initial=9mm,
     r/3/offset/.initial=14mm,
-    r/4/offset/.initial=19mm}
-}
+    r/4/offset/.initial=19mm
+  }
 
 % keys to adjust offsets for timer 1/2/3/4
 
@@ -872,11 +870,11 @@
 % only used by keys above
 % set all timer offsets: timer_i set to timer_1 offset + (i-1) * #1
 \def\pktxd@settimeroffsets#1{
-  \foreach \s in {l,r} {
+  \@for\s:=l,r\do{
     \def\basicoffset{\pgfkeysvalueof{/pktxd/default/timers/\s/1/offset}}
-    \foreach \n in {1,2,3,4} {
-      \pgfmathsetlengthmacro{\offset}{\basicoffset+(\n-1)*#1}
-      \global\pgfkeyslet{/pktxd/default/timers/\s/\n/offset}{\offset}
+    \@for\i:=1,2,3,4\do{
+      \pgfmathsetlengthmacro{\offset}{\basicoffset+(\i-1)*#1}
+      \pgfkeyslet{/pktxd/default/timers/\s/\i/offset}{\offset}
     }
   }
 }
@@ -1378,8 +1376,6 @@
   %
   \pktxd@hfalse%
   \setlength{\pktxd@trans}{0cm}%
-  % reset to default values, env keys may then change them
-  \pktxd@resettimeroffsets%
   \begin{tikzpicture}[tight background,
     background rectangle/.style={fill=\pktxd@bgcolor},
     show background rectangle,
@@ -1449,7 +1445,6 @@
   \setlength{\pktxd@replydelay}{0cm}%
   \def\pktxd@width{1cm}%
   \setlength{\pktxd@prop}{3mm}%
-  \pktxd@resettimeroffsets%
   \begin{tikzpicture}[tight background,
     background rectangle/.style={fill=\pktxd@bgcolor},
     show background rectangle,
@@ -1477,8 +1472,6 @@
   % no need to remove names : /pktxd/A|B/.code sets them in env scope
   % (contrary to @initmentities)
 \end{tikzpicture}}
-
-\pktxd@resettimeroffsets
 
 % Local Variables:
 % outline-regexp: "%%+"
