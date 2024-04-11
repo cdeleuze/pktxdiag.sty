@@ -309,7 +309,7 @@
 \pgfkeys{
   % env keys
   /pktxd/frame style/.code=\pgfkeys{/pktxd/styles/global/.style={#1}},
-  /pktxd/frame style+/.code=\pgfkeys{/pktxd/styles/global/.style={very thick,->,#1}},
+  /pktxd/frame style+/.code=\pgfkeys{/pktxd/styles/global/.style={very thick,-Latex,#1}},
   /pktxd/label style/.code=\pgfkeys{/pktxd/styles/label global/.style={#1}},
   /pktxd/label style+/.code=\pgfkeys{/pktxd/styles/label global/.style={above,sloped,#1}},
   % frame keys
@@ -331,8 +331,8 @@
 \pgfkeys{
   /pktxd/styles/.cd,
   % styles for frames
+  global/.style={very thick,-Latex},
   this frame/.style={},
-  global/.style={very thick,->},
   this flow/.style={},
   current frame style/.style={
     /pktxd/styles/global,

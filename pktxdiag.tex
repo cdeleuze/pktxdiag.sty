@@ -609,14 +609,16 @@ through the \texttt{label style+} key.
 \subsection{Graphics attributes}
 
 Frames can also be given most tikz graphics attributes to specify their
-colors, line width, arrow tip shape etc.
+colors, line width, arrow tip etc.
+
+% arrow tip default is -Latex
+% show possibilities ->, -latex, -Stealth (could be default?), -Triangle
 
 \begin{codeexample}[width=5cm]
   \begin{pktxdiag}
-    \AB[thin]{DATA}
-    \BA[dashed,blue,-Latex]{ACK}
-    \AB[ultra thick,yellow,text=red,
-        -{Stealth[length=2.5mm,inset=0pt]}]{OK !}
+    \AB[,{-Latex[open]}]{DATA}
+    \BA[dashed,blue,thin,->]{ACK}
+    \AB[ultra thick,orange,text=red,-Stealth]{OK !}
   \end{pktxdiag}
 \end{codeexample}
 
@@ -628,9 +630,9 @@ option.\index{env option!background}
 
 \begin{codeexample}[width=5cm]
   \begin{pktxdiag}[background=green!15]
-    \AB[thin]{DATA}
-    \BA[dashed,blue,-Latex]{ACK}
-    \AB[ultra thick,yellow,text=red,
+    \AB[thin,-Straight Barb]{DATA}
+    \BA[dashed,blue,-latex]{ACK}
+    \AB[ultra thick,orange,text=red,
         -{Stealth[length=2.5mm,inset=0pt]}]{OK !}
   \end{pktxdiag}
 \end{codeexample}
@@ -1179,6 +1181,7 @@ From rfc1337.
     C/princeton.edu proxy,D/llp-ph.cs.princeton.edu},
   label style+={sloped=false}]
 
+% latex arrow tip is a bit smaller than Latex
 \definestyle{big}{latex-latex,line width=3mm}
 \setflowstyle{big}{big}
 
