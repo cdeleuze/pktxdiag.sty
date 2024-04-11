@@ -4,7 +4,6 @@
 \usepackage[T1]{fontenc}
 \usepackage[latin1]{inputenc}
 \usepackage{a4wide}
-%\usepackage{cours}
 \usepackage{float}
 \usepackage{subfig}
 \usepackage{alltt}
@@ -48,7 +47,7 @@
   \BAcancel{ACK}
 \end{pktxdiag}
 \hfill
-\begin{pktxdiag}[prop]
+\begin{pktxdiag}[prop=1cm]
   \fullduplex
   \ABtimed{DATA}{2cm}{temporisateur}
   \BwaitA
@@ -785,7 +784,7 @@
 
 \begin{figure}[H]
 
-\subfloat[Sans connexions persistantes]{\begin{pktxdiag}[width=2cm,reply delay=2mm,send delay=4mm,prop=2mm]\tiny
+\subfloat[Sans connexions persistantes]{\begin{pktxdiag}[width=2cm,reply delay=2mm,send delay=4mm,prop=2mm,frame style+=thin]\tiny
     \AB{SYN}
     \BA{SYN-ACK}
     \AB{ACK}
@@ -807,7 +806,7 @@
     \BA{ACK}
   \end{pktxdiag}}
 \hfill
-\subfloat[Avec connexions persistantes]{\begin{pktxdiag}[width=2cm,reply delay=2mm,send delay=4mm,prop=2mm]\tiny
+\subfloat[Avec connexions persistantes]{\begin{pktxdiag}[width=2cm,reply delay=2mm,send delay=4mm,prop=2mm,frame style+=thin]\tiny
     \AB{SYN}
     \BA{SYN-ACK}
     \AB{ACK}

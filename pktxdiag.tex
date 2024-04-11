@@ -132,8 +132,8 @@ will be \emph{piggybacked} on the data frame.
 \index{frame option!delayed}
 \index{frame option!stop}
 
-Currently four timers may be run simultaneously on each side.
-This may be increased in future versions.
+Currently four timers may run simultaneously on each side.  This may
+be increased in future versions.
 
 \index{frame option!timed2}
 \index{frame option!delayed2}
@@ -805,6 +805,17 @@ and possibly cleaned-up
 
 \subsection{Frame styles}
 
+% TODO global
+% styles/global
+
+% env
+% frame style
+% frame style+
+
+% frame
+% style
+% style+ no?
+
 \subsection{Note styles}
 
 \subsection{Entity styles}
@@ -826,7 +837,9 @@ environment keys \texttt{entities/style} and \texttt{entities/label
 
 Each entity actually has a style key that initially points to these
 keys (which can thus be used to change the default styles), but they
-can be redefined to change the style of a given entity.  This can be usefull in diagrams with multiple entities, see section \ref{sec:multipleentities}.
+can be redefined to change the style of a given entity.  This can be
+usefull in diagrams with multiple entities, see section
+\ref{sec:multipleentities}.
 
 \index{env option!entities/style}
 \index{env option!entities/label style}
@@ -938,8 +951,8 @@ at the time the key is processed).
 
 \section{Horizontal diagrams}
 
-There's some support for drawing horizontal diagrams: simply use the
-\texttt{hpktxdiag} environment.  With this kind of diagrams, the
+There's limited support for drawing horizontal diagrams: simply use
+the \texttt{hpktxdiag} environment.  With this kind of diagrams, the
 \emph{transmission time}\footnote{That is, the time elapsed between
   the sending of the first and the last bit of the frame.} is shown
 and so options are provided to deal with it (they are simply ignored
@@ -975,7 +988,7 @@ a horizontal diagram.
 
 Multiple (more than two) entities are not possible.  Other missing
 features include: late frames, laters, gone and plop frames, states,
-and actions.
+actions, entity pictures.
 
 \index{env option!short trans}
 \index{env option!shorts}
@@ -1028,9 +1041,7 @@ and actions.
                       \Bwaittimer
                       \BA[late=6cm,rnote=oops!,rnoteoffset=-1mm]{FIN}
                       \Bstate{Closed}
-
-\later{2cm}
-
+  \later{2cm}
                       \Bactionstate{passive open}{Listen}
   \Apause
   \Aactionstate{active open}{SynSent}
@@ -1146,7 +1157,7 @@ From rfc1337.
 \label{galery:dnsresolver}
 
 \begin{codeexample}[]
-  \begin{pktxdiag}[prop=0mm,reply delay=1cm, width=4cm,
+\begin{pktxdiag}[prop=0mm,reply delay=1cm, width=4cm,
     entities={A/client under test,B/recursive resolver,C/myresolver
       auth NS,D/myresolver HTTP server}]
   \entityname{A}{client\\under test}
@@ -1181,30 +1192,30 @@ From rfc1337.
     C/princeton.edu proxy,D/llp-ph.cs.princeton.edu},
   label style+={sloped=false}]
 
-% latex arrow tip is a bit smaller than Latex
-\definestyle{big}{latex-latex,line width=3mm}
-\setflowstyle{big}{big}
+  % latex arrow tip is a bit smaller than Latex
+  \definestyle{big}{latex-latex,line width=3mm}
+  \setflowstyle{big}{big}
 
-\frame{A}{B}{invite}
-   \frame{B}{C}{invite}
-      \frame{C}{D}{invite}
-\frame{B}{A}{100 trying}
-   \frame{C}{B}{100 trying}
-      \frame{D}{C}{100 trying}
-      \Xpause{D}
-      \frame{D}{C}{180 ringing}
-   \frame{C}{B}{180 ringing}
-\frame{B}{A}{180 ringing}
-      \Xpause{D}
-      \frame{D}{C}{200 OK}
-   \frame{C}{B}{200 OK}
-\frame{B}{A}{200 OK}
-\frame{A}{D}{ACK}
-\Xpause{D}
-\frame[fid=big,prop=0cm]{D}{A}{Media}
-\Xpause{D}
-\frame{D}{A}{BYE}
-\frame{A}{D}{200 OK}
+  \frame{A}{B}{invite}
+  \frame{B}{C}{invite}
+  \frame{C}{D}{invite}
+  \frame{B}{A}{100 trying}
+  \frame{C}{B}{100 trying}
+  \frame{D}{C}{100 trying}
+  \Xpause{D}
+  \frame{D}{C}{180 ringing}
+  \frame{C}{B}{180 ringing}
+  \frame{B}{A}{180 ringing}
+  \Xpause{D}
+  \frame{D}{C}{200 OK}
+  \frame{C}{B}{200 OK}
+  \frame{B}{A}{200 OK}
+  \frame{A}{D}{ACK}
+  \Xpause{D}
+  \frame[fid=big,prop=0cm]{D}{A}{Media}
+  \Xpause{D}
+  \frame{D}{A}{BYE}
+  \frame{A}{D}{200 OK}
 \end{pktxdiag}
 \end{codeexample}
 

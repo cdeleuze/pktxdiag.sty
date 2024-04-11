@@ -17,7 +17,7 @@
 \RequirePackage{tikz}
 \usetikzlibrary{decorations.pathmorphing} % for drawing zigzag
 \usetikzlibrary{arrows.meta}              % for arrow styles
-\usetikzlibrary{backgrounds}
+\usetikzlibrary{backgrounds}              % for the diagram background
 
 % entities have to be drawn below all other elements
 \pgfdeclarelayer{entities}
@@ -47,7 +47,6 @@
   warn only/.is if=pktxd@warnonly,
   background/.code=\def\pktxd@bgcolor{#1},
   %
-  prop/.default=1cm,
   prop/.code=\setlength{\pktxd@prop}{#1},
   %
   no cross/.is if=pktxd@nocross,
@@ -98,7 +97,7 @@
 \newif\ifpktxd@picontop
 \def\pktxd@picoffset{0mm}
 
-%% transmission time
+%%% transmission time
 
 % horizontal diagrams also show transmission time
 
@@ -145,7 +144,7 @@
 
 \pgfkeys{/pktxd/frame/.cd,
   % these can also be set for the whole env
-  % so we defined them as .styles
+  % so we defined them as .style's
   %
   prop/.style={/pktxd/prop=#1},
   trans/.style={/pktxd/trans=#1},
@@ -212,13 +211,13 @@
     \fi}
 }
 
-\newif\ifpktxd@bad\pktxd@badfalse
-\newif\ifpktxd@lost\pktxd@lostfalse
-\newif\ifpktxd@plop\pktxd@plopfalse
-\newif\ifpktxd@gone\pktxd@gonefalse
-\newif\ifpktxd@late\pktxd@latefalse
-\newif\ifpktxd@delayed\pktxd@delayedfalse
-\newif\ifpktxd@stop\pktxd@stopfalse
+\newif\ifpktxd@bad
+\newif\ifpktxd@lost
+\newif\ifpktxd@plop
+\newif\ifpktxd@gone
+\newif\ifpktxd@late
+\newif\ifpktxd@delayed
+\newif\ifpktxd@stop
 
 \newif\ifpktxd@nocross
 \newif\ifpktxd@snote
@@ -289,7 +288,7 @@
   {\pgfkeysvalueof{/pktxd/default/#2}}}
 
 %% styles
-%%%% commands
+%%% commands
 
 % define a style: name for a set of options
 \newcommand{\definestyle}[2]{\pgfkeys{/pktxd/styles/#1/.style={#2}}}
@@ -304,7 +303,7 @@
 \newcommand{\setflowstyle}[2]{\pgfkeys{/pktxd/flows/#1/style/.initial=#2}}
 \newcommand{\setflowlabelstyle}[2]{\pgfkeys{/pktxd/flows/#1/labelstyle/.initial=#2}}
 
-%%%% user keys
+%%% user keys
 
 \pgfkeys{
   % env keys
@@ -316,7 +315,7 @@
   /pktxd/frame/style/.code=\pgfkeys{/pktxd/styles/this frame/.style={#1}},
   /pktxd/frame/label style/.code=\pgfkeys{/pktxd/styles/label this frame/.style={#1}}}
 
-%%%% hierarchy of styles
+%%% hierarchy of styles
 
 % the frame|label style of the current frame is styles/current frame|label style.
 % This includes (in order):
@@ -339,8 +338,8 @@
     /pktxd/styles/this flow,
     /pktxd/styles/this frame},
   % styles for frame labels
-  label this frame/.style={},
   label global/.style={above,sloped},
+  label this frame/.style={},
   label this flow/.style={},
   current label style/.style={
     /pktxd/styles/label global,
@@ -429,7 +428,7 @@
 % otherwise use value in default dir
 % TODO: currently only default entries are used (no key to set timer
 % offsets on specific entities)
-\newcommand{\pktxd@getconftimer}[4]{
+\newcommand{\pktxd@getconftimer}[4]{ % entity lr id name
   \pgfkeysifdefined{/pktxd/entities/#1/timers/#2/#3/#4}
   {\pgfkeysvalueof{/pktxd/entities/#1/timers/#2/#3/#4}}
   {\pgfkeysvalueof{/pktxd/default/timers/#2/#3/#4}}}
@@ -448,7 +447,7 @@
 % - @arrowh: draw arrow for horizontal diagram
 % - @frame: main macro
 
-%%%% Draw a frame label: it can be made of:
+%%% Draw a frame label: it can be made of:
 %  - l1 label (passed as arg 2)
 %  - the l2 label (passed as label2 option key)
 %  - both
@@ -470,7 +469,7 @@
 
 \newlength{\pktxd@len}
 
-%%%% the draw arrow macro for vertical packet exchange diagram
+%%% the draw arrow macro for vertical packet exchange diagram
 
 % #1 are remaining keys (not handled by @frame) plus opacity,
 % #2 is sender pos, #3 is receiver pos
@@ -579,7 +578,7 @@
   \end{scope}
 }
 
-%%%% the draw arrow macro for horizontal packet exchange diagram
+%%% the draw arrow macro for horizontal packet exchange diagram
 %   TODO: doesn't need the /pktxd/styles/.cd?
 
 \newcommand{\pktxd@arrowh}[5][]{
@@ -610,7 +609,7 @@
 }
 
 
-%%%% the main macro for processing a frame command:
+%%% the main macro for processing a frame command:
 % - handle all frame keys (prop, trans, delayed, late...)
 % - draw frame by calling @arrow, passing it style and remaining tikz keys
 % - setup timers
@@ -749,7 +748,7 @@
 
 
 %% handling of timers
-%%%% visual settings
+%%% visual settings
 
 % env keys and corresponding state
 \pgfkeys{/pktxd/.cd,
@@ -772,7 +771,7 @@
                \setlength{\pktxd@timertoffset}{#1}}
 \newlength{\pktxd@timertoffset}\setlength{\pktxd@timertoffset}{0.2mm}
 
-%%%% timer state
+%%% timer state
 
 % a timer belongs to an entity, is leftist or rightist and is timer n
 % on its side (n=1..4)
@@ -790,7 +789,7 @@
   \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/start}{0}
   \pgfkeysgsetvalue{/pktxd/entities/#1/timer/#2/#3/end}{0}}
 
-%%%% current frame timers
+%%% current frame timers
 
 % @timeds is the list of timers started by current frame
 % it has a dumb last element to avoid the loop break on a final comma
@@ -819,7 +818,7 @@
 \newcommand{\pktxd@addcancel}[1]{
   \edef\pktxd@cancels{#1,\pktxd@cancels}}
 
-%%%% timer offsets
+%%% timer offsets
 
 % The (horizontal) offset of the four timers is set to a default
 % that is sensible if using timer labels.
@@ -883,7 +882,7 @@
 % (see @drawtimer)
 \def\pktxd@lefttimeraddoffset{3mm}
 
-%%%% timer processing and drawing
+%%% timer processing and drawing
 
 \newif\ifpktxd@putlabelonarrow
 \newlength{\pktxd@labellength}
@@ -1143,20 +1142,26 @@
 
 %% laters
 %
-% they are in unlimited number
+% A later has two effects:
+% 1. it advances time: this is done immediately
+% 2. it is drawn (erasing entity lines and possibly timers): this will
+%    be done when env is closed.  It is thus stored in /pktxd/laters.
 
 \newlength{\pktxd@laterdashedlen}
 \setlength{\pktxd@laterdashedlen}{1cm}
 \pgfkeys{/pktxd/laters/.initial={0cm/0cm}}
 
 \newcommand{\later}[1]{
+  % store for drawing at close of env
   \pgfkeys{/pktxd/laters/.append/.expanded={,\pAs/#1}}
+  % advance time
   \pktxd@addtosend{A}{#1}
   \pktxd@addtorecv{A}{#1}
   \pktxd@addtosend{B}{#1}
   \pktxd@addtorecv{B}{#1}
 }
 
+% iterator on timers: used by @drawlater
 \newcommand{\pktxd@alltimers}[1]{
   \foreach \e/\o in {A/l,B/r} {
     \foreach \n in {1,2,3,4} {
@@ -1175,7 +1180,7 @@
 \newcommand{\pktxd@drawlater}[2]{
   \def\tpos{-#1-#2/2-\pktxd@laterdashedlen/2}
 
-  % vertical lines
+  % entity lines
   \ifpktxd@h\else
   \draw[\pktxd@bgcolor,dashed](\pktxd@pos{A},\tpos) -- ++(0,\pktxd@laterdashedlen);
   \draw[\pktxd@bgcolor,dashed](\pktxd@pos{B},\tpos) -- ++(0,\pktxd@laterdashedlen);
@@ -1186,6 +1191,8 @@
   \pktxd@alltimers{\pktxd@drawlateronetimer}
   \fi
 }
+
+%% TODO - not about laters
 
 \newcommand{\pktxd@setpos}[2]{
   \pgfmathsetlengthmacro{\toto}{#2}
@@ -1215,7 +1222,7 @@
 }
 
 
-%% specialized code for two entities diagrams
+%% shortcut macros for two entities diagrams
 
 \newcommand{\AB}[2][]{\pktxd@frame[#1]{A}{B}{#2}}
 \newcommand{\BA}[2][]{\pktxd@frame[#1]{B}{A}{#2}}
@@ -1267,6 +1274,7 @@
 \newcommand{\ABstop}[5][]{\AB[#1,stop={#2}{#3}{#4}]{#5}}
 \newcommand{\BAstop}[5][]{\BA[#1,stop={#2}{#3}{#4}]{#5}}
 
+% TODO - it this useful?
 % shortcuts
 \def\pAs{\pktxd@Tsend{A}}
 \def\pBs{\pktxd@Tsend{B}}
@@ -1382,12 +1390,13 @@
     /pktxd/.cd,#1]\sffamily
     \ifpktxd@mmode\else\pktxd@initentities\fi
   }
-  {
-    % finish drawing all timers
-    % this also moves Tsend to end of timer if needed
+  { % closing pktxdiag env
+    % 1. finish drawing all timers
+    %    this also moves Tsend to end of timer if needed
     \pktxd@finishtimers
 
-    % draw vertical lines and labels
+    % 2. draw entity lines, pictures, and labels
+    %    this in done on layer 'entities' to stay behind other drawings
     \pktxd@computemaxtime{\pktxd@replydelay}
     \pktxd@len=\maxtime
     \advance \pktxd@len by \pktxd@finaldelay
@@ -1395,37 +1404,37 @@
     \newif\ifpktxd@picdefined
     
     \begin{pgfonlayer}{entities}
-    \pktxd@forallentities {
-      % not reset to \relax accross envs?
-      \def\myname{\pgfkeysvalueof{/pktxd/entities/\e}}
-      \def\mypic{\pgfkeysvalueof{/pktxd/entities/\e/pic}}
-      \pgfkeysifdefined{/pktxd/entities/\e/pic}
-         {\pktxd@picdefinedtrue}{\pktxd@picdefinedfalse}
-      \def\mylabel{
-        \ifpktxd@picdefined
-        \ifpktxd@picontop  % pic on top of label
-        \mypic\\[\pktxd@picoffset]\myname
-        \else              % label on top of pic
-        \myname\\[\pktxd@picoffset]\mypic
-        \fi
-        \else              % just the label
-        \myname
-        \fi}
-      \draw[/pktxd/entities/\e/style] (\pktxd@pos{\e},\pktxd@initialdelay)
-       node[/pktxd/entities/\e/label style] {\mylabel}
+      \pktxd@forallentities {
+        % not reset to \relax accross envs?
+        \def\myname{\pgfkeysvalueof{/pktxd/entities/\e}}
+        \def\mypic{\pgfkeysvalueof{/pktxd/entities/\e/pic}}
+        \pgfkeysifdefined{/pktxd/entities/\e/pic}
+        {\pktxd@picdefinedtrue}{\pktxd@picdefinedfalse}
+        \def\mylabel{
+          \ifpktxd@picdefined
+            \ifpktxd@picontop  % pic on top of label
+              \mypic\\[\pktxd@picoffset]\myname
+            \else              % label on top of pic
+              \myname\\[\pktxd@picoffset]\mypic
+            \fi
+          \else              % just the label
+            \myname
+          \fi}
+        \draw[/pktxd/entities/\e/style] (\pktxd@pos{\e},\pktxd@initialdelay)
+        node[/pktxd/entities/\e/label style] {\mylabel}
         -- (\pktxd@pos{\e},-\pktxd@len);
-    }
+      }
     \end{pgfonlayer}
 
-    % draw later(s)
+    % 3. draw later(s)
     \pgfkeys{/pktxd/laters/.get=\laters}
     \foreach \t/\l in \laters {
       %\pktxd@debug{time \t~ len \l}
       \ifdim\t=0cm\else\pktxd@drawlater{\t}{\l}\fi
     }
 
-    % remove entities names
-    % they are set through pgfglobalkeys and would persist accross envs
+    % 4. remove entities names
+    %    they are set through pgfglobalkeys and would persist accross envs
     \pktxd@forallentities {
       \pgfglobalkeys{/pktxd/entities/\e/.initial=\relax}
     }
