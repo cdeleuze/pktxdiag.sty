@@ -1,3 +1,5 @@
+NOTE: this repo is no more updated, dev now occurs on gitlab <https://gitlab.com/deleuzec/pktxdiag.sty>
+
 # pktxdiag.sty
 
 ## A TikZ-based LaTeX package for drawing packet exchange diagrams
